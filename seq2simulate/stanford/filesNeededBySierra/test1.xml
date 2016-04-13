@@ -1,0 +1,9 @@
+<?xml version="1.0" standalone="yes"?>
+<Stanford_Algorithm_Interpretation>
+    <algorithmVersion></algorithmVersion>
+    <webServiceVersion>beta-1.0.1</webServiceVersion>
+    <failure>
+        <errorMessage>Invalid key.</errorMessage>
+    </failure>
+</Stanford_Algorithm_Interpretation>
+

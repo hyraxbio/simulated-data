@@ -1,0 +1,201 @@
+#!/usr/bin/env python
+
+import os
+import appdirs
+import click
+import uuid
+
+import seq2simulate.run_simulation
+
+def get_working_dir():
+    """
+    Returns a default working directory.
+    """
+
+    return os.path.join(
+        appdirs.user_data_dir('tests', 'simulated'), 
+        str(uuid.uuid4())
+    )
+
+@click.command()
+
+@click.option(
+    '--susceptible', 
+    help='Path to a FASTA file of susceptible sequence(s).', 
+    type=click.Path(exists=True, readable=True, resolve_path=True)
+)
+
+@click.option(
+    '--resistant', 
+    help='Path to a FASTA file of resistant sequence(s).', 
+    type=click.Path(exists=True, readable=True, resolve_path=True)
+)
+
+@click.option(
+    '--out', 
+    help='Path to the desired output folder (will be created).',
+    type=click.Path(resolve_path=True)
+)
+
+@click.option(
+    '--platform',
+    help='Sequencing platform to simulate.',
+    type=click.Choice(['illumina', 'ion', 'roche'])
+)
+
+@click.option(
+    '--working-dir',
+    help='Returns a specific working directory location. ' \
+         'Defaults to a randomly generated uuid in an appropriate ' \
+         'data folder.', 
+    type=click.Path(resolve_path=True)
+)
+
+@click.option(
+    '--prevalence',
+    help='Select a prevalence to run at.  Default is to generate 10' \
+        'prevalences: 0.5, 1, 2, 5, 10, 15, 20, 30, 50, 100',
+    type=click.INT
+)
+
+@click.option(
+    '--diversity-only',
+    help='Leaves the working directory at a point where diversity, but not ' \
+        'sequencing error, has been simulated.',
+    is_flag=True 
+)
+
+@click.option(
+    '--error-only',
+    help='When used with --working-dir, generates sequencing error from ' \
+        'the given working directory, which should already have been ' \
+        'created using --evolve-only.',
+    is_flag=True 
+)
+
+@click.option(
+    '--prevalence-only',
+    help='When used with --working-dir, creates the final output from '\
+        'already --error-only simulated reads in the given working directory',
+    is_flag=True
+)
+
+@click.option(
+    '--pcr-error',
+    help='Include a false PCR error in this simulation.',
+    is_flag=True
+)
+
+@click.option(
+    '--env-error',
+    help='Include some DNA from HIV ENV in this simulation.',
+    is_flag=True
+)
+
+@click.option(
+    '--human-error',
+    help='Include some human DNA in this simulation.',
+    is_flag=True
+)
+
+@click.option(
+    '--remove-rt',
+    help='Remove the piece of RT covering K103N entirely.',
+    is_flag=True
+)
+
+@click.option(
+    '--randomize',
+    help='For multiple sequences.  Shuffle and randomly assign error types.',
+    is_flag=True
+)
+
+@click.option(
+    '--paired-end',
+    help='Paired-end sequencing.  Only valid with illumina data.',
+    is_flag=True
+)
+
+def run(
+    susceptible, resistant, out, platform, working_dir, prevalence, 
+    diversity_only, error_only, prevalence_only, pcr_error,
+    env_error, human_error, remove_rt, randomize, paired_end
+):
+    """
+    The simulate command simulates HIV drug resistance testing data
+    from a susceptible and resistant sequence.
+
+    """
+
+    if paired_end and platform != "illumina":
+        raise ValueError(
+            'Only illumina paired-end reads can be simulated.'
+        )
+
+    if diversity_only and error_only:
+        raise ValueError(
+            'Can\'t run with both --diversity-only and --error-only.' \
+            'Run with --help for further information.'
+        )
+
+    if working_dir is None:
+        if error_only or prevalence_only:
+            raise ValueError(
+                'Must run later steps from an existing working directory.'
+            )
+        else:
+            working_dir = get_working_dir()
+
+    if not error_only and not prevalence_only:
+        if susceptible is None:
+            raise ValueError(
+                'Use --susceptible to provide a file of ' \
+                'susceptible sequences.'
+            )
+        if resistant is None:
+            raise ValueError(
+                'Use --resistant to provide a file of ' \
+                'resistant sequences.'
+            )
+            print 'Susceptible file:', susceptible
+            print 'Resistant file:', resistant
+
+    if not diversity_only:
+        if platform is None:
+            raise ValueError(
+                'Must select --platform { roche | illumina | ion }.'
+            )
+        print 'Sequencing platform:', platform
+
+    if not diversity_only and not error_only:
+        if out is None:
+            raise ValueError(
+                'Use --out to provide an output folder name.'
+            )
+        print 'Output folder:', out
+
+    print 'Working directory:', working_dir.replace(' ', '\ ')
+
+    if not error_only and not prevalence_only:
+        seq2simulate.run_simulation.run_diversity(
+            susceptible, resistant,
+            pcr_error, env_error, human_error, remove_rt,
+            randomize,
+            working_dir
+        )
+
+    if not diversity_only and not prevalence_only:
+        seq2simulate.run_simulation.run_error(
+            platform, working_dir, pcr_error, env_error, human_error,
+            paired_end
+        )
+
+    if not diversity_only and not error_only:
+        seq2simulate.run_simulation.run_prevalence(
+            out, remove_rt, working_dir, prevalence
+        )
+
+    print 'Unescaped working directory:', working_dir
+
+if __name__ == '__main__':
+    run(auto_envvar_prefix='SIMULATE')
