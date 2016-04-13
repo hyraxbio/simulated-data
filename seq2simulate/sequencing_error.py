@@ -10,7 +10,7 @@ import pysam
 
 import art
 
-import custom_iterators
+import custom_generators
 import platform
 import seq2simulate
 
