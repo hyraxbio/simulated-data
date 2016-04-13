@@ -13,6 +13,8 @@ Uses the EvolveAGene4 evolution simulator, the ART sequence simulator and the si
 
 ## Install
 
+From root:
+
 ### Global
 ```
 python setup.py build
