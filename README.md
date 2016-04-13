@@ -28,10 +28,10 @@ env/bin/pip install .
 ```
 The install script may suggest a number of external software packages which must be in your build system for seq2simulate to work.  These include EvolveAGene4 and art_454/art_illumina.
 
-* EvolveAGene4: [https://popmodels.cancercontrol.cancer.gov/gsr/packages/evolveagene/]
-* ART: [http://www.niehs.nih.gov/research/resources/software/biostatistics/art/]
+* EvolveAGene4: https://popmodels.cancercontrol.cancer.gov/gsr/packages/evolveagene/
+* ART: http://www.niehs.nih.gov/research/resources/software/biostatistics/art/
 
-Java is also required, and can be installed via a package manager or from [Oracle][http://www.oracle.com].
+Java is also required, and can be installed via a package manager or from [Oracle](http://www.oracle.com).
 
 ## Basic Usage
 
