@@ -35,12 +35,12 @@ Java is also required, and can be installed via a package manager or from [Oracl
 
 ## Basic Usage
 
-### Create a Roche/454 simulation from Seq6 at 1% prevalence:
+Create a Roche/454 simulation from Seq6 at 1% prevalence:
 
 ```
 simulate --prevalence 1 --susceptible data/split/Seq6_Sus --resistant data/split/Seq6_Res --out temp_roche --platform roche
 ```
-### Create an Illumina simulation from all sequences, with randomized errors, at all prevalences:
+Create an Illumina simulation from all sequences, with randomized errors, at all prevalences:
 
 ```
 env/bin/simulate --susceptible data/SusceptibleSeqs_all.fasta --resistant data/ResistantSeqs_all.fasta --out temp_out --platform illumina --paired-end --randomize
