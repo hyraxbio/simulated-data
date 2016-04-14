@@ -150,15 +150,15 @@ def unaligned_sam_file(original_sam_filename, working_dir):
 
     copy_sam_header(original_sam_filename, corrected_sam_file)
 
-    incorrect_sam_file = custom_iterators.parse_sam(
+    incorrect_sam_file = custom_generators.parse_sam(
         open(original_sam_filename, 'r')
     )
 
     for read in incorrect_sam_file:
         
-        read[custom_iterators.CIGAR] = ''
+        read[custom_generators.CIGAR] = ''
         # 4 is the SAM flag signal for "unmapped"
-        read[custom_iterators.FLAG] = '4'
+        read[custom_generators.FLAG] = '4'
         corrected_sam_file.write('\t'.join(read))
 
     incorrect_sam_file.close()
@@ -182,18 +182,18 @@ def correct_sam_file(original_sam_file, working_dir):
 
     copy_sam_header(original_sam_file, corrected_sam_file)
 
-    incorrect_sam_file = custom_iterators.parse_sam(
+    incorrect_sam_file = custom_generators.parse_sam(
         open(original_sam_file, 'r')
     )
 
     for read in incorrect_sam_file:
-        if read[custom_iterators.CIGAR] is not None \
-            and read[custom_iterators.CIGAR] != "":
+        if read[custom_generators.CIGAR] is not None \
+            and read[custom_generators.CIGAR] != "":
 
-            read[custom_iterators.CIGAR] = \
-                read[custom_iterators.CIGAR].replace("=", "M")
-            read[custom_iterators.CIGAR] = \
-                read[custom_iterators.CIGAR].replace("X", "M")
+            read[custom_generators.CIGAR] = \
+                read[custom_generators.CIGAR].replace("=", "M")
+            read[custom_generators.CIGAR] = \
+                read[custom_generators.CIGAR].replace("X", "M")
 
         corrected_sam_file.write('\t'.join(read))
 
