@@ -38,7 +38,7 @@ platforms = {
     'illumina': art.illumina,
     'ion': art.ion,
     'pacbio-ccs': art.pacbio_ccs,
-    'pacbio-clr': arg.pacbio_clr
+    'pacbio-clr': art.pacbio_clr
 }
 
 DEFAULT_PREVALENCES = [0.5, 1, 2, 5, 10, 15, 20, 30, 50, 100]

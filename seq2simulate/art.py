@@ -19,7 +19,7 @@ illumina = Platform(50000, 250)
 roche = Platform(2000, 320, profile=roche_profile_dir)
 ion = Platform(10000, 320, profile=ion_profile_dir)
 pacbio_ccs = Platform(2000, 250, profile=pacbio_ccs_profile)
-pacbio_clr = Platform(2000, 250, profile=pacbio_profile)
+pacbio_clr = Platform(2000, 250, profile=pacbio_clr_profile)
 
 def sequence_length(sequence_file):
     """ Open a file and return the length of the first sequence.
@@ -106,7 +106,7 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
     subprocess.check_call(args, stdout=devnull, stderr=devnull)
     devnull.close()
 
-    if platform == pacbio:
+    if platform == pacbio_ccs or platform == pacbio_clr:
         shutil.move(out_file + '_0001.fastq', out_file + '.fq')
         shutil.move(out_file + '_0001.ref', out_file + '.ref')
         shutil.move(out_file + '_0001.maf', out_file + '.maf')
