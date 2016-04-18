@@ -12,12 +12,14 @@ import seq2simulate
 package_dir = seq2simulate.__path__[0]
 roche_profile_dir = os.path.join(package_dir, 'profiles/roche')
 ion_profile_dir = os.path.join(package_dir, 'profiles/ion')
-pacbio_profile = os.path.join(package_dir, 'profiles/model_qc_ccs')
+pacbio_ccs_profile = os.path.join(package_dir, 'profiles/model_qc_ccs')
+pacbio_clr_profile = os.path.join(package_dir, 'profiles/model_qc_clr')
 
 illumina = Platform(50000, 250)
 roche = Platform(2000, 320, profile=roche_profile_dir)
 ion = Platform(10000, 320, profile=ion_profile_dir)
-pacbio = Platform(5000, 250, profile=pacbio_profile)
+pacbio_ccs = Platform(2000, 250, profile=pacbio_ccs_profile)
+pacbio_clr = Platform(2000, 250, profile=pacbio_profile)
 
 def sequence_length(sequence_file):
     """ Open a file and return the length of the first sequence.
@@ -63,11 +65,24 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
                 '-s', '50'
             ])
 
-    elif platform == pacbio:
+    elif platform == pacbio_ccs:
         args = [
             'pbsim',
             '--data-type',
             'CCS',
+            '--model_qc',
+            platform.profile,
+            '--prefix',
+            out_file, 
+            '--depth',
+            str(coverage),
+            sequence_file,
+        ]
+    elif platform == pacbio_clr:
+        args = [
+            'pbsim',
+            '--data-type',
+            'CLR',
             '--model_qc',
             platform.profile,
             '--prefix',
