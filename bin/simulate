@@ -40,7 +40,7 @@ def get_working_dir():
 @click.option(
     '--platform',
     help='Sequencing platform to simulate.',
-    type=click.Choice(['illumina', 'ion', 'roche'])
+    type=click.Choice(['illumina', 'ion', 'pacbio', 'roche'])
 )
 
 @click.option(

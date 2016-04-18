@@ -36,7 +36,8 @@ csv_header_rows = [
 platforms = {
     'roche': art.roche,
     'illumina': art.illumina,
-    'ion': art.ion
+    'ion': art.ion,
+    'pacbio': art.pacbio
 }
 
 DEFAULT_PREVALENCES = [0.5, 1, 2, 5, 10, 15, 20, 30, 50, 100]

@@ -1,19 +1,23 @@
 import os
+import shutil
 import subprocess
 import uuid
 
 import Bio
 
 from platform import Platform
+from maf2sam import maf2sam
 import seq2simulate
 
 package_dir = seq2simulate.__path__[0]
 roche_profile_dir = os.path.join(package_dir, 'profiles/roche')
 ion_profile_dir = os.path.join(package_dir, 'profiles/ion')
+pacbio_profile = os.path.join(package_dir, 'profiles/model_qc_ccs')
 
 illumina = Platform(50000, 250)
 roche = Platform(2000, 320, profile=roche_profile_dir)
 ion = Platform(10000, 320, profile=ion_profile_dir)
+pacbio = Platform(5000, 250, profile=pacbio_profile)
 
 def sequence_length(sequence_file):
     """ Open a file and return the length of the first sequence.
@@ -26,7 +30,7 @@ def sequence_length(sequence_file):
 
 def simulate(sequence_file, platform, coverage, paired_end, working_dir):
 
-    """ Wrapper for the sequence simulator ART.
+    """ Wrapper for the sequence simulators ART and pbsim.
 
         Args:
             sequence_file: Filename of the sequence from which to simulate
@@ -59,6 +63,20 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
                 '-s', '50'
             ])
 
+    elif platform == pacbio:
+        args = [
+            'pbsim',
+            '--data-type',
+            'CCS',
+            '--model_qc',
+            platform.profile,
+            '--prefix',
+            out_file, 
+            '--depth',
+            str(coverage),
+            sequence_file,
+        ]
+
     else:
         args = [
             'art_454',
@@ -73,7 +91,15 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
     subprocess.check_call(args, stdout=devnull, stderr=devnull)
     devnull.close()
 
-    if platform != illumina:
+    if platform == pacbio:
+        shutil.move(out_file + '_0001.fastq', out_file + '.fq')
+        shutil.move(out_file + '_0001.ref', out_file + '.ref')
+        shutil.move(out_file + '_0001.maf', out_file + '.maf')
+        maf2sam(out_file + '.maf', out_file + '.ref')
+        os.unlink(out_file + '.maf')
+        os.unlink(out_file + '.ref')
+
+    if platform == roche or platform == ion:
         os.unlink(out_file + '.stat')
 
     if paired_end:
