@@ -2,34 +2,60 @@ import re
 from functools import total_ordering
 
 PR, RT, INI = range(3)
-gene_names = {
+gene_region_names = {
     PR: "PR",
     RT: "RT",
     INI: "INI"
 }
+gene_regions = {v: k for k,v in gene_region_names.iteritems()}
+
 drm_regex = re.compile("([A-Z])([0-9]+)([A-Zid])")
-gene_start_positions = {PR: 56, RT: 155, INI: 715}
+wildtype_regex = re.compile("([A-Z])([0-9]+)")
+gene_region_start_positions = [(INI, 715), (RT, 155), (PR, 56)]
 
 class MalformattedDrmString(Exception):
     pass
 
 @total_ordering
 class Drm:
+    """A mutation conferring drug resistance in HIV."""
 
-    def __init__(self, drm_string, gene):
+    def __init__(self, drm_string, gene_region=None):
 
-        self.gene = gene
+        if gene_region is not None:
+            self.gene_region = gene_region
+
         self.insert = False
         self.delete = False
         drm = drm_regex.match(drm_string)
         if drm is None:
-            raise MalformattedDrmString("Not a DRM string: " + drm_string)
+            drm = wildtype_regex.match(drm_string)
+            if not drm:
+                raise MalformattedDrmString("Not a DRM string: " + drm_string)
+            # add the wildtype as the mutation if no mutation specified
+            drm_string += drm.group(1)
+            # check the match
+            drm = drm_regex.match(drm_string)
+            if not drm:
+                raise MalformattedDrmString("Not a DRM string: " + drm_string)
 
         self.wildtype = drm.group(1)
-        self.relative_pos = int(drm.group(2))
-        self.nucleotide_pos = (
-                self.relative_pos + gene_start_positions[self.gene] - 1
-            ) * 3
+        if gene_region is not None:
+            self.relative_pos = int(drm.group(2))
+            self.absolute_pos = self.relative_pos \
+                + gene_region_start_positions[self.gene_region]
+        else:
+            self.absolute_pos = int(drm.group(2))
+            found = False
+            for region, position in gene_region_start_positions:
+                if self.absolute_pos > position:
+                    self.relative_pos = self.absolute_pos - position
+                    found = True
+                    break
+            if not found:
+                throw ValueError('DRM is not in a known gene region')
+        self.nucleotide_pos = (self.absolute_pos - 1) * 3    
+
         self.mutation = drm.group(3)
         if self.mutation == 'i':
             self.insert = True
@@ -39,7 +65,8 @@ class Drm:
             self.mutation = drm.group(3)
 
     def __key(self):
-        return (self.gene, self.wildtype, self.relative_pos, self.mutation)
+        return (self.gene_region, self.wildtype, 
+                self.relative_pos, self.mutation)
 
     def __lt__(self, other):
 
@@ -55,14 +82,12 @@ class Drm:
 
     def __str__(self):
 
-        return gene_names[self.gene] + ":" + \
-        self.wildtype + str(self.relative_pos) + self.mutation
+        return self.wildtype + str(self.nucleotide_pos) + self.mutation
 
 
     def __repr__(self):
         
-        return gene_names[self.gene] + ":" + \
-        self.wildtype + str(self.relative_pos) + self.mutation     
+        return self.wildtype + str(self.nucleotide_pos) + self.mutation     
 
 
 

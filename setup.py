@@ -74,6 +74,7 @@ setup(
     packages=['seq2simulate'],
     scripts=['bin/simulate', 'bin/package-simulation', 'bin/sierra'],
     package_data={'seq2simulate': [
+        'all_drms.tsv',
         'contamination/*',
         'profiles/model*',
         'profiles/ion/*',

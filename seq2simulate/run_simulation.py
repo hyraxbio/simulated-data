@@ -19,6 +19,7 @@ import sequencing_error
 evolved_filename = 'evolved_files.pkl'
 error_filename = 'error_files.pkl'
 final_csv_filename = 'manifest.csv'
+final_json_filename = 'manifest.json'
 max_years_infected = 10
 
 csv_header_rows = [
@@ -194,7 +195,7 @@ def run_error_thread(error_queue, result, platform, working_dir,
         True on completion.
     """
 
-    error_result = {}
+    error_result = {'platform' : platform}
 
     error_result['sequence'] = result['sequence']
     if pcr_error:
@@ -306,18 +307,11 @@ def run_prevalence_thread(manifest_queue, platform, paired_end,
             out_dir
         )
 
-        manifest_queue.put(','.join(
-        [
+        manifest_queue.put(Sample(
             ntpath.basename(hashed_filename),
-            result['sequence'].susceptible.id,
-            result['sequence'].resistant.id,
-            str(required_prevalence),
-            str(result['sequence'].years_infected),
-            str(result['sequence'].pcr_error),
-            str(result['sequence'].human_error),
-            str(result['sequence'].env_error),
-            str(result['sequence'].remove_rt)
-        ]) + '\n')
+            result['sequence'],
+            required_prevalence
+        ))
     
 
 def run_prevalence(out_dir, remove_rt, working_dir, produce_prevalence):
@@ -342,10 +336,8 @@ def run_prevalence(out_dir, remove_rt, working_dir, produce_prevalence):
 
     csv_rows = []
     threads = []
-    
 
-    with open(os.path.join(working_dir, error_filename), 'rb') as handle, \
-         open(os.path.join(out_dir, final_csv_filename), 'w') as out_handle:
+    with open(os.path.join(working_dir, error_filename), 'rb') as handle:
         error_data = pickle.load(handle)
         platform = error_data['platform']
         paired_end = error_data['paired_end']
@@ -369,8 +361,16 @@ def run_prevalence(out_dir, remove_rt, working_dir, produce_prevalence):
         p.close()
         p.join()
 
-
-        while not manifest_queue.empty():
-                out_handle.write(manifest_queue.get())
-
+        with open(os.path.join(out_dir, 
+            final_csv_filename), 'w') as csv_handle,\
+            open(os.path.join(out_dir, 
+            final_json_filename), 'w') as json_handle:
+            test = sample.header(error_data['platform'])
+            test['samples'] = {}
+            while not manifest_queue.empty():
+                sample = manifest_queue.get()
+                test['samples'][sample.name] = sample.encode()
+                csv_handle.write(sample.dump_csv())
+            json_handle.write(json.dumps(test))
+                
     return True
