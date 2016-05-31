@@ -19,7 +19,8 @@ class CheckPresenceOfExecutables(install):
                         'gsr/packages/evolveagene/',
         'java': 'http://www.oracle.com',
         'art_454': 'http://www.niehs.nih.gov/research/resources/software/biostatistics/art/',
-        'art_illumina': 'http://www.niehs.nih.gov/research/resources/software/biostatistics/art/'
+        'art_illumina': 'http://www.niehs.nih.gov/research/resources/software/biostatistics/art/',
+        'pbsim': 'https://code.google.com/archive/p/pbsim/'
     } 
 
     class ExecutableException(Exception):
@@ -69,11 +70,12 @@ setup(
     description='Simulated data generator for HIV drug resistance testing',
     author='Imogen Wright',
     author_email='imogen@hyraxbio.co.za',
-    version='1.0.2',
+    version='1.2.0',
     packages=['seq2simulate'],
     scripts=['bin/simulate', 'bin/package-simulation', 'bin/sierra'],
     package_data={'seq2simulate': [
         'contamination/*',
+        'profiles/model*',
         'profiles/ion/*',
         'profiles/roche/*',
         'stanford/*.jar',

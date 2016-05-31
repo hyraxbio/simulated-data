@@ -40,7 +40,7 @@ def get_working_dir():
 @click.option(
     '--platform',
     help='Sequencing platform to simulate.',
-    type=click.Choice(['illumina', 'ion', 'roche'])
+    type=click.Choice(['illumina', 'ion', 'pacbio-clr', 'pacbio-ccs', 'roche'])
 )
 
 @click.option(
@@ -163,7 +163,7 @@ def run(
     if not diversity_only:
         if platform is None:
             raise ValueError(
-                'Must select --platform { roche | illumina | ion }.'
+                'Must select --platform { roche | illumina | ion | pacbio-ccs | pacbio-clr }.'
             )
         print 'Sequencing platform:', platform
 
