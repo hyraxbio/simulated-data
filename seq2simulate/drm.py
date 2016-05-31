@@ -11,7 +11,10 @@ gene_regions = {v: k for k,v in gene_region_names.iteritems()}
 
 drm_regex = re.compile("([A-Z])([0-9]+)([A-Zid])")
 wildtype_regex = re.compile("([A-Z])([0-9]+)")
-gene_region_start_positions = [(INI, 715), (RT, 155), (PR, 56)]
+gene_region_start_positions_tuple = [(INI, 715), (RT, 155), (PR, 56)]
+gene_region_start_positions = {
+    d[0]: d[1] for d in gene_region_start_positions_tuple
+}
 
 class MalformattedDrmString(Exception):
     pass
@@ -47,13 +50,13 @@ class Drm:
         else:
             self.absolute_pos = int(drm.group(2))
             found = False
-            for region, position in gene_region_start_positions:
+            for region, position in gene_region_start_positions_tuple:
                 if self.absolute_pos > position:
                     self.relative_pos = self.absolute_pos - position
                     found = True
                     break
             if not found:
-                throw ValueError('DRM is not in a known gene region')
+                raise ValueError('DRM is not in a known gene region')
         self.nucleotide_pos = (self.absolute_pos - 1) * 3    
 
         self.mutation = drm.group(3)
