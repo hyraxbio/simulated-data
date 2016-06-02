@@ -44,7 +44,8 @@ platforms = {
     'pacbio-clr': art.pacbio_clr
 }
 
-DEFAULT_PREVALENCES = [0.5, 1, 2, 5, 10, 15, 20, 30, 50, 100]
+DEFAULT_PREVALENCES = [0.005, 0.01, 0.02, 0.05, 0.10, 
+                        0.15, 0.20, 0.30, 0.50, 1]
 
 MINIMUM_FOR_SHUFFLE = 4
 

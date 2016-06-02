@@ -18,8 +18,8 @@ pacbio_clr_profile = os.path.join(package_dir, 'profiles/model_qc_clr')
 illumina = Platform(50000, 250, 0.01)
 roche = Platform(2000, 320, 0.03, profile=roche_profile_dir)
 ion = Platform(10000, 320, 0.03, profile=ion_profile_dir)
-pacbio_ccs = Platform(2000, 250, 0.02, profile=pacbio_ccs_profile)
-pacbio_clr = Platform(2000, 250, 0.10, profile=pacbio_clr_profile)
+pacbio_ccs = Platform(10000, 250, 0.02, profile=pacbio_ccs_profile)
+pacbio_clr = Platform(10000, 250, 0.10, profile=pacbio_clr_profile)
 
 platform_names = { illumina: 'illumina', roche: 'roche',
                    ion: 'ion', pacbio_ccs: 'pacbio_ccs', 

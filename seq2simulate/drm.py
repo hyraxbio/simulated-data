@@ -68,8 +68,8 @@ class Drm:
             self.mutation = drm.group(3)
 
     def __key(self):
-        return (self.gene_region, self.wildtype, 
-                self.relative_pos, self.mutation)
+        return (self.wildtype, 
+                self.absolute_pos, self.mutation)
 
     def __lt__(self, other):
 
@@ -85,12 +85,12 @@ class Drm:
 
     def __str__(self):
 
-        return self.wildtype + str(self.nucleotide_pos) + self.mutation
+        return self.wildtype + str(self.absolute_pos) + self.mutation
 
 
     def __repr__(self):
         
-        return self.wildtype + str(self.nucleotide_pos) + self.mutation     
+        return self.wildtype + str(self.absolute_pos) + self.mutation     
 
 
 

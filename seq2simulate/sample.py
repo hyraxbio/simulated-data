@@ -1,7 +1,9 @@
 import json
+
 import art
 import drm
 import hiv_drms
+import prevalence
 import sierra_wrapper
 
 resistance_scores = [(60, 'R'), (15, 'I')]
@@ -11,6 +13,13 @@ resistance_scores = [(60, 'R'), (15, 'I')]
 # resistant.  This only happens in NGS data, so Sierra can't capture
 # it and we must treat the case manually here.
 fixed_calls = { drm.Drm('M184V', drm.RT) : {'D4T': 'R', 'AZT': 'R'}}
+
+# If we remove everything in RT barring K65, we should get low coverage
+# calls for all NRTIs and NNRTIs unless we see K65R
+low_coverage_drugs = ['ABC', 'DDI', 'FTC', '3TC', 'D4T', 
+                      'TDF', 'AZT', 'EFV', 'ETR', 'NVP', 'RPV']
+call_if_resistant = ['TDF', 'DDI']
+
 
 def header(platform):
     result = {}
@@ -45,6 +54,19 @@ class Sample:
             str(self.sequence.remove_rt)
         ]) + '\n'
 
+    def is_no_coverage(self, drm):
+        return (
+            self.sequence.remove_rt \
+            and drm.nucleotide_pos >= prevalence.rt_no_coverage_start \
+            and drm.nucleotide_pos <= prevalence.rt_no_coverage_end
+        )
+
+    def required_prevalence(self, drm):
+        if self.is_no_coverage(drm):
+            return 0
+        else:
+            return self.prevalence
+
     def acceptable_error(self, drm):
         # insertion mutations can be up to 10% below their prevalence.
         if (drm.mutation == 'i'):
@@ -69,18 +91,42 @@ class Sample:
             if not found:
                 final_calls[drug] = 'S'
 
+            # check for low coverage
+            if (
+                self.sequence.remove_rt \
+                and drug in low_coverage_drugs \
+                and not (
+                	final_calls[drug] != 'S' and drug in call_if_resistant
+                )
+            ):
+                final_calls[drug] = 'LC'
+
         return final_calls
 
 
     def encode(self):
         
         mutations = { "[pol] " + str(drm) : {
-                'prevalence': self.prevalence,
+                'prevalence': self.required_prevalence(drm),
                 'acceptable_error': self.acceptable_error(drm)
             } for drm in self.sequence.drms 
         } 
 
         calls = self.encode_calls(sierra_wrapper.get_calls(
-        	self.sequence.resistant))
+            self.sequence.resistant))
 
-        return {'mutations': mutations, 'calls': calls}
+        notes = {"simulated_from" : self.sequence.resistant.id}
+        notes["errors"] = []
+        if self.sequence.remove_rt:
+        	notes["errors"].append("RT removed")
+        if self.sequence.pcr_error:
+        	notes["errors"].append("PCR error")
+        if self.sequence.human_error:
+        	notes["errors"].append("Human DNA added")
+        if self.sequence.env_error:
+        	notes["errors"].append("ENV DNA added")
+
+        return {'mutations': mutations, 
+                'calls': calls,
+                'notes': notes
+                }
