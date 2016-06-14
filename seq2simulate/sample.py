@@ -26,10 +26,10 @@ def header(platform):
     result['platform'] = {
         'name': art.platform_names[platform],
         'coverage_depth': platform.coverage,
-        'acceptable_error': [platform.prevalence_error, 
+        'error_bars': [platform.prevalence_error, 
                              platform.prevalence_error]
     }
-    result['organism'] = {
+    result['pathogen'] = {
         'name': 'HIV',
         'mutations': ["[pol] " + str(d) for d in hiv_drms.drms]
     }
@@ -106,11 +106,11 @@ class Sample:
 
     def encode(self):
         
-        mutations = { "[pol] " + str(drm) : {
+        mutations = [ 
+                {'name': "[pol] " + str(drm),
                 'prevalence': self.required_prevalence(drm),
-                'acceptable_error': self.acceptable_error(drm)
-            } for drm in self.sequence.drms 
-        } 
+                'error_bars': self.acceptable_error(drm)} \
+                for drm in self.sequence.drms ]
 
         calls = self.encode_calls(sierra_wrapper.get_calls(
             self.sequence.resistant))
@@ -126,7 +126,9 @@ class Sample:
         if self.sequence.env_error:
         	notes["errors"].append("ENV DNA added")
 
-        return {'mutations': mutations, 
+        return {
+                'name': self.name,
+                'mutations': mutations, 
                 'calls': calls,
                 'notes': notes
                 }

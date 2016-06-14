@@ -368,10 +368,10 @@ def run_prevalence(out_dir, remove_rt, working_dir, produce_prevalence):
             final_json_filename), 'w') as json_handle:
             csv_handle.write(','.join(csv_header_rows) + '\n')
             test = sample.header(platforms[error_data['platform']])
-            test['samples'] = {}
+            test['samples'] = []
             while not manifest_queue.empty():
                 s = manifest_queue.get()
-                test['samples'][s.name] = s.encode()
+                test['samples'].append(s.encode())
                 csv_handle.write(s.dump_csv())
             json_handle.write(json.dumps(test, indent=2))
                 
