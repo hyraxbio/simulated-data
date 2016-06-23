@@ -10,5 +10,5 @@ drms = []
 
 with open(drm_tsv, 'rb') as csvfile:
 	drm_strings = csv.reader(csvfile, delimiter='\t')
-	drms = set([drm.Drm(d[0], drm.gene_regions[d[2]]) for d in drm_strings])
+	drms = set([drm.Drm(d[1], drm.gene_regions[d[2]]) for d in drm_strings])
 
