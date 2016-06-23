@@ -70,7 +70,7 @@ class Sample:
     def acceptable_error(self, drm):
         # insertion mutations can be up to 10% below their prevalence.
         if (drm.mutation == 'i'):
-            return [10, 0]
+            return [0.1, 0]
         else:
             return [0, 0]
 
