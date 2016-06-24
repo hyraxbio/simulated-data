@@ -14,11 +14,14 @@ def write_settings(folder, settings, samples):
     with open(os.path.join(folder, "settings.json"), 'w') as f:
         f.write(json.dump(settings, indent: 2)) 
 
+    
+
 def compress(file):
     output = file + '.gz'
     with open(file, 'rb') as f_in, gzip.open(output, 'wb') as f_out:
         shutil.copyfileobj(f_in, f_out)
     return output
+
 
 def illumina_single(folder):
     """
@@ -44,6 +47,7 @@ def illumina_single(folder):
     write_settings(folder, settings, samples)
 
     return True
+
 
 def illumina_paired(folder):
     """
@@ -146,7 +150,7 @@ def read_generator(folder, file_list, mid_file):
                     prefix_qual + s.letter_annotations["phred_quality"]
                 sequences.append(new_record)
             os.unlink(os.path.join(folder, seq_file))
-
+            
     return sequences, samples
 
 def roche(folder, mid_file):
@@ -174,7 +178,7 @@ def roche(folder, mid_file):
         "fastq"
     )
     write_settings(folder, settings, samples)
-
+    
     return True
 
 
