@@ -12,9 +12,9 @@ def write_settings(folder, settings, samples):
     settings["sample_details"] = samples
 
     with open(os.path.join(folder, "settings.json"), 'w') as f:
-        f.write(json.dump(settings, indent: 2)) 
+        f.write(json.dump(settings, indent=2)) 
 
-    
+
 
 def compress(file):
     output = file + '.gz'
@@ -150,7 +150,7 @@ def read_generator(folder, file_list, mid_file):
                     prefix_qual + s.letter_annotations["phred_quality"]
                 sequences.append(new_record)
             os.unlink(os.path.join(folder, seq_file))
-            
+
     return sequences, samples
 
 def roche(folder, mid_file):
@@ -178,7 +178,7 @@ def roche(folder, mid_file):
         "fastq"
     )
     write_settings(folder, settings, samples)
-    
+
     return True
 
 
