@@ -14,6 +14,13 @@ def compress(file):
     os.remove(file)
     return output
 
+
+def sample_record(id, files): 
+    return {"sample_name": id, "file_names": files}
+
+def mid_record(id, mid):
+    return {"sample_name": id, "mid": mid}
+
 illumina_details_name = "SampleSheet.csv"
 
 illumina_details_preamble_single = """[Header]
@@ -87,7 +94,7 @@ def illumina_single(folder):
             pid = os.basename(s).replace('.fastq', '')
             f.write("%s,%s,%s\n" % (pid, pid, illumina_details_postfix))
             filename = os.basename(compress(path.join(folder, s)))
-            samples.append({"sample_name": pid, "file_names": [filename]})
+            samples.append(sample_record(pid, [filename]))
 
     return samples
 
@@ -120,7 +127,7 @@ def illumina_paired(folder):
                 if os.path.isfile(s2):
                     file1 = os.basename(compress(s))
                     file2 = os.basename(compress(s2))
-                    samples.append({"sample_name":sid, "file_names":[file1, file2]})
+                    samples.append(sample_record(pid, [file1, file2]))
                 else:
                     raise ValueError("Expecting pairs of files ending in _1 and _2")
             
@@ -152,7 +159,7 @@ def ion(folder):
             pid = os.basename(s).replace('.fastq', '')
             f.write("%s,%s\n" % (pid, pid))
             filename = os.basename(compress(path.join(folder, s)))
-            samples.append({"sample_name": pid, "file_names": [filename]})
+            samples.append(sample_record(pid, [filename]))
 
     return samples
 
@@ -163,7 +170,7 @@ roche_details_preamble = "midname,patientname\n"
 
 roche_prefix_characters = "tcag"
 
-def read_generator(folder, file_list, mid_file):
+def read_multiplexer(folder, file_list, mid_file):
     """
     Build combined reads with MIDs.
 
@@ -189,7 +196,7 @@ def read_generator(folder, file_list, mid_file):
             prefix_qual = [40] * 14
             pid = seq_file.replace('.fastq', '')
             details.write("%s,%s\n" % (mid[0], pid))
-            samples.append({"sample_name":pid, "mid":mid[0]})
+            samples.append(mid_record(pid, mid[0]))
             for s in in_seqs:
                 new_record = SeqRecord.SeqRecord(prefix_string + s.seq, 
                     id=s.id, 
@@ -218,7 +225,7 @@ def roche(folder, mid_file):
         return
 
     file_list = os.listdir(folder)
-    sequence, samples = read_generator(folder, file_list, mid_file)
+    sequence, samples = read_multiplexer(folder, file_list, mid_file)
     SeqIO.write(
         sequences, 
         os.path.join(folder, roche_filename), 
