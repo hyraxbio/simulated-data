@@ -120,7 +120,7 @@ def illumina_paired(folder):
                 if os.path.isfile(s2):
                     file1 = os.basename(compress(s))
                     file2 = os.basename(compress(s2))
-                    samples.append({"sample_name":sid, "filenames":[file1, file2]})
+                    samples.append({"sample_name":sid, "file_names":[file1, file2]})
                 else:
                     raise ValueError("Expecting pairs of files ending in _1 and _2")
             
