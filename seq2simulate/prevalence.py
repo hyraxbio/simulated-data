@@ -799,7 +799,7 @@ def produce_prevalence(
     if paired_end:
         final_filename = (final_filename + "_1.fastq", final_filename + "_2.fastq")
     else:
-        final_filename = (final_filename + ".fastq")
+        final_filename =+ ".fastq"
 
     select_sequences(
         final_filename, susceptible_file, susceptible_sam, 
