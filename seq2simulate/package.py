@@ -14,6 +14,12 @@ def compress(file):
     os.remove(file)
     return output
 
+def sequence_files(folder):
+    file_list = glob.glob(os.path.join(folder, "*.fastq.gz"))
+    for uncompressed in glob.glob(os.path.join(folder, "*.fastq")):
+        file_list.append(compress(uncompressed))
+    return map(os.path.basename, file_list)
+
 
 def sample_record(id, files): 
     return {"sample_name": id, "file_names": files}
@@ -86,15 +92,14 @@ def illumina_single(folder):
         return
 
     samples = []
-    file_list = glob.glob(os.path.join(folder, "*.fastq"))
+    file_list = sequence_files(folder)
     with open(os.path.join(folder, illumina_details_name), 'w') as f:
         f.write(illumina_details_preamble_single)
 
         for s in file_list:
-            pid = os.basename(s).replace('.fastq', '')
+            pid = s.replace('.gz', '').replace('.fastq', '')
             f.write("%s,%s,%s\n" % (pid, pid, illumina_details_postfix))
-            filename = os.basename(compress(path.join(folder, s)))
-            samples.append(sample_record(pid, [filename]))
+            samples.append(sample_record(pid, [s]))
 
     return samples
 
@@ -114,20 +119,18 @@ def illumina_paired(folder):
         return
 
     samples = []
-    file_list = glob.glob(os.path.join(folder, "*.fastq"))
+    file_list = sequence_files(folder)
     with open(os.path.join(folder, illumina_details_name), 'w') as f:
         f.write(illumina_details_preamble_paired)
         for s in file_list:
-            pid = os.basename(s).replace('.fastq', '')
+            pid = s.replace('.gz', '').replace('.fastq', '')
             if pid.endswith('_1'):
                 pid = pid.replace('_1', '')
                 # only write out the first file of the pair
                 f.write("%s,%s,%s\n" % (pid, pid, illumina_details_postfix))
-                s2 = s.replace(s, "_1.fastq", "_2.fastq")
-                if os.path.isfile(s2):
-                    file1 = os.basename(compress(s))
-                    file2 = os.basename(compress(s2))
-                    samples.append(sample_record(pid, [file1, file2]))
+                s2 = s.replace("_1.", "_2.")
+                if os.path.isfile(os.path.join(folder, s2)):
+                    samples.append(sample_record(pid, [s, s2]))
                 else:
                     raise ValueError("Expecting pairs of files ending in _1 and _2")
             
@@ -151,15 +154,14 @@ def ion(folder):
         return
 
     samples = []
-    file_list = glob.glob(os.path.join(folder, "*.fastq"))
+    file_list = sequence_files(folder)
     with open(os.path.join(folder, ion_details_name), 'w') as f:
         f.write(ion_details_preamble)
 
         for s in file_list:
-            pid = os.basename(s).replace('.fastq', '')
+            pid = s.replace('.gz', '').replace('.fastq', '')
             f.write("%s,%s\n" % (pid, pid))
-            filename = os.basename(compress(path.join(folder, s)))
-            samples.append(sample_record(pid, [filename]))
+            samples.append(sample_record(pid, [s]))
 
     return samples
 

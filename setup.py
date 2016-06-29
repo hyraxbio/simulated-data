@@ -14,14 +14,16 @@ class CheckPresenceOfExecutables(install):
     necessary executables in path.
     """
 
-    needed_executables = {
-        'EvolveAGene4': 'https://popmodels.cancercontrol.cancer.gov/' \
-                        'gsr/packages/evolveagene/',
-        'java': 'http://www.oracle.com',
-        'art_454': 'http://www.niehs.nih.gov/research/resources/software/biostatistics/art/',
-        'art_illumina': 'http://www.niehs.nih.gov/research/resources/software/biostatistics/art/',
-        'pbsim': 'https://code.google.com/archive/p/pbsim/'
-    } 
+    # needed_executables = {
+    #     'EvolveAGene4': 'https://popmodels.cancercontrol.cancer.gov/' \
+    #                     'gsr/packages/evolveagene/',
+    #     'java': 'http://www.oracle.com',
+    #     'art_454': 'http://www.niehs.nih.gov/research/resources/software/biostatistics/art/',
+    #     'art_illumina': 'http://www.niehs.nih.gov/research/resources/software/biostatistics/art/',
+    #     'pbsim': 'https://code.google.com/archive/p/pbsim/'
+    # }
+
+    needed_executables = {} 
 
     class ExecutableException(Exception):
         pass
@@ -70,7 +72,7 @@ setup(
     description='Simulated data generator for HIV drug resistance testing',
     author='Imogen Wright',
     author_email='imogen@hyraxbio.co.za',
-    version='1.3.0',
+    version='1.3.1-dev',
     packages=['seq2simulate'],
     scripts=['bin/simulate', 'bin/package-simulation', 'bin/sierra'],
     package_data={'seq2simulate': [
@@ -95,7 +97,7 @@ setup(
         'appdirs >= 1.3.0',
         'BioPython >= 1.65',
         'click >= 3.3',
-        'pysam >= 0.8.2.1',
+        'pysam == 0.8.2.1',
         'numpy >= 1.0.0',
         'soappy >= 0.12.22',
         'multiprocessing >= 2.6.2.1'
@@ -104,7 +106,7 @@ setup(
         'appdirs >= 1.3.0',
         'BioPython >= 1.65',
         'click >= 3.3',
-        'pysam >= 0.8.2.1',
+        'pysam == 0.8.2.1',
         'numpy >= 1.0.0',
         'soappy >= 0.12.22',
         'multiprocessing >= 2.6.2.1'
