@@ -208,7 +208,7 @@ def read_multiplexer(folder, file_list, mid_file):
                     prefix_qual + s.letter_annotations["phred_quality"]
                 sequences.append(new_record)
             os.unlink(os.path.join(folder, seq_file))
-
+    
     return sequences, samples
 
 def roche(folder, mid_file):
