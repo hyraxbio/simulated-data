@@ -209,7 +209,7 @@ def read_multiplexer(folder, file_list, mid_file):
                 sequences.append(new_record)
             os.unlink(os.path.join(folder, seq_file))
 
-    return sequences, sampes
+    return sequences, samples
 
 def roche(folder, mid_file):
     """
