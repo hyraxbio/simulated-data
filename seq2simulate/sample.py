@@ -12,7 +12,7 @@ resistance_scores = [(60, 'R'), (15, 'I')]
 # namely that if there's any M184M in the mix, the call goes up to
 # resistant.  This only happens in NGS data, so Sierra can't capture
 # it and we must treat the case manually here.
-fixed_calls = { drm.Drm('M184V', drm.RT) : {'D4T': 'R', 'AZT': 'R'}}
+fixed_calls = { drm.Drm('M184V', drm.RT) : {'D4T': [15,'R'], 'AZT': [15,'R']}}
 
 # If we remove everything in RT barring K65, we should get low coverage
 # calls for all NRTIs and NNRTIs unless we see K65R
@@ -79,8 +79,9 @@ class Sample:
         for drug, score in raw_calls.iteritems():
             found = False
             for drm, drugs_affected in fixed_calls.iteritems():
-                if drm in self.sequence.drms and drug in drugs_affected.keys():
-                    final_calls[drug] = drugs_affected[drug]
+                if drm in self.sequence.drms and drug in drugs_affected.keys() \
+                and score >= drugs_affected[drug][0]:
+                    final_calls[drug] = drugs_affected[drug][1]
                     found = True
             if not found:
                 for cutoff, call in resistance_scores:
