@@ -145,6 +145,11 @@ def run(
             )
         else:
             working_dir = get_working_dir()
+    else:
+        if not error_only and not prevalence_only and os.path.exists(working_dir):
+            raise ValueError(
+                'Cannot specify existing working directory for full run or --diversity-only.'
+            )
 
     if not error_only and not prevalence_only:
         if susceptible is None:
@@ -173,6 +178,8 @@ def run(
                 'Use --out to provide an output folder name.'
             )
         print 'Output folder:', out
+
+
 
     print 'Working directory:', working_dir.replace(' ', '\ ')
 
