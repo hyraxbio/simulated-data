@@ -12,7 +12,7 @@ resistance_scores = [(60, 'R'), (15, 'I')]
 # namely that if there's any M184M in the mix, the call goes up to
 # resistant.  This only happens in NGS data, so Sierra can't capture
 # it and we must treat the case manually here.
-fixed_calls = { drm.Drm('M184V', drm.RT) : {'D4T': [15,'R'], 'AZT': [15,'R']}}
+fixed_calls = { drm.Drm('M184V', drm.RT) : {'D4T': [50,'R'], 'AZT': [50,'R']}}
 
 # If we remove everything in RT barring K65, we should get low coverage
 # calls for all NRTIs and NNRTIs unless we see K65R
