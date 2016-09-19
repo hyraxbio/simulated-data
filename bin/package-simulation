@@ -6,6 +6,7 @@ import click
 import uuid
 
 import seq2simulate.package
+import seq2simulate.settings
 
 def get_working_dir():
     """
@@ -48,26 +49,32 @@ def run(folder, platform, mid_file):
         )
 
     if platform == 'illumina':
-        seq2simulate.package.illumina_single(
+        settings = {"platform": 1}
+        samples = seq2simulate.package.illumina_single(
             folder
         )
     elif platform == 'illumina-paired':
-        seq2simulate.package.illumina_paired(
+        settings = {"platform": 1, "paired": True}
+        samples = seq2simulate.package.illumina_paired(
             folder
         )
     elif platform == 'ion':
-        seq2simulate.package.ion(
+        settings = {"platform": 0}
+        samples = seq2simulate.package.ion(
             folder
         )
     elif platform == 'roche':
         if mid_file is None:
             raise ValueError('Need an MID file to package a roche job.')
 
-        seq2simulate.package.roche(
+        settings = {"platform": 2}
+        samples = seq2simulate.package.roche(
             folder, mid_file
         )
     else:
         raise ValueError('Invalid platform ' + platform + '.')
+
+    seq2simulate.settings.write_settings(folder, settings, samples)
 
 if __name__ == '__main__':
     run(auto_envvar_prefix='SIMULATE')

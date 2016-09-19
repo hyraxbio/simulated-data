@@ -23,7 +23,7 @@ ABOVE = 0
 BELOW = 1
 
 # start at RT 89
-rt_no_coverage_start = ((89 + 155) * 3)
+rt_no_coverage_start = ((89 + 155) * 3 - 3)
 # end at RT 349
 rt_no_coverage_end = ((349 + 155) * 3)
 
@@ -781,11 +781,10 @@ def produce_prevalence(
     """
 
     print sequence.susceptible.id, '-', sequence.resistant.id, \
-            'at', prevalence, "% DRM prevalence"
+            'at', (prevalence*100), "% DRM prevalence"
 
-    num_resistant = int(platform.coverage * float(prevalence) / 100.0)
-    num_susceptible = int(platform.coverage * (
-                            100.0 - float(prevalence)) / 100.0)
+    num_resistant = int(platform.coverage * prevalence)
+    num_susceptible = int(platform.coverage * (1.0 - prevalence))
 
     num_total = (
         (len(sequence.susceptible) / platform.mean_read_length) \
@@ -798,7 +797,9 @@ def produce_prevalence(
     final_filename = os.path.join(out_dir, str(prevalence), str(uuid.uuid4()))
     final_output_filename = final_filename
     if paired_end:
-        final_filename = (final_filename + "_1", final_filename + "_2")
+        final_filename = (final_filename + "_1.fastq", final_filename + "_2.fastq")
+    else:
+        final_filename += ".fastq"
 
     select_sequences(
         final_filename, susceptible_file, susceptible_sam, 
@@ -825,8 +826,10 @@ def produce_prevalence(
         randomize_names_paired(final_filename[0], final_filename[1],
             working_dir)
     else:
-        #tag_names(final_filename, "susceptible", working_dir)
-        #tag_names(final_resistant_filename, "resistant", working_dir)
+        #if you need to for prevalence debugging, you can tag sequences 
+        #like this:
+        tag_names(final_filename, "susceptible", working_dir)
+        tag_names(final_resistant_filename, "resistant", working_dir)
         append_files(final_filename, final_resistant_filename)
         os.unlink(final_resistant_filename)
         randomize_names(final_filename, working_dir)

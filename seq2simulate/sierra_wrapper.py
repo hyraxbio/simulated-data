@@ -22,11 +22,14 @@ executable = 'run.sh'
 server = SOAPpy.SOAPProxy(endpoint)
 report_version = 2 # a clearer report version with a defined schema 
 
+# slightly different from definition in drm.py
 mutation_dict = {
     'PR' : drm.PR, 
     'RT' : drm.RT,
     'IN' : drm.INI
 }
+
+combination_mutations = ['E44A', 'M230I', 'V118I']
 
 package_dir = seq2simulate.__path__[0]
 sierra_dir = os.path.join(package_dir, 'stanford')
@@ -34,7 +37,16 @@ sierra_dir = os.path.join(package_dir, 'stanford')
 class SierraError(Exception):
     pass
 
-def get_drms_from_local_sierra(sequence):
+def call_sierra(sequence):
+    """
+    Call local sierra JAVA instance.
+
+    Args:
+        sequence: A Biopython sequence object.
+
+    Returns:
+        Flat text produced by Sierra.
+    """
 
     unique = str(uuid.uuid4())
 
@@ -60,87 +72,19 @@ def get_drms_from_local_sierra(sequence):
 
     return sierra_result
 
-def get_drms_from_server(sequence):
+def call_sierra_with_retries(sequence):
     """
-    Call the remote HIVdb server.
+    Call sierra until success or N retries and return document root of XML.
 
     Args:
-        sequence: a BioPython sequence object.
+        sequence: A Biopython sequence object.
 
     Returns:
-        An unformatted XML result string.
+        Sierra XML documentRoot ET object.
     """
-
-    return server.processSequencesString(
-                key, 
-                report_version, 
-                sequence.format('fasta'))
-
-def get_calls_from_server(drm_list):
-    """
-    Call the remote HIVdb server.
-
-    Args:
-        mutation_list: a list of mutations
-
-    Returns:
-        An unformatted XML result string.
-    """
-
-    formatted_drm_list = [drm_list]
-
-    return server.processMutationLists(
-                key, 
-                report_version, 
-                formatted_drm_list)
-
-def get_calls(drm_list):
-    """
-    Use the HIVdb server to find drug calls from DRMs
-
-    Args:
-        drm_list: an array of arrays 
-            [[pr_mutations], [rt_mutations], [ini_mutations]]
-
-    Returns:
-        A dictionary of {"drug_name": score}
-    """
-
-    calls = {}
-
-    result_string = get_calls_from_server(drm_list)
-    root = ET.fromstring(result_string)
-
-    if root.find('result') is None \
-    or root.find('result').find('success') is None \
-    or root.find('result').find('success').text == 'false':
-        print result_string
-        raise SierraError('List could not be processed by server.')
-
-    for drug_score in root.find('result').findall('drugScore'):
-        drug_code = drug_score.find('drugCode').text
-        score = drug_score.find('score').text
-        if drug_code is not None and score is not None:
-            calls[drug_code] = int(score)
-
-    return calls
-
-
-def get_drms(sequence):
-    """
-    Use the HIVdb server to find which DRMs are present in a sequence 
-
-    Args:
-        sequence: a BioPython sequence object.
-
-    Returns:
-        A list of Drm objects
-    """
-
-    drms = []
     retries = 5
     while retries > 0:
-        result_string = get_drms_from_local_sierra(sequence)
+        result_string = call_sierra(sequence)
         root = ET.fromstring(result_string)
         if root.find('result') is None \
         or root.find('result').find('success') is None \
@@ -152,18 +96,54 @@ def get_drms(sequence):
     if retries == 0:
         raise SierraError('Sequence could not be processed by server')
 
+    return root
+
+def get_calls(sequence):
+    """
+    Use HIVdb to find drug calls from DRMs
+
+    Args:
+        sequence: a Biopython sequence object.
+
+    Returns:
+        A dictionary of {"drug_name": score}
+    """
+
+    calls = {}
+    root = call_sierra_with_retries(sequence)
+
+    for drug_score in root.find('result').findall('drugScore'):
+        drug_code = drug_score.find('drugCode').text
+        score = drug_score.find('score').text
+        if drug_code is not None and score is not None:
+            calls[drug_code] = int(score)
+
+    return calls
+
+def get_drms(sequence):
+    """
+    Use HIVdb to find which DRMs are present in a sequence 
+
+    Args:
+        sequence: a BioPython sequence object.
+
+    Returns:
+        A list of Drm objects
+    """
+
+    drms = []
+    
+    root = call_sierra_with_retries(sequence)
     for gene_data in root.iter('geneData'):
         gene = gene_data.find('gene')
         for mutation in gene_data.iter('mutation'):
             add = False
             mut_string = mutation.find('mutationString')
             # important mutations that only score in combination
-            if gene.text == 'RT' and mut_string.text in ['E44A', 'M230I', 
-                'V118I']:
+            if gene.text == 'RT' and mut_string.text in combination_mutations:
                 add = True
             elif mut_string is not None and gene is not None \
-              and gene.text in mutation_dict \
-              and mutation.find('atypical') is None:
+              and gene.text in mutation_dict:
                 for drug_score in root.iter('drugScore'):
                     for partial_score in drug_score.iter('partialScore'):
                         mut = partial_score.find('mutation')
@@ -181,3 +161,5 @@ def get_drms(sequence):
                 mut_text = mut_text.replace(' deletion', 'd')
                 drms.append(drm.Drm(mut_text, mutation_dict[gene.text]))
     return drms
+
+

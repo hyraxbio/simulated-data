@@ -1,8 +1,31 @@
 import appdirs
 import csv
 import os
+import gzip
+import shutil
+import glob
 
 from Bio import SeqIO, SeqRecord
+
+def compress(file):
+    output = file + '.gz'
+    with open(file, 'rb') as f_in, gzip.open(output, 'wb') as f_out:
+        shutil.copyfileobj(f_in, f_out)
+    os.remove(file)
+    return output
+
+def sequence_files(folder):
+    file_list = glob.glob(os.path.join(folder, "*.fastq.gz"))
+    for uncompressed in glob.glob(os.path.join(folder, "*.fastq")):
+        file_list.append(compress(uncompressed))
+    return map(os.path.basename, file_list)
+
+
+def sample_record(id, files): 
+    return {"sample_name": id, "file_names": files}
+
+def mid_record(id, mid):
+    return {"sample_name": id, "mid": mid}
 
 illumina_details_name = "SampleSheet.csv"
 
@@ -68,17 +91,17 @@ def illumina_single(folder):
     if not os.path.isdir(folder):
         return
 
-    file_list = os.listdir(folder)
+    samples = []
+    file_list = sequence_files(folder)
     with open(os.path.join(folder, illumina_details_name), 'w') as f:
         f.write(illumina_details_preamble_single)
 
         for s in file_list:
-            pid = s.replace('.fastq', '')
+            pid = s.replace('.gz', '').replace('.fastq', '')
             f.write("%s,%s,%s\n" % (pid, pid, illumina_details_postfix))
-            os.rename(os.path.join(folder, s), 
-                      os.path.join(folder, pid + '_.fastq'))
+            samples.append(sample_record(pid, [s]))
 
-    return True
+    return samples
 
 def illumina_paired(folder):
     """
@@ -95,26 +118,23 @@ def illumina_paired(folder):
     if not os.path.isdir(folder):
         return
 
-    file_list = os.listdir(folder)
+    samples = []
+    file_list = sequence_files(folder)
     with open(os.path.join(folder, illumina_details_name), 'w') as f:
         f.write(illumina_details_preamble_paired)
         for s in file_list:
-            pid = s.replace('.fastq', '')
+            pid = s.replace('.gz', '').replace('.fastq', '')
             if pid.endswith('_1'):
                 pid = pid.replace('_1', '')
                 # only write out the first file of the pair
                 f.write("%s,%s,%s\n" % (pid, pid, illumina_details_postfix))
-                os.rename(os.path.join(folder, s), 
-                      os.path.join(folder, pid + "_R1_.fastq"))
-            elif pid.endswith('_2'):
-                pid = pid.replace('_2', '')
-                os.rename(os.path.join(folder, s), 
-                      os.path.join(folder, pid + "_R2_.fastq"))
-            else:
-                raise ValueError("Expecting pairs of files ending in _1 "
-                    "and _2")
+                s2 = s.replace("_1.", "_2.")
+                if os.path.isfile(os.path.join(folder, s2)):
+                    samples.append(sample_record(pid, [s, s2]))
+                else:
+                    raise ValueError("Expecting pairs of files ending in _1 and _2")
             
-    return True
+    return samples
 
 ion_details_name = "PatientDetails.csv"
 ion_details_preamble = "Sample ID,File Prefix\n"
@@ -133,15 +153,17 @@ def ion(folder):
     if not os.path.isdir(folder):
         return
 
-    file_list = os.listdir(folder)
+    samples = []
+    file_list = sequence_files(folder)
     with open(os.path.join(folder, ion_details_name), 'w') as f:
         f.write(ion_details_preamble)
 
         for s in file_list:
-            pid = s.replace('.fastq', '')
+            pid = s.replace('.gz', '').replace('.fastq', '')
             f.write("%s,%s\n" % (pid, pid))
-            os.rename(os.path.join(folder, s), 
-                      os.path.join(folder, pid + '_.fastq'))
+            samples.append(sample_record(pid, [s]))
+
+    return samples
 
 
 roche_filename = "IULK3W101.fastq"
@@ -150,7 +172,7 @@ roche_details_preamble = "midname,patientname\n"
 
 roche_prefix_characters = "tcag"
 
-def read_generator(folder, file_list, mid_file):
+def read_multiplexer(folder, file_list, mid_file):
     """
     Build combined reads with MIDs.
 
@@ -162,7 +184,8 @@ def read_generator(folder, file_list, mid_file):
     Returns:
         True on completion.
     """
-
+    sequences = []
+    samples = []
     
     with open(os.path.join(folder, roche_details_name), 'w') as details, \
         open(mid_file, 'r') as mid_handle:
@@ -175,6 +198,7 @@ def read_generator(folder, file_list, mid_file):
             prefix_qual = [40] * 14
             pid = seq_file.replace('.fastq', '')
             details.write("%s,%s\n" % (mid[0], pid))
+            samples.append(mid_record(pid, mid[0]))
             for s in in_seqs:
                 new_record = SeqRecord.SeqRecord(prefix_string + s.seq, 
                     id=s.id, 
@@ -182,8 +206,10 @@ def read_generator(folder, file_list, mid_file):
                     description=s.description)
                 new_record.letter_annotations["phred_quality"]=\
                     prefix_qual + s.letter_annotations["phred_quality"]
-                yield new_record
+                sequences.append(new_record)
             os.unlink(os.path.join(folder, seq_file))
+
+    return sequences, samples
 
 def roche(folder, mid_file):
     """
@@ -201,11 +227,13 @@ def roche(folder, mid_file):
         return
 
     file_list = os.listdir(folder)
+    sequences, samples = read_multiplexer(folder, file_list, mid_file)
     SeqIO.write(
-        read_generator(folder, file_list, mid_file), 
+        sequences, 
         os.path.join(folder, roche_filename), 
         "fastq"
     )
+    return samples
 
 
 
