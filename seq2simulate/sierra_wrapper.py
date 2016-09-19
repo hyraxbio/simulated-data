@@ -143,8 +143,7 @@ def get_drms(sequence):
             if gene.text == 'RT' and mut_string.text in combination_mutations:
                 add = True
             elif mut_string is not None and gene is not None \
-              and gene.text in mutation_dict \
-              and mutation.find('atypical') is None:
+              and gene.text in mutation_dict:
                 for drug_score in root.iter('drugScore'):
                     for partial_score in drug_score.iter('partialScore'):
                         mut = partial_score.find('mutation')
