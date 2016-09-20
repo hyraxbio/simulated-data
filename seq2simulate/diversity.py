@@ -75,12 +75,6 @@ def simulate(sequence, working_dir):
             # evolveagene OOMs aggressively, which is a pain
             tries = 10
             while not os.path.isfile(evolve_file) and tries > 0:
-                # keep the log to find out why it failed
-                shutil.move(
-                    os.path.join(working_dir, "evolveagene.txt"),
-                    os.path.join("/tmp", 
-                        "%sevolveagene.txt" % seq.id)
-                )
                 # doze a bit so the threads get out of sync
                 time.sleep(random.randint(1, 5))
                 evolve_file = evolveagene.run(

@@ -5,7 +5,6 @@ from Bio import SeqIO
 from subprocess import call
 
 fasta_output_filename = 'evolveagene_raw'
-script_output_filename = 'evolveagene.txt'
 evolveagene_extension = '_Unaligned.FASTA'
 
 CONSTANT, PURIFYING, POSITIVE, BOTH = range(4)
@@ -62,13 +61,7 @@ def run(
         '-ss', selection_types[selection_type],
         ]
 
-    script_out = str(uuid.uuid4()) + script_output_filename
-    with open(
-            os.path.join(working_dir, script_output_filename), 'a'
-        ) as script_handle:
-
-        call(" ".join(arg_list), stdout=script_handle, stderr=script_handle,
-            shell=True)
+    call(" ".join(arg_list), shell=True)
 
     print 'evolved.'
 
