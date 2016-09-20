@@ -297,6 +297,15 @@ def run_prevalence_thread(manifest_queue, platform, paired_end,
     if produce_prevalence is not None:
         prevalences = [produce_prevalence]
 
+    prevalences_to_remove = [p for p in prevalences \
+                             if p < platforms[platform].prevalence_error]
+
+    if len(prevalences_to_remove) > 0:
+        print "Removing prevalences ", prevalences_to_remove, \
+              "as they are lower than the error rate for the selected machine"
+
+        prevalences = [p for p in prevalences if p not in prevalences_to_remove]
+
     for required_prevalence in prevalences:
 
         hashed_filename = prevalence.produce_prevalence(
@@ -371,7 +380,7 @@ def run_prevalence(out_dir, remove_rt, working_dir, produce_prevalence):
             test['samples'] = []
             while not manifest_queue.empty():
                 s = manifest_queue.get()
-                test['samples'].append(s.encode())
+                test['samples'].append(s.encode(platform))
                 csv_handle.write(s.dump_csv())
             json_handle.write(json.dumps(test, indent=2))
                 

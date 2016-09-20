@@ -791,10 +791,7 @@ def produce_prevalence(
         * platform.coverage
     )
 
-    if not os.path.exists(os.path.join(out_dir, str(prevalence))):
-        os.makedirs(os.path.join(out_dir, str(prevalence)))
-
-    final_filename = os.path.join(out_dir, str(prevalence), str(uuid.uuid4()))
+    final_filename = os.path.join(out_dir, str(uuid.uuid4()))
     final_output_filename = final_filename
     if paired_end:
         final_filename = (final_filename + "_1.fastq", final_filename + "_2.fastq")
@@ -826,8 +823,7 @@ def produce_prevalence(
         randomize_names_paired(final_filename[0], final_filename[1],
             working_dir)
     else:
-        #if you need to for prevalence debugging, you can tag sequences 
-        #like this:
+        # comment out sequence tags to "run blind":
         tag_names(final_filename, "susceptible", working_dir)
         tag_names(final_resistant_filename, "resistant", working_dir)
         append_files(final_filename, final_resistant_filename)
