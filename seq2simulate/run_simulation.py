@@ -44,7 +44,7 @@ platforms = {
     'pacbio-clr': art.pacbio_clr
 }
 
-DEFAULT_PREVALENCES = [0.005, 0.01, 0.02, 0.05, 0.10, 
+DEFAULT_PREVALENCES = [0.005, 0.01, 0.02, 0.04, 0.06, 0.10, 
                         0.15, 0.20, 0.30, 0.50, 1]
 
 MINIMUM_FOR_SHUFFLE = 4
@@ -297,12 +297,14 @@ def run_prevalence_thread(manifest_queue, platform, paired_end,
     if produce_prevalence is not None:
         prevalences = [produce_prevalence]
 
+    # remove any prevalences that fall within error bars.
     prevalences_to_remove = [p for p in prevalences \
-                             if p < platforms[platform].prevalence_error]
+                             if prevalence.range_unusable(platforms[platform], p)]
 
     if len(prevalences_to_remove) > 0:
         print "Removing prevalences ", prevalences_to_remove, \
-              "as they are lower than the error rate for the selected machine"
+              "as they are ambiguous at the given error rate. " \
+              "Please rerun at a different prevalence."
 
         prevalences = [p for p in prevalences if p not in prevalences_to_remove]
 
@@ -380,7 +382,7 @@ def run_prevalence(out_dir, remove_rt, working_dir, produce_prevalence):
             test['samples'] = []
             while not manifest_queue.empty():
                 s = manifest_queue.get()
-                test['samples'].append(s.encode(platform))
+                test['samples'].append(s.encode(platforms[platform]))
                 csv_handle.write(s.dump_csv())
             json_handle.write(json.dumps(test, indent=2))
                 
