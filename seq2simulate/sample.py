@@ -150,7 +150,7 @@ class Sample:
                 self.sequence.remove_rt \
                 and drug in low_coverage_drugs \
                 and not (
-                	final_calls[drug] != 'S' and drug in call_if_resistant
+                    final_calls[drug] != 'S' and drug in call_if_resistant
                 )
             ):
                 final_calls[drug] = 'LC'
@@ -158,13 +158,32 @@ class Sample:
         return final_calls
 
 
-    def encode(self):
+    def make_susceptible(self, call):
+        """
+        Convert a call to susceptible, unless it's low coverage
+        Args:
+            call: the call to convert
+        Returns:
+            The converted call.
+        """
+        if call != 'LC':
+            return 'S'
+        return 'LC'
+
+
+    def encode(self, platform):
         """
         Encode a sample as a dictionary that can be easily JSON-serialized.
+        Args:
+            platform: the platform for which to set the prevalence range.
 
         Returns:
             A dictionary.
         """
+
+        if prevalence.range_unusable(platform, self.prevalence):
+            raise ValueError("Can't encode this sample for given platform - prevalence ambiguous.")
+
         mutations = [ 
                 {'name': "[pol] " + str(drm),
                 'prevalence': self.required_prevalence(drm),
@@ -174,20 +193,44 @@ class Sample:
         calls = self.encode_calls(sierra_wrapper.get_calls(
             self.sequence.resistant))
 
+        # If the DRM prevalence is low enough that we can test for 
+        # "susceptibility"
+        if prevalence.range_susceptible(platform, self.prevalence):
+            calls = {k : make_susceptible(v) for k, v in calls.iteritems(0)}
+
+            
+            prevalence_range = [
+                platform.prevalence_error, 
+                100
+            ]
+        # If the DRM prevalence is high enough that we can test for
+        # true resistance
+        else:
+            # The resistant prevalence range runs from the platform error rate to
+            # true prevalence - max(platform error, lowest error bar)
+            prevalence_range = [
+                platform.prevalence_error,
+                self.prevalence - max(
+                    platform.prevalence_error,
+                    max([m['error_bars'][0] for m in mutations]
+                ))
+            ]
+
         notes = {"simulated_from" : self.sequence.resistant.id}
         notes["errors"] = []
         if self.sequence.remove_rt:
-        	notes["errors"].append("RT removed")
+            notes["errors"].append("RT removed")
         if self.sequence.pcr_error:
-        	notes["errors"].append("PCR error")
+            notes["errors"].append("PCR error")
         if self.sequence.human_error:
-        	notes["errors"].append("Human DNA added")
+            notes["errors"].append("Human DNA added")
         if self.sequence.env_error:
-        	notes["errors"].append("ENV DNA added")
+            notes["errors"].append("ENV DNA added")
 
         return {
                 'name': self.name,
                 'mutations': mutations, 
                 'calls': calls,
-                'notes': notes
+                'notes': notes,
+                'prevalence_range': prevalence_range
                 }
