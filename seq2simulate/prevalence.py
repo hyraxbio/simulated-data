@@ -840,7 +840,10 @@ def produce_prevalence(
     final_filename = os.path.join(out_dir, str(uuid.uuid4()))
     final_output_filename = final_filename
     if paired_end:
-        final_filename = (final_filename + "_1.fastq", final_filename + "_2.fastq")
+        final_filename = (
+            final_filename + "_1.fastq", 
+            final_filename + "_2.fastq"
+        )
     else:
         final_filename += ".fastq"
 
