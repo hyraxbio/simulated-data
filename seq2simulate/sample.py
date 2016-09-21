@@ -206,12 +206,14 @@ class Sample:
         # If the DRM prevalence is high enough that we can test for
         # true resistance
         else:
-            # The prevalence range runs from the platform error rate to
-            # true prevalence - platform error - lowest error bar
+            # The resistant prevalence range runs from the platform error rate to
+            # true prevalence - max(platform error, lowest error bar)
             prevalence_range = [
                 platform.prevalence_error,
-                self.prevalence - platform.prevalence_error \
-                    - max([m['error_bars'][0] for m in mutations])
+                self.prevalence - max(
+                    platform.prevalence_error,
+                    max([m['error_bars'][0] for m in mutations]
+                ))
             ]
 
         notes = {"simulated_from" : self.sequence.resistant.id}
