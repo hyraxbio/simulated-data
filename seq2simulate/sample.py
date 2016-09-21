@@ -190,15 +190,12 @@ class Sample:
                 'error_bars': self.acceptable_error(drm)} \
                 for drm in self.sequence.drms ]
 
-        calls = self.encode_calls(sierra_wrapper.get_calls(
-            self.sequence.resistant))
-
         # If the DRM prevalence is low enough that we can test for 
         # "susceptibility"
         if prevalence.range_susceptible(platform, self.prevalence):
-            calls = {k : make_susceptible(v) for k, v in calls.iteritems(0)}
+            calls = self.encode_calls(sierra_wrapper.get_calls(
+                self.sequence.susceptible))
 
-            
             prevalence_range = [
                 platform.prevalence_error, 
                 100
@@ -206,6 +203,9 @@ class Sample:
         # If the DRM prevalence is high enough that we can test for
         # true resistance
         else:
+            calls = self.encode_calls(sierra_wrapper.get_calls(
+            self.sequence.resistant))
+            
             # The resistant prevalence range runs from the platform error rate to
             # true prevalence - max(platform error, lowest error bar)
             prevalence_range = [
