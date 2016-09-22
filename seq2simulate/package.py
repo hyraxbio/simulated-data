@@ -226,7 +226,7 @@ def roche(folder, mid_file):
     if not os.path.isdir(folder):
         return
 
-    file_list = os.listdir(folder)
+    file_list = glob.glob(os.path.join(folder, "*.fastq"))
     sequences, samples = read_multiplexer(folder, file_list, mid_file)
     SeqIO.write(
         sequences, 

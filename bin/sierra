@@ -7,8 +7,7 @@ from seq2simulate import sierra_wrapper as sierra
 
 @click.command()
 
-@click.option(
-    '--sequence-file', 
+@click.argument('sequence-file'
     help='Path to a file containing sequences to run.', 
     type=click.Path(exists=True, readable=True, resolve_path=True)
 )
