@@ -39,10 +39,9 @@ def get_working_dir():
 )
 
 @click.option(
-    '--settings/--no-settings', default=False
+    '--print-settings', is_flag=True
 )
-
-def run(folder, platform, mid_file, settings):
+def run(folder, platform, mid_file, print_settings):
     """
     Parse command line arguments and start the packager.
     """
@@ -78,7 +77,7 @@ def run(folder, platform, mid_file, settings):
     else:
         raise ValueError('Invalid platform ' + platform + '.')
 
-    if settings:
+    if print_settings:
         seq2simulate.settings.write_settings(folder, settings, samples)
 
 if __name__ == '__main__':
