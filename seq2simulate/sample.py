@@ -198,7 +198,7 @@ class Sample:
 
             prevalence_range = [
                 platform.prevalence_error, 
-                100
+                1
             ]
         # If the DRM prevalence is high enough that we can test for
         # true resistance
