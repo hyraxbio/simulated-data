@@ -74,7 +74,12 @@ setup(
     author_email='imogen@hyraxbio.co.za',
     version='1.3.6',
     packages=['seq2simulate'],
-    scripts=['bin/simulate', 'bin/package-simulation', 'bin/sierra'],
+    scripts=[
+        'bin/simulate', 
+        'bin/package-simulation', 
+        'bin/sierra',
+        'bin/merge-samples'
+    ],
     package_data={'seq2simulate': [
         'all_drms.tsv',
         'contamination/*',
