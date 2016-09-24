@@ -196,7 +196,7 @@ def read_multiplexer(folder, file_list, mid_file):
             in_seqs = SeqIO.parse(os.path.join(folder, seq_file), "fastq")
             prefix_string = roche_prefix_characters + mid[1]
             prefix_qual = [40] * 14
-            pid = seq_file.replace('.fastq', '')
+            pid = os.path.basename(seq_file.replace('.fastq', ''))
             details.write("%s,%s\n" % (mid[0], pid))
             samples.append(mid_record(pid, mid[0]))
             for s in in_seqs:
