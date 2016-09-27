@@ -47,7 +47,7 @@ platforms = {
 DEFAULT_PREVALENCES = [0.005, 0.01, 0.02, 0.04, 0.06, 0.10, 
                         0.15, 0.20, 0.30, 0.50, 1]
 
-MINIMUM_FOR_SHUFFLE = 4
+MINIMUM_FOR_SHUFFLE = 3
 
 # Multiprocessing in Python 2 has buggy error reporting.  This
 # gives us a stack trace
@@ -138,7 +138,8 @@ def run_diversity(
             )
         print "Shuffling and randomly assigning error types."
 
-        sequencing_error.shuffle_and_assign_error_types(sequences)
+        sequencing_error.shuffle_and_assign_error_types(sequences, 
+                                                        pcr_error=False)
 
     
     threads = []

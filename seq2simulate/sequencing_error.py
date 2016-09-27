@@ -392,7 +392,7 @@ def simulate(sequence, sequence_file, platform, paired_end, working_dir):
     return out_fq, out_sam
 
 
-def shuffle_and_assign_error_types(sequences):
+def shuffle_and_assign_error_types(sequences, pcr_error=True):
     """
     Shuffle sequences, copy them, and assign certain common sequencing errors 
     to the shuffled sequences 0-6.  If less than 3 sequences are passed, no 
@@ -403,15 +403,16 @@ def shuffle_and_assign_error_types(sequences):
     Args:
         sequences: the list of sequences to shuffle.    
     """
-	
+    
     random.shuffle(sequences)
 
-    if len(sequences) >= 3:
-	   sequences[0].pcr_error = True
-	   sequences[1].env_error = True
-	   sequences[2].human_error = True
-
-    if len(sequences) >= 6:
-    	sequences[3].pcr_error = True
-    	sequences[4].env_error = True
-    	sequences[5].human_error = True
+    if len(sequences) >= 3 and len(sequences) < 6:
+        if pcr_error:
+            sequences[0].pcr_error = True
+        sequences[1].env_error = True
+        sequences[2].human_error = True
+    elif len(sequences) >= 6:
+        if pcr_error:
+            sequences[3].pcr_error = True
+        sequences[4].env_error = True
+        sequences[5].human_error = True
