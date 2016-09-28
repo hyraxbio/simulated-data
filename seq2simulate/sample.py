@@ -21,7 +21,7 @@ low_coverage_drugs = ['ABC', 'DDI', 'FTC', '3TC', 'D4T',
 call_if_resistant = ['TDF', 'DDI']
 
 
-def header(platform):
+def header(platform, paired_end=False):
     """
     Return the manifest header in sigma format.
     Args:
@@ -31,6 +31,7 @@ def header(platform):
     result['platform'] = {
         'name': art.platform_names[platform],
         'coverage_depth': platform.coverage,
+        'paired_end': paired_end,
         'error_bars': [platform.prevalence_error, 
                              platform.prevalence_error]
     }

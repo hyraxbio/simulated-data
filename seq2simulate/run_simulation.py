@@ -379,7 +379,8 @@ def run_prevalence(out_dir, remove_rt, working_dir, produce_prevalence):
             open(os.path.join(out_dir, 
             final_json_filename), 'w') as json_handle:
             csv_handle.write(','.join(csv_header_rows) + '\n')
-            test = sample.header(platforms[error_data['platform']])
+            test = sample.header(platforms[platform],
+                paired_end)
             test['samples'] = []
             while not manifest_queue.empty():
                 s = manifest_queue.get()
