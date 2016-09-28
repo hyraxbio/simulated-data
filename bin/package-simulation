@@ -79,6 +79,8 @@ def run(folder, platform, mid_file, print_settings):
 
     if print_settings:
         seq2simulate.settings.write_settings(folder, settings, samples)
+    elif platform == 'roche':
+        seq2simulate.settings.write_settings(folder, {}, samples)
 
 if __name__ == '__main__':
     run(auto_envvar_prefix='SIMULATE')
