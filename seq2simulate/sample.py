@@ -3,6 +3,7 @@ import json
 import art
 import drm
 import hiv_drms
+import platform as plat
 import prevalence
 import sierra_wrapper
 
@@ -12,7 +13,7 @@ resistance_scores = [(60, 'R'), (15, 'I')]
 # namely that if there's any M184M in the mix, the call goes up to
 # resistant.  This only happens in NGS data, so Sierra can't capture
 # it and we must treat the case manually here.
-fixed_calls = { drm.Drm('M184V', drm.RT) : {'D4T': [50,'R'], 'AZT': [50,'R']}}
+fixed_calls_below_100_prevalence = { drm.Drm('M184V', drm.RT) : {'D4T': [50,'R'], 'AZT': [50,'R']}}
 
 # If we remove everything in RT barring K65, we should get low coverage
 # calls for all NRTIs and NNRTIs unless we see K65R
@@ -29,7 +30,7 @@ def header(platform, paired_end=False):
     """
     result = {}
     result['platform'] = {
-        'name': art.platform_names[platform],
+        'name': plat.platform_names[platform],
         'coverage_depth': platform.coverage,
         'paired_end': paired_end,
         'error_bars': [platform.prevalence_error, 
@@ -103,20 +104,39 @@ class Sample:
         else:
             return self.prevalence
 
-    def acceptable_error(self, drm):
+    def acceptable_error(self, drm, platform):
         """
         Returns the error bars for a particular mutation.
         Args:
             drm: The drug resistance mutation in question.
+            platform: the sequencing platform of interest
         Returns:
             A 2 element list, with the lower and upper error bounds
             for the mutation.  Currently this is always zero (and thus superseded
             by the platform error bars) unless the mutation is an indel.
         """
+
         # insertion mutations can be up to relative 10% below 
         # their prevalence.
-        if (drm.mutation == 'i'):
+        if drm.mutation == 'i':
             return [0.1 * float(self.required_prevalence(drm)), 0]
+        # this particular linkage is impossible to call as accurately
+        # as many others.
+        elif str(drm) == "D222N" and ("T224i" in \
+            [str(s) for s in self.sequence.drms]):
+            return [0.05 * float(self.required_prevalence(drm)), 0]
+        # skewed quality calls in homopolymers for ion torrent and roche
+        # make these hard to call when the susceptible/resistant ratio
+        # approaches 50/50
+        elif self.required_prevalence(drm) >= 0.25 and \
+             self.required_prevalence(drm) <= 0.75 and \
+             (platform == plat.ion or \
+             platform == plat.roche):
+            return [
+                platform.prevalence_error * 1.5,
+                platform.prevalence_error * 1.5
+            ]
+
         else:
             return [0, 0]
 
@@ -132,9 +152,13 @@ class Sample:
         final_calls = {}
         for drug, score in raw_calls.iteritems():
             found = False
-            for drm, drugs_affected in fixed_calls.iteritems():
-                if drm in self.sequence.drms and drug in drugs_affected.keys() \
-                and score >= drugs_affected[drug][0]:
+
+            # some calls need to be artificially doctored at mixed prevalence
+            for drm, drugs_affected in fixed_calls_below_100_prevalence.iteritems():
+                if drm in self.sequence.drms and \
+                   self.required_prevalence(drm) < 1.0 and \
+                   drug in drugs_affected.keys() and \
+                   score >= drugs_affected[drug][0]:
                     final_calls[drug] = drugs_affected[drug][1]
                     found = True
             if not found:
@@ -188,7 +212,7 @@ class Sample:
         mutations = [ 
                 {'name': "[pol] " + str(drm),
                 'prevalence': self.required_prevalence(drm),
-                'error_bars': self.acceptable_error(drm)} \
+                'error_bars': self.acceptable_error(drm, platform)} \
                 for drm in self.sequence.drms ]
 
         # If the DRM prevalence is low enough that we can test for 
