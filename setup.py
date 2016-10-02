@@ -72,7 +72,7 @@ setup(
     description='Simulated data generator for HIV drug resistance testing',
     author='Imogen Wright',
     author_email='imogen@hyraxbio.co.za',
-    version='1.4.0',
+    version='1.4.1',
     packages=['seq2simulate'],
     scripts=[
         'bin/simulate', 
@@ -99,27 +99,24 @@ setup(
         'install': CheckPresenceOfExecutables
     },
     install_requires=[
-        'appdirs == 1.3.0',
+        'appdirs == 1.4.0',
         'BioPython == 1.65',
-        'click == 3.3',
+        'click == 5.1',
         'pysam == 0.8.2.1',
-        'numpy == 1.11.2rc1',
+        'numpy == 1.9.2',
         'soappy == 0.12.22',
         'multiprocessing == 2.6.2.1',
-        'pytest==2.9.2'
+        'wstools==0.4.3'
     ],
     setup_requires=[
-        'appdirs == 1.3.0',
+        'appdirs == 1.4.0',
         'BioPython == 1.65',
-        'click == 3.3',
+        'click == 5.1',
         'pysam == 0.8.2.1',
         'numpy == 1.11.2rc1',
         'soappy == 0.12.22',
         'multiprocessing == 2.6.2.1',
-        'pytest==2.9.2'
-    ],
-    test_requires=[
-        'pytest==2.9.2'
+        'wstools==0.4.3'
     ]
 )
 
