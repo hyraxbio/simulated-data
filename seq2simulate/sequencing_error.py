@@ -11,7 +11,7 @@ import pysam
 import art
 
 import custom_generators
-import platform
+import platform as plat
 import seq2simulate
 
 # values for ion torrent and miseq taken from
@@ -328,7 +328,7 @@ def simulate(sequence, sequence_file, platform, paired_end, working_dir):
         coverage = platform.coverage/len(records)
 
         coverage_multiplier = 4
-        if platform == art.roche:
+        if platform == plat.roche:
             coverage_multiplier = 32
 
         print "Building", coverage_multiplier, "times coverage."

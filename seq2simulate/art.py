@@ -5,26 +5,10 @@ import uuid
 
 import Bio
 
+import platform as plat
 from platform import Platform
 from maf2sam import maf2sam
 import seq2simulate
-
-package_dir = seq2simulate.__path__[0]
-roche_profile_dir = os.path.join(package_dir, 'profiles/roche')
-ion_profile_dir = os.path.join(package_dir, 'profiles/ion')
-pacbio_ccs_profile = os.path.join(package_dir, 'profiles/model_qc_ccs')
-pacbio_clr_profile = os.path.join(package_dir, 'profiles/model_qc_clr')
-
-illumina = Platform(50000, 250, 0.01)
-roche = Platform(2000, 320, 0.03, profile=roche_profile_dir)
-ion = Platform(10000, 320, 0.03, profile=ion_profile_dir)
-pacbio_ccs = Platform(10000, 250, 0.02, profile=pacbio_ccs_profile)
-pacbio_clr = Platform(10000, 250, 0.10, profile=pacbio_clr_profile)
-
-platform_names = { illumina: 'illumina', roche: 'roche',
-                   ion: 'ion', pacbio_ccs: 'pacbio_ccs', 
-                   pacbio_clr: 'pacbio_clr'
-}
 
 def sequence_length(sequence_file):
     """ Open a file and return the length of the first sequence.
@@ -51,7 +35,7 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
     """
     out_file = os.path.join(working_dir, str(uuid.uuid4()))
 
-    if platform == illumina:
+    if platform == plat.illumina:
         args = [
             'art_illumina', 
             '-sam',
@@ -70,7 +54,7 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
                 '-s', '50'
             ])
 
-    elif platform == pacbio_ccs:
+    elif platform == plat.pacbio_ccs:
         args = [
             'pbsim',
             '--data-type',
@@ -83,7 +67,7 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
             str(coverage),
             sequence_file,
         ]
-    elif platform == pacbio_clr:
+    elif platform == plat.pacbio_clr:
         args = [
             'pbsim',
             '--data-type',
@@ -111,7 +95,7 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
     subprocess.check_call(args, stdout=devnull, stderr=devnull)
     devnull.close()
 
-    if platform == pacbio_ccs or platform == pacbio_clr:
+    if platform == plat.pacbio_ccs or platform == plat.pacbio_clr:
         shutil.move(out_file + '_0001.fastq', out_file + '.fq')
         shutil.move(out_file + '_0001.ref', out_file + '.ref')
         shutil.move(out_file + '_0001.maf', out_file + '.maf')
@@ -119,7 +103,7 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
         os.unlink(out_file + '.maf')
         os.unlink(out_file + '.ref')
 
-    if platform == roche or platform == ion:
+    if platform == plat.roche or platform == plat.ion:
         os.unlink(out_file + '.stat')
 
     if paired_end:

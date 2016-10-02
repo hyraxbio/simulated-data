@@ -12,8 +12,8 @@ import random
 import time
 import traceback
 
-import art
 import diversity
+import platform as plat
 import prevalence
 import sample
 import sequencing_error
@@ -35,14 +35,6 @@ csv_header_rows = [
     'ENV_DNA',
     'RT_Removed'
 ]
-
-platforms = {
-    'roche': art.roche,
-    'illumina': art.illumina,
-    'ion': art.ion,
-    'pacbio-ccs': art.pacbio_ccs,
-    'pacbio-clr': art.pacbio_clr
-}
 
 DEFAULT_PREVALENCES = [0.005, 0.01, 0.02, 0.04, 0.06, 0.10, 
                         0.15, 0.20, 0.30, 0.50, 1]
@@ -212,12 +204,12 @@ def run_error_thread(error_queue, result, platform, working_dir,
     error_result['susceptible_fq'], error_result['susceptible_sam'] =\
         sequencing_error.simulate(
             result['sequence'], result['susceptible'], 
-            platforms[platform], paired_end, working_dir
+            plat.platforms[platform], paired_end, working_dir
     )
     error_result['resistant_fq'], error_result['resistant_sam'] =\
         sequencing_error.simulate(
             result['sequence'], result['resistant'], 
-            platforms[platform], paired_end, working_dir
+            plat.platforms[platform], paired_end, working_dir
     )
 
     error_queue.put(error_result)
@@ -300,7 +292,7 @@ def run_prevalence_thread(manifest_queue, platform, paired_end,
 
     # remove any prevalences that fall within error bars.
     prevalences_to_remove = [p for p in prevalences \
-                             if prevalence.range_unusable(platforms[platform], p)]
+                             if prevalence.range_unusable(plat.platforms[platform], p)]
 
     if len(prevalences_to_remove) > 0:
         print "Removing prevalences ", prevalences_to_remove, \
@@ -313,7 +305,7 @@ def run_prevalence_thread(manifest_queue, platform, paired_end,
 
         hashed_filename = prevalence.produce_prevalence(
             required_prevalence,
-            platforms[platform],
+            plat.platforms[platform],
             paired_end,
             result['susceptible_fq'], result['susceptible_sam'],
             result['resistant_fq'], result['resistant_sam'],
@@ -379,12 +371,12 @@ def run_prevalence(out_dir, remove_rt, working_dir, produce_prevalence):
             open(os.path.join(out_dir, 
             final_json_filename), 'w') as json_handle:
             csv_handle.write(','.join(csv_header_rows) + '\n')
-            test = sample.header(platforms[platform],
+            test = sample.header(plat.platforms[platform],
                 paired_end)
             test['samples'] = []
             while not manifest_queue.empty():
                 s = manifest_queue.get()
-                test['samples'].append(s.encode(platforms[platform]))
+                test['samples'].append(s.encode(plat.platforms[platform]))
                 csv_handle.write(s.dump_csv())
             json_handle.write(json.dumps(test, indent=2))
                 

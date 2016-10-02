@@ -27,8 +27,6 @@ rt_no_coverage_start = ((89 + 155) * 3 - 3)
 # end at RT 349
 rt_no_coverage_end = ((349 + 155) * 3)
 
-
-
 def range_resistant(platform, required_prevalence):
     """
     Considering the platform error rate, should we try to test this as 
@@ -580,6 +578,7 @@ def blockers(fq_filename, sam_filename, drm_dict,
             print "Fulfillment of", unfulfilled_drm, "is blocked by", \
                 blocking_drm, \
                 "- correcting a difference of", prevalence_diff
+            print drm_dict
 
             handles_to_close, _, temp_generator = generator(fq_filename, 
                 sam_filename, drm_dict.keys(), reads_per_drm, remove_rt,
