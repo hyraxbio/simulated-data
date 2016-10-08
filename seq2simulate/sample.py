@@ -33,6 +33,7 @@ def header(platform, paired_end=False):
     error = platform.prevalence_error
 
     # side effect of simulated data's read selection strategy
+    # TODO: make this irrelevant
     if paired_end:
         error *= 2
 
@@ -40,8 +41,7 @@ def header(platform, paired_end=False):
         'name': plat.platform_names[platform],
         'coverage_depth': platform.coverage,
         'paired_end': paired_end,
-        'error_bars': [platform.prevalence_error, 
-                             platform.prevalence_error]
+        'error_bars': [error, error]
     }
     result['pathogen'] = {
         'name': 'HIV',
@@ -253,6 +253,7 @@ class Sample:
 
         # we must allow a little more wiggle for T224i-containing samples
         # because D222S appears quite frequently at low prevalence.
+        # TODO: generalize this somehow
         if "T224i" in [str(s) for s in self.sequence.drms]:
             error *= 1.25
 
