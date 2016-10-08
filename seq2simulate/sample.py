@@ -254,7 +254,7 @@ class Sample:
         # we must allow a little more wiggle for T224i-containing samples
         # because D222S appears quite frequently at low prevalence.
         if "T224i" in [str(s) for s in self.sequence.drms]:
-            error *= 1.5
+            error *= 1.25
 
 
         notes = {"simulated_from" : self.sequence.resistant.id}
@@ -270,7 +270,7 @@ class Sample:
 
         return {
                 'name': self.name,
-                'error': error,
+                'error': [error, error],
                 'mutations': mutations, 
                 'calls': calls,
                 'notes': notes,
