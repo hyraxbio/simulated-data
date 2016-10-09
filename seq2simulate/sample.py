@@ -136,8 +136,8 @@ class Sample:
         # skewed quality calls in homopolymers for ion torrent and roche
         # make these hard to call when the susceptible/resistant ratio
         # approaches 50/50
-        elif self.required_prevalence(drm) >= 0.25 and \
-             self.required_prevalence(drm) <= 0.75 and \
+        elif self.required_prevalence(drm) >= 0.20 and \
+             self.required_prevalence(drm) <= 0.80 and \
              (platform == plat.ion or \
              platform == plat.roche):
             return [
