@@ -271,7 +271,7 @@ class Sample:
 
         return {
                 'name': self.name,
-                'error': [error, error],
+                'error_bars': [error, error],
                 'mutations': mutations, 
                 'calls': calls,
                 'notes': notes,
