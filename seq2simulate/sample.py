@@ -133,13 +133,11 @@ class Sample:
         elif str(drm) == "D222N" and ("T224i" in \
             [str(s) for s in self.sequence.drms]):
             return [0.05 * float(self.required_prevalence(drm)), 0]
-        # skewed quality calls in homopolymers for ion torrent and roche
-        # make these hard to call when the susceptible/resistant ratio
+
+        # we're more lenient when the susceptible/resistant ratio
         # approaches 50/50
         elif self.required_prevalence(drm) >= 0.20 and \
-             self.required_prevalence(drm) <= 0.80 and \
-             (platform == plat.ion or \
-             platform == plat.roche):
+             self.required_prevalence(drm) <= 0.80:
             return [
                 platform.prevalence_error * 2,
                 platform.prevalence_error * 2
