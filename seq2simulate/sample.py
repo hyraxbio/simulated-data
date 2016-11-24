@@ -5,7 +5,7 @@ import drm
 import hiv_drms
 import platform as plat
 import prevalence
-import sierra_wrapper
+import sierra_ws as sierra
 
 resistance_scores = [(60, 'R'), (15, 'I')]
 
@@ -224,7 +224,7 @@ class Sample:
         # If the DRM prevalence is low enough that we can test for 
         # "susceptibility"
         if prevalence.range_susceptible(platform, self.prevalence):
-            calls = self.encode_calls(sierra_wrapper.get_calls(
+            calls = self.encode_calls(sierra.get_calls(
                 self.sequence.susceptible))
 
             prevalence_range = [
@@ -234,7 +234,7 @@ class Sample:
         # If the DRM prevalence is high enough that we can test for
         # true resistance
         else:
-            calls = self.encode_calls(sierra_wrapper.get_calls(
+            calls = self.encode_calls(sierra.get_calls(
             self.sequence.resistant))
             
             # The resistant prevalence range runs from the platform error rate to

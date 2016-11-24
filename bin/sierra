@@ -3,12 +3,11 @@
 import click
 
 from Bio import SeqIO
-from seq2simulate import sierra_wrapper as sierra
+from seq2simulate import sierra_ws as sierra
 
 @click.command()
 
-@click.argument('sequence-file'
-    help='Path to a file containing sequences to run.', 
+@click.argument('sequence-file',
     type=click.Path(exists=True, readable=True, resolve_path=True)
 )
 

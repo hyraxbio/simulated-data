@@ -5,7 +5,6 @@ import shutil
 import uuid
 
 import Bio
-import numpy
 import pysam
 import re
 
