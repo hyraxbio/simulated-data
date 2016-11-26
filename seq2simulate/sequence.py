@@ -1,6 +1,6 @@
 import os
 
-import sierra_wrapper as sierra
+import sierra_ws as sierra
 
 class Sequence:
     """A sequence from which to simulate reads."""
