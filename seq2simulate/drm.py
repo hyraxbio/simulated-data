@@ -69,7 +69,6 @@ class Drm:
 
     def locus_str(self):
         return "[" + locus_names[self.locus] + "] " \
-            + self.wildtype \
             + str(self.relative_pos) \
             + self.mutation
 
