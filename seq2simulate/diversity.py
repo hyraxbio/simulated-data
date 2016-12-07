@@ -7,7 +7,7 @@ import time
 import Bio
 
 import evolveagene
-import sierra_ws as sierra
+import sierra_wrapper as sierra
 
 output_filename = 'evolveagene_checked.fasta'
 

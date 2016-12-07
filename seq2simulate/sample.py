@@ -5,7 +5,7 @@ import drm
 import hiv_drms
 import platform as plat
 import prevalence
-import sierra_ws as sierra
+import sierra_wrapper as sierra
 
 resistance_scores = [(60, 'R'), (15, 'I')]
 
@@ -45,7 +45,7 @@ def header(platform, paired_end=False):
     }
     result['pathogen'] = {
         'name': 'HIV',
-        'mutations': ["[pol] " + str(d) for d in hiv_drms.drms]
+        'mutations': [d.locus_str() for d in hiv_drms.drms]
     }
     return result
 
@@ -216,7 +216,7 @@ class Sample:
             raise ValueError("Can't encode this sample for given platform - prevalence ambiguous.")
 
         mutations = [ 
-                {'name': "[pol] " + str(drm),
+                {'name': drm.locus_str(),
                 'prevalence': self.required_prevalence(drm),
                 'error_bars': self.acceptable_error(drm, platform)} \
                 for drm in self.sequence.drms ]
@@ -252,7 +252,7 @@ class Sample:
         # we must allow a little more wiggle for T224i-containing samples
         # because D222S appears quite frequently at low prevalence.
         # TODO: generalize this somehow
-        if "T224i" in [str(s) for s in self.sequence.drms]:
+        if "T69i" in [str(s) for s in self.sequence.drms]:
             error *= 1.25
 
 

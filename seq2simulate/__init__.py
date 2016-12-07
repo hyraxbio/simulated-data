@@ -6,7 +6,7 @@ __all__ = [
     'run_simulation', 
     'sequence',
     'sequencing_error'
-    'sierra_ws'
+    'sierra_wrapper'
 ]
 
 import diversity
