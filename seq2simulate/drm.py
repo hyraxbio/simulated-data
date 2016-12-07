@@ -2,18 +2,18 @@ import re
 from functools import total_ordering
 
 PR, RT, INI = range(3)
-gene_region_names = {
+locus_names = {
     PR: "PR",
     RT: "RT",
     INI: "INI"
 }
-gene_regions = {v: k for k,v in gene_region_names.iteritems()}
+loci = {v: k for k,v in locus_names.iteritems()}
 
 drm_regex = re.compile("([A-Z])([0-9]+)([A-Zid])")
 wildtype_regex = re.compile("([A-Z])([0-9]+)")
-gene_region_start_positions_tuple = [(INI, 715), (RT, 155), (PR, 56)]
-gene_region_start_positions = {
-    d[0]: d[1] for d in gene_region_start_positions_tuple
+locus_start_positions_tuple = [(INI, 715), (RT, 155), (PR, 56)]
+locus_start_positions = {
+    d[0]: d[1] for d in locus_start_positions_tuple
 }
 
 class MalformattedDrmString(Exception):
@@ -23,10 +23,10 @@ class MalformattedDrmString(Exception):
 class Drm:
     """A mutation conferring drug resistance in HIV."""
 
-    def __init__(self, drm_string, gene_region=None):
+    def __init__(self, drm_string, locus=None):
 
-        if gene_region is not None:
-            self.gene_region = gene_region
+        if locus is not None:
+            self.locus = locus
 
         self.insert = False
         self.delete = False
@@ -43,14 +43,14 @@ class Drm:
                 raise MalformattedDrmString("Not a DRM string: " + drm_string)
 
         self.wildtype = drm.group(1)
-        if gene_region is not None:
+        if locus is not None:
             self.relative_pos = int(drm.group(2))
             self.absolute_pos = self.relative_pos \
-                + gene_region_start_positions[self.gene_region]
+                + locus_start_positions[self.locus]
         else:
             self.absolute_pos = int(drm.group(2))
             found = False
-            for region, position in gene_region_start_positions_tuple:
+            for region, position in locus_start_positions_tuple:
                 if self.absolute_pos > position:
                     self.relative_pos = self.absolute_pos - position
                     found = True
@@ -66,6 +66,12 @@ class Drm:
             self.delete = True
         else:
             self.mutation = drm.group(3)
+
+    def locus_str(self):
+        return "[" + locus_names[self.locus] + "] " \
+            + self.wildtype \
+            + str(self.relative_pos) \
+            + self.mutation
 
     def __key(self):
         return (self.wildtype, 

@@ -3,7 +3,7 @@
 import click
 
 from Bio import SeqIO
-from seq2simulate import sierra_ws as sierra
+from seq2simulate import sierra_wrapper as sierra
 
 @click.command()
 
