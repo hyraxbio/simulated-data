@@ -26,7 +26,7 @@ report_version = 2 # a clearer report version with a defined schema
 mutation_dict = {
     'PR' : drm.PR, 
     'RT' : drm.RT,
-    'IN' : drm.INI
+    'IN' : drm.IN
 }
 
 combination_mutations = ['E44A', 'M230I', 'V118I']

@@ -14,7 +14,7 @@ endpoint = 'https://hivdb.stanford.edu/graphql'
 mutation_dict = {
     'PR' : drm.PR, 
     'RT' : drm.RT,
-    'IN' : drm.INI
+    'IN' : drm.IN
 }
 
 def call_sierra(sequence):
