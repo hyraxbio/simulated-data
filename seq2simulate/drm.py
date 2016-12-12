@@ -1,17 +1,17 @@
 import re
 from functools import total_ordering
 
-PR, RT, INI = range(3)
+PR, RT, IN = range(3)
 locus_names = {
     PR: "PR",
     RT: "RT",
-    INI: "INI"
+    IN: "IN"
 }
 loci = {v: k for k,v in locus_names.iteritems()}
 
 drm_regex = re.compile("([A-Z])([0-9]+)([A-Zid])")
 wildtype_regex = re.compile("([A-Z])([0-9]+)")
-locus_start_positions_tuple = [(INI, 715), (RT, 155), (PR, 56)]
+locus_start_positions_tuple = [(IN, 715), (RT, 155), (PR, 56)]
 locus_start_positions = {
     d[0]: d[1] for d in locus_start_positions_tuple
 }
