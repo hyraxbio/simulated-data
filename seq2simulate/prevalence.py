@@ -8,6 +8,7 @@ import Bio
 import pysam
 import re
 
+import art
 import custom_generators
 import drm
 import sequencing_error
@@ -862,6 +863,26 @@ def produce_prevalence(
         sequence.drms, num_resistant, 0, sequence.remove_rt, paired_end
     )
 
+    # add in some junk
+    errors = [
+        (sequence.human_error, sequencing_error.human_file),
+        (sequence.env_error, sequencing_error.env_file)
+    ]
+    
+    for error, error_file in errors:
+        if error:
+            print "Adding contamination."
+            contaminate = random.uniform(0.1, 0.5)
+            error_fq, _ = art.simulate(
+                error_file, platform, int(float(platform.coverage)*contaminate), 
+                paired_end, working_dir
+            )
+            if paired_end:
+                append_files(final_filename[0], error_fq[0])
+                append_files(final_filename[1], error_fq[1])
+            else:
+                append_files(final_filename, error_fq)
+
     if paired_end:
         append_files(final_filename[0], final_resistant_filename[0])
         os.unlink(final_resistant_filename[0])
@@ -871,8 +892,8 @@ def produce_prevalence(
             working_dir)
     else:
         # comment out sequence tags to "run blind":
-        tag_names(final_filename, "susceptible", working_dir)
-        tag_names(final_resistant_filename, "resistant", working_dir)
+        # tag_names(final_filename, "susceptible", working_dir)
+        # tag_names(final_resistant_filename, "resistant", working_dir)
         append_files(final_filename, final_resistant_filename)
         os.unlink(final_resistant_filename)
         randomize_names(final_filename, working_dir)

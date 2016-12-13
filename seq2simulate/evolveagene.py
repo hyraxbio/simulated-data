@@ -52,6 +52,7 @@ def run(
     with open(sequence_file, 'w') as out:
         out.write(str(sequence.seq))
 
+    devnull = open(os.devnull, 'w')
     arg_list = ['EvolveAGene4',
         '-f', '\"%s\"' % sequence_file, 
         '-t', tree_types[tree_type],
@@ -61,7 +62,7 @@ def run(
         '-ss', selection_types[selection_type],
         ]
 
-    call(" ".join(arg_list), shell=True)
+    call(" ".join(arg_list), shell=True, stdout=devnull)
 
     print 'evolved.'
 

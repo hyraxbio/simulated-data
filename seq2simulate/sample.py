@@ -181,7 +181,7 @@ class Sample:
                 self.sequence.remove_rt \
                 and drug in low_coverage_drugs \
                 and not (
-                    final_calls[drug] != 'S' and drug in call_if_resistant
+                    final_calls[drug] == 'R' and drug in call_if_resistant
                 )
             ):
                 final_calls[drug] = 'LC'
