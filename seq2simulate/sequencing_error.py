@@ -346,23 +346,6 @@ def simulate(sequence, sequence_file, platform, paired_end, working_dir):
             fq_filenames.append(fq_file)
             sam_filenames.append(sam_file)
 
-    errors = [
-        (sequence.human_error, human_file),
-        (sequence.env_error, env_file)
-    ]
-    
-    for error, error_file in errors:
-        # simulate some reads from a human chromosome and add them
-        if error:
-            contaminate = random.uniform(0.1, 0.5)
-            simulated_fq, simulated_sam = art.simulate(
-                error_file, platform, int(platform.coverage*contaminate), 
-                paired_end, working_dir
-            )
-            unaligned_sam_file(simulated_sam, working_dir)
-            fq_filenames.append(simulated_fq)
-            sam_filenames.append(simulated_sam)
-
     if paired_end:
         out_fq = (sequence_file + simulated_fq_1_name, 
             sequence_file + simulated_fq_2_name)
