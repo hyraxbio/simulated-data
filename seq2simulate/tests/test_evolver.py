@@ -78,9 +78,26 @@ class TreeTester(unittest.TestCase):
         self.assertEqual(len(tl), 19)
 
     def test_get_list_of_tree_nodes_validation(self):
-        t = evolver.random_tree(10)  
         with self.assertRaises(ValueError):
             evolver.get_list_of_tree_nodes('blah')
+
+    def test_random_tree(self):
+        t5 = evolver.random_tree(5)
+        t10 = evolver.random_tree(10)
+        self.assertIsInstance(t10, evolver.Tree)
+        self.assertIsInstance(t5, evolver.Tree)
+        self.assertEqual(len(evolver.get_list_of_tree_nodes(t5)), 9)
+        self.assertEqual(len(evolver.get_list_of_tree_nodes(t10)), 19)
+        nodes = evolver.get_list_of_tree_nodes(t5)
+        self.assertTrue(all(isinstance(node.length, float) for node in nodes))
+        
+
+    def test_random_tree_validation(self):
+        with self.assertRaises(ValueError):
+            evolver.random_tree('blah')
+        with self.assertRaises(ValueError):
+            evolver.random_tree(10, mean_branch_length='blah')
+
 
 if __name__=='__main__':
     unittest.main()

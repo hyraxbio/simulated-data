@@ -87,13 +87,20 @@ def random_tree(num_taxa, mean_branch_length=0.1):
         mean_branch_length: The average substitution rate of the branches.
             
     """
-    nodes = [Tree() for i in range(num_taxa)]
+    if not isinstance(num_taxa, (int, float)):
+        raise ValueError('num_taxa must be a number')
+    if not isinstance(mean_branch_length, float):
+        raise ValueError('mean_branch_length must be a float')
+    if mean_branch_length < 0.0 or mean_branch_length > 1.0:
+        raise ValueError('mean_branch_length must be in range 0-1')
+
+    nodes = [Tree() for i in range(int(num_taxa))]
     
     while len(get_orphans(nodes)) > 1: 
         orphan_nodes = get_two_random_orphans(nodes)
         new_node = Tree(left=orphan_nodes[0], 
                         right=orphan_nodes[1], 
-                        length=random.uniform(0, 1)
+                        length=random.uniform(0, 2*mean_branch_length)
                     )
         nodes.append(new_node)
 
@@ -157,5 +164,5 @@ def get_list_of_tree_nodes(tree):
     return get_nodes(tree, nodes=nodes)
 
 if __name__=='__main__':
-    t = random_tree(10)
+    pass
     
