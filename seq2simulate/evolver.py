@@ -33,6 +33,12 @@ class Tree(object):
         if right is not None:
             right.parent = self
 
+    def set_value(self, value):
+        self.value = value
+
+    def get_value(self):
+        return self.value
+    
     def __repr__(self):
         format_str = '<Tree {}: val:{} len:{} left:{} right:{} parent:{}>'
         return format_str.format(*(str(i) for i in [self.id, self.value, self.length, 
@@ -87,11 +93,26 @@ def get_two_random_orphans(tree_nodes):
     return orphan_nodes
 
 def preorder_exec(tree, function='__str__', arguments=[]):
+    """
+    Perform a preorder traversal of 'tree', and execute 'function' passing 'arguments'.
+    """
     if tree:
         print(tree.__repr__())
         getattr(tree, function)(*arguments)
         preorder_exec(tree.left, function=function, arguments=arguments)
         preorder_exec(tree.right, function=function, arguments=arguments)
 
+def get_list_of_tree_nodes(tree, nodes=[]):
+    """
+    Perform a preorder traversal of 'tree', and return a list of all nodes.
+    """
+    if tree:
+        nodes.append(tree)
+        get_list_of_tree_nodes(tree.left, nodes=nodes)
+        get_list_of_tree_nodes(tree.right, nodes=nodes)
+
+    return nodes
+
 if __name__=='__main__':
     pass
+    

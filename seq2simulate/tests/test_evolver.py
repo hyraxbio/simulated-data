@@ -33,6 +33,12 @@ class TreeTester(unittest.TestCase):
         nodes[0].parent = nodes[1]
         self.assertEqual(len(evolver.get_orphans(nodes)), 3)
 
-
+    def test_preorder_exec(self):
+        t = evolver.random_tree(10)  
+        tlist = evolver.get_list_of_tree_nodes(t)
+        self.assertTrue(all(i.get_value() is None for i in tlist))
+        evolver.preorder_exec(t, function='set_value', arguments=['test'])
+        self.assertTrue(all(i.get_value() == 'test' for i in tlist))
+ 
 if __name__=='__main__':
     unittest.main()
