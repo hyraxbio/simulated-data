@@ -45,6 +45,18 @@ class Tree(object):
         if right is not None:
             right.parent = self
 
+    @property
+    def length(self):
+        return self._length
+
+    @length.setter
+    def length(self, length):
+        if not isinstance(length, float):
+            raise ValueError('length must be a float')
+        if length < 0.0 or length > 1.0:
+            raise ValueError('length must be in range 0-1')
+        self._length = length
+
     def set_value(self, value):
         self.value = value
 
@@ -52,8 +64,8 @@ class Tree(object):
         return self.value
     
     def __repr__(self):
-        format_str = '<Tree {}: val:{} len:{} left:{} right:{} parent:{}>'
-        return format_str.format(*(str(i) for i in [self.id, self.value, self.length, 
+        format_str = '<Tree {}: len:{} left:{} right:{} parent:{}>'
+        return format_str.format(*(str(i) for i in [self.id, self.length, 
             self._get_id_or_none(self.left),
             self._get_id_or_none(self.right),
             self._get_id_or_none(self.parent),
@@ -79,7 +91,10 @@ def random_tree(num_taxa, mean_branch_length=0.1):
     
     while len(get_orphans(nodes)) > 1: 
         orphan_nodes = get_two_random_orphans(nodes)
-        new_node = Tree(left=orphan_nodes[0], right=orphan_nodes[1])
+        new_node = Tree(left=orphan_nodes[0], 
+                        right=orphan_nodes[1], 
+                        length=random.uniform(0, 1)
+                    )
         nodes.append(new_node)
 
     return get_orphans(nodes)[0]
@@ -142,5 +157,5 @@ def get_list_of_tree_nodes(tree):
     return get_nodes(tree, nodes=nodes)
 
 if __name__=='__main__':
-    pass
+    t = random_tree(10)
     
