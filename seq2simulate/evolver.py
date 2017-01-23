@@ -5,7 +5,12 @@ from types import NoneType
 class Tree(object):
     id = 0
 
-    def __init__(self, value=None, length=0.1, left=None, right=None, parent=None):
+    def __init__(self, 
+        value=None, 
+        length=0.1, 
+        left=None, 
+        right=None, 
+        parent=None):
         
 
         self.id = Tree.id
@@ -113,7 +118,6 @@ def preorder_exec(tree, function='__str__', arguments=[]):
         raise ValueError('nodes must be a list')
 
     if tree:
-        print(tree.__repr__())
         getattr(tree, function)(*arguments)
         preorder_exec(tree.left, function=function, arguments=arguments)
         preorder_exec(tree.right, function=function, arguments=arguments)
