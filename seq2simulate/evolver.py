@@ -1,5 +1,6 @@
 
 import random
+from types import NoneType
 
 class Tree(object):
     id = 0
@@ -96,23 +97,40 @@ def preorder_exec(tree, function='__str__', arguments=[]):
     """
     Perform a preorder traversal of 'tree', and execute 'function' passing 'arguments'.
     """
+    if not isinstance(tree, (Tree, NoneType)):
+        raise ValueError('tree must be of class Tree, or NoneType.')
+
+    if not isinstance(function, (str)):
+        raise ValueError('function must be a str')
+
+    if not isinstance(arguments, (list)):
+        raise ValueError('nodes must be a list')
+
     if tree:
         print(tree.__repr__())
         getattr(tree, function)(*arguments)
         preorder_exec(tree.left, function=function, arguments=arguments)
         preorder_exec(tree.right, function=function, arguments=arguments)
 
-def get_list_of_tree_nodes(tree, nodes=[]):
+def get_list_of_tree_nodes(tree):
     """
     Perform a preorder traversal of 'tree', and return a list of all nodes.
     """
-    if tree:
-        nodes.append(tree)
-        get_list_of_tree_nodes(tree.left, nodes=nodes)
-        get_list_of_tree_nodes(tree.right, nodes=nodes)
+    if not isinstance(tree, (Tree, NoneType)):
+        raise ValueError('tree must be of class Tree, or NoneType.')
 
-    return nodes
+    def get_nodes(tree, nodes=[]):
+
+        if tree:
+            nodes.append(tree)
+            get_nodes(tree.left, nodes=nodes)
+            get_nodes(tree.right, nodes=nodes)
+
+        return nodes
+
+    nodes = []
+    return get_nodes(tree, nodes=nodes)
 
 if __name__=='__main__':
-    pass
+    t = random_tree(10)
     
