@@ -6,6 +6,8 @@ class Tree(object):
     id = 0
 
     def __init__(self, value=None, length=0.1, left=None, right=None, parent=None):
+        
+
         self.id = Tree.id
         Tree.id += 1
         self.value = value
@@ -20,6 +22,8 @@ class Tree(object):
 
     @left.setter
     def left(self, left):
+        if not isinstance(left, (Tree, NoneType)):
+            raise ValueError('left must be of class Tree, or NoneType.')
         self._left = left
         if left is not None:
             left.parent = self
@@ -30,6 +34,8 @@ class Tree(object):
 
     @right.setter
     def right(self, right):
+        if not isinstance(right, (Tree, NoneType)):
+            raise ValueError('right must be of class Tree, or NoneType.')
         self._right = right
         if right is not None:
             right.parent = self
@@ -132,5 +138,5 @@ def get_list_of_tree_nodes(tree):
     return get_nodes(tree, nodes=nodes)
 
 if __name__=='__main__':
-    t = random_tree(10)
+    pass
     

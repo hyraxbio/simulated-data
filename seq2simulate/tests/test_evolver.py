@@ -16,6 +16,23 @@ class TreeTester(unittest.TestCase):
         tree1 = evolver.Tree()
         self.assertEqual(tree1.id, tree0.id + 1)
 
+    def test_tree_validation(self):
+        tree0 = evolver.Tree()
+        tree1 = evolver.Tree()
+        tree0.left = tree1
+        tree0.left = None
+        tree1.left = tree1
+        tree1.left = None
+        with self.assertRaises(ValueError):
+            tree0.left = 'left'
+        with self.assertRaises(ValueError):
+            tree0.left = 5
+        with self.assertRaises(ValueError):
+            tree0.right = 'right'
+        with self.assertRaises(ValueError):
+            tree0.right = 5
+        
+
     def test_get_two_random_orphans(self):
         nodes = [evolver.Tree() for i in range(4)]
         nodes[0].left = nodes[1]
