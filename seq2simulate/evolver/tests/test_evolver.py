@@ -81,6 +81,18 @@ class TreeTester(unittest.TestCase):
         with self.assertRaises(ValueError):
             trees.get_list_of_tree_nodes('blah')
 
+    def test_get_list_of_tree_leaves(self):
+        t = trees.random_tree(10)  
+        tl = trees.get_list_of_tree_leaves(t)
+        self.assertEqual(len(tl), 10)
+        for i in tl:
+            self.assertIsNone(i.left)
+            self.assertIsNone(i.right)
+
+    def test_get_list_of_tree_leaves_validation(self):
+        with self.assertRaises(ValueError):
+            trees.get_list_of_tree_leaves('blah')
+
     def test_random_tree(self):
         t5 = trees.random_tree(5)
         t10 = trees.random_tree(10)

@@ -163,5 +163,25 @@ def get_list_of_tree_nodes(tree):
     nodes = []
     return get_nodes(tree, nodes=nodes)
 
+def get_list_of_tree_leaves(tree):
+    """
+    Perform a preorder traversal of 'tree', and return a list of all terminal nodes.
+    """
+    if not isinstance(tree, (Tree, NoneType)):
+        raise ValueError('tree must be of class Tree, or NoneType.')
+
+    def get_nodes(tree, nodes=[]):
+
+        if tree:
+            if tree.left is None and tree.right is None:
+                nodes.append(tree)
+            get_nodes(tree.left, nodes=nodes)
+            get_nodes(tree.right, nodes=nodes)
+
+        return nodes
+
+    nodes = []
+    return get_nodes(tree, nodes=nodes)
+
 if __name__=='__main__':
     pass
