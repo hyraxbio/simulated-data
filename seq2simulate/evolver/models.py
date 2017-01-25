@@ -107,5 +107,4 @@ def parse_sequence_to_loci(sequence):
     return loci
 
 if __name__=='__main__':
-    s = 'atgatgccagtcgatcgatcgtagcatcgtagctgtagca'
-    l = parse_sequence(s) 
+    pass
