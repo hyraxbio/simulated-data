@@ -56,21 +56,7 @@ class ModelTester(unittest.TestCase):
     def test_parse_sequence_to_loci(self):
         s = 'atgatgccagtcgatcgatcgtagcatcgtagctgtagca'
         l = models.parse_sequence_to_loci(s)
-        for i,seq in enumerate(['atg',
-             'atg',
-             'cca',
-             'gtc',
-             'gat',
-             'cga',
-             'tcg',
-             'tag',
-             'cat',
-             'cgt',
-             'agc',
-             'tgt',
-             'agc',
-             'a--']
-        ):
+        for i,seq in enumerate(['atg', 'atg', 'cca', 'gtc', 'gat', 'cga', 'tcg', 'tag', 'cat', 'cgt', 'agc', 'tgt', 'agc','a--']):
             self.assertEqual(len(l[i].codons), 1)
             self.assertEqual(l[i].codons[0].seq, seq)
 
@@ -80,6 +66,9 @@ class ModelTester(unittest.TestCase):
         l[1].add_codon('ttt')
         l1, s1 = models.parse_loci_to_sequence(l)
         self.assertEqual(l1, [1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
+        self.assertEqual(s1, ['atg', 'atg', 'ttt', 'cca', 'gtc', 'gat', 'cga', 'tcg', 'tag', 'cat', 'cgt', 'agc', 'tgt', 'agc', 'a--'])
+
+
 
 if __name__=='__main__':
     unittest.main()
