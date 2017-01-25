@@ -60,17 +60,22 @@ class Codon(ValidationMixin, object):
         
 class Locus(object):
     """
-    Locus object containing codon(s) for indexing mutations by codon.
+    Locus object containing codon(s) for grouping mutations by a reference codon.
     
     Args:
-        codons: a list of Codon objects or nucleotides
+        codons: a list of Codon objects or nucleotide strings (typically triplets).
     """
 
-    def __init__(self, codons=[]):
+    def __init__(self, codons=[], loc=0):
+        self.loc = loc
         self._codons = []
         for codon in codons:
             self.add_codon(codon)             
    
+    @property 
+    def loc_aa(self):
+        return self.loc+1
+
     @property 
     def codons(self):
         return self._codons
@@ -96,5 +101,11 @@ class Locus(object):
     def __str__(self):
         return '<Locus {}>'.format(' '.join([codon.__str__() for codon in self.codons]))
 
+def parse_sequence_to_loci(sequence):
+    codon_strings = [sequence[i*3:i*3+3] for i in range(1+len(sequence)//3)]
+    loci = [Locus(codons=[i]) for i in codon_strings]
+    return loci
+
 if __name__=='__main__':
-    pass
+    s = 'atgatgccagtcgatcgatcgtagcatcgtagctgtagca'
+    l = parse_sequence(s) 

@@ -31,6 +31,8 @@ class ModelTester(unittest.TestCase):
 
     def test_locus_init(self):
         l = models.Locus()
+        self.assertEqual(l.loc, 0)
+        self.assertEqual(l.loc_aa, 1)
         self.assertEqual(l.__str__(), '<Locus >')
         l = models.Locus(codons=[models.Codon(), 'atg'])
         self.assertEqual(len(l.codons), 2)
@@ -51,6 +53,27 @@ class ModelTester(unittest.TestCase):
         with self.assertRaises(ValueError):
             l = models.Locus(codons=[c, 'abc'])
         
+    def test_parse_sequence_to_loci(self):
+        s = 'atgatgccagtcgatcgatcgtagcatcgtagctgtagca'
+        l = models.parse_sequence_to_loci(s)
+        for i,seq in enumerate(['atg',
+             'atg',
+             'cca',
+             'gtc',
+             'gat',
+             'cga',
+             'tcg',
+             'tag',
+             'cat',
+             'cgt',
+             'agc',
+             'tgt',
+             'agc',
+             'a--']
+        ):
+            self.assertEqual(len(l[i].codons), 1)
+            self.assertEqual(l[i].codons[0].seq, seq)
+
 
 if __name__=='__main__':
     unittest.main()
