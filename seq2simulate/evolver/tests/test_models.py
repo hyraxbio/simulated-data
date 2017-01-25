@@ -77,8 +77,9 @@ class ModelTester(unittest.TestCase):
     def test_parse_loci_to_sequence(self):
         s0 = 'atgatgccagtcgatcgatcgtagcatcgtagctgtagca'
         l = models.parse_sequence_to_loci(s0)
-        s1 = models.parse_loci_to_sequence(l)
-        self.assertEqual(s0+'--', s1)
+        l[1].add_codon('ttt')
+        l1, s1 = models.parse_loci_to_sequence(l)
+        self.assertEqual(l1, [1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
 
 if __name__=='__main__':
     unittest.main()

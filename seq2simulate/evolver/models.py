@@ -101,17 +101,35 @@ class Locus(object):
     def __str__(self):
         return '<Locus {}>'.format(' '.join([codon.__str__() for codon in self.codons]))
 
+    @property
     def sequence(self):
+        """
+        Returns compiled sequence string.
+        """
         return ''.join([codon.seq for codon in self.codons])
-            
+        
+    @property    
+    def location_sequence(self):
+        """
+        Returns codon location string and sequence string.
+        """
+        sequence = [codon.seq for codon in self.codons]
+        return [self.loc_aa]*len(sequence), sequence
 
 def parse_sequence_to_loci(sequence):
     codon_strings = [sequence[i*3:i*3+3] for i in range(1+len(sequence)//3)]
-    loci = [Locus(codons=[i]) for i in codon_strings]
+    loci = [Locus(codons=[j], loc=i) for i,j in enumerate(codon_strings)]
     return loci
 
 def parse_loci_to_sequence(loci):
-    return ''.join([locus.sequence() for locus in loci]) 
+    locations = []
+    sequences = []
+    for locus in loci:
+        location, sequence = locus.location_sequence
+        locations.append(location)
+        sequences.append(sequence)
+    return [j for i in locations for j in i], [j for i in sequences for j in i]
 
 if __name__=='__main__':
     pass
+
