@@ -63,7 +63,7 @@ class Tree(object):
     def get_value(self):
         return self.value
     
-    def __repr__(self):
+    def __str__(self):
         format_str = '<Tree {}: len:{} left:{} right:{} parent:{}>'
         return format_str.format(*(str(i) for i in [self.id, self.length, 
             self._get_id_or_none(self.left),

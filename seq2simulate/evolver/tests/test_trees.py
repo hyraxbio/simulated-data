@@ -9,7 +9,7 @@ class TreeTester(unittest.TestCase):
         self.assertIsNone(tree0.value)
         self.assertIsNone(tree0.left)
         self.assertIsNone(tree0.right)
-        self.assertEqual(tree0.__repr__(), '<Tree {}: len:0.1 left:None right:None parent:None>'.format(tree0.id))
+        self.assertEqual(tree0.__str__(), '<Tree {}: len:0.1 left:None right:None parent:None>'.format(tree0.id))
 
     def test_tree_ids_increment_automatically(self):
         tree0 = trees.Tree()

@@ -26,7 +26,7 @@ class CodonTable(object):
         for codon,aa in self.codon_dict.items():
             setattr(self, codon, aa)
 
-    def __repr__(self):
+    def __str__(self):
         return '<CodonTable {}>'.format(''.join(sorted([aa for aa in self.codon_dict.values()])))
 
 class Codon(ValidationMixin, object):
@@ -55,11 +55,46 @@ class Codon(ValidationMixin, object):
             raise ValueError('sequence is not valid')
         self._seq = seq
             
-    def __repr__(self):
+    def __str__(self):
         return '<Codon {}>'.format(self._seq)
         
-     
+class Locus(object):
+    """
+    Locus object containing codon(s) for indexing mutations by codon.
+    
+    Args:
+        codons: a list of Codon objects or nucleotides
+    """
+
+    def __init__(self, codons=[]):
+        self._codons = []
+        for codon in codons:
+            self.add_codon(codon)             
+   
+    @property 
+    def codons(self):
+        return self._codons
+
+    @codons.setter 
+    def codons(self, codons):
+        if not isinstance(codons, list):
+            raise ValueError('codons must be a list') 
+        for codon in codons:
+            if not isinstance(codon, Codon):
+                raise ValueError('codons must contain Codons')
+        self._codons = codons
+
+    def add_codon(self, codon):
+        if isinstance(codon, Codon):
+            self._codons.append(codon)
+        elif isinstance(codon, str):
+            self._codons.append(Codon(seq=codon))
+            
+    def del_codon(self):
+        self._codons = self._codons[:-1]
+
+    def __str__(self):
+        return '<Locus {}>'.format(' '.join([codon.__str__() for codon in self.codons]))
 
 if __name__=='__main__':
-    ct = CodonTable(stop_codons=False)
-    c = Codon('atg')
+    pass
