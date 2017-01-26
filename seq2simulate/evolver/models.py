@@ -1,6 +1,6 @@
 from numpy import array, ones, identity
-import numpy
-from codon_frequencies import CodonTable, Fcodon
+import numpy, pylab
+from codon_frequencies import CodonTable, FEqual
 
 
 class ValidationMixin(object):
@@ -148,7 +148,7 @@ def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None):
     n = len(codons)
     q = ones([n, n])
     idmatrix = identity(n)
-    cf = Fcodon()
+    cf = FEqual
 
     for i in range(n):
         codon1 = codons[i]
@@ -243,8 +243,8 @@ def mutation_rate(codon1, codon2,
         raise ValueError('omega must be a number')
     if not isinstance(kappa, (int, float)):
         raise ValueError('kappa must be a number')
-    if not isinstance(codon_freq, Fcodon):
-        raise ValueError('codon_freq must be an instance of Fcodon')
+    if not isinstance(codon_freq, dict):
+        raise ValueError('codon_freq must be an instance of dict')
 
 
     cat = mutation_category(codon1, codon2, codon_table=codon_table)
@@ -252,13 +252,13 @@ def mutation_rate(codon1, codon2,
     if cat == 'multisite':
         rate = 0 
     if cat == ['synonymous', 'transversion' ]:
-        rate = getattr(codon_freq, codon2)
+        rate = codon_freq[codon2]
     if cat == ['synonymous', 'transition' ]:
-        rate = getattr(codon_freq, codon2)*kappa
+        rate = codon_freq[codon2]
     if cat == ['nonsynonymous', 'transversion']:
-        rate = getattr(codon_freq, codon2)*omega
+        rate = codon_freq[codon2]
     if cat == ['nonsynonymous', 'transition']:
-        rate = getattr(codon_freq, codon2)*kappa*omega
+        rate = codon_freq[codon2]
     return rate 
 
 def diff_index(s1, s2):
@@ -299,5 +299,6 @@ def mutations(seq1, seq2):
 
 if __name__=='__main__':
     q, qdict = goldman_Q()
-    pass
+    #pylab.plot([numpy.exp(q*t)[0][0] for t in numpy.arange(0, 10, 100)])
+    #pylab.show()
 

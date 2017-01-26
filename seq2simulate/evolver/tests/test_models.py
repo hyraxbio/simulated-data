@@ -99,7 +99,7 @@ class ModelTester(unittest.TestCase):
 
     def test_mutation_rate_validation(self):
         ct = codon_frequencies.CodonTable(stop_codons=False)
-        cf = codon_frequencies.Fcodon()
+        cf = codon_frequencies.FEqual
         with self.assertRaises(ValueError):
             models.mutation_rate('atg', 'acc')
         with self.assertRaises(ValueError):
@@ -111,7 +111,7 @@ class ModelTester(unittest.TestCase):
         
     def test_mutation_rate(self):
         ct = codon_frequencies.CodonTable(stop_codons=False)
-        cf = codon_frequencies.Fcodon()
+        cf = codon_frequencies.FEqual
         self.assertEqual(models.mutation_rate('atg', 'acc', codon_table=ct, codon_freq=cf), 0)
         self.assertIsInstance(models.mutation_rate('gca', 'gcg', codon_table=ct, codon_freq=cf), float)
 
