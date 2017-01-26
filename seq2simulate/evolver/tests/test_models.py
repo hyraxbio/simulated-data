@@ -81,6 +81,21 @@ class ModelTester(unittest.TestCase):
         s1 = models.parse_loci_to_sequence_string(l)
         self.assertEqual(s1, s0)
 
+    def test_mutation_category_validation(self):
+        ct = models.CodonTable(stop_codons=False)
+        with self.assertRaises(ValueError):
+            models.mutation_category('atg', 'acc')
+        with self.assertRaises(ValueError):
+            models.mutation_category('atg', 2, codon_table=ct)
+        
+
+    def test_mutation_category(self):
+        ct = models.CodonTable(stop_codons=False)
+        self.assertEqual(models.mutation_category('atg', 'acc', codon_table=ct), ['multisite'])
+        self.assertEqual(models.mutation_category('gca', 'gcg', codon_table=ct), ['transition', 'synonymous'])
+        self.assertEqual(models.mutation_category('gca', 'gct', codon_table=ct), ['transversion', 'synonymous'])
+        self.assertEqual(models.mutation_category('atg', 'ata', codon_table=ct), ['transition', 'nonsynonymous'])
+        self.assertEqual(models.mutation_category('atg', 'atc', codon_table=ct), ['transversion', 'nonsynonymous'])
 
 if __name__=='__main__':
     unittest.main()
