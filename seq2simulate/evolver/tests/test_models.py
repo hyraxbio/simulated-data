@@ -53,10 +53,17 @@ class ModelTester(unittest.TestCase):
         with self.assertRaises(ValueError):
             l = models.Locus(codons=[c, 'abc'])
         
-    def test_parse_sequence_to_loci(self):
+    def test_parse_hanging_sequence_to_loci(self):
         s = 'atgatgccagtcgatcgatcgtagcatcgtagctgtagca'
         l = models.parse_sequence_to_loci(s)
         for i,seq in enumerate(['atg', 'atg', 'cca', 'gtc', 'gat', 'cga', 'tcg', 'tag', 'cat', 'cgt', 'agc', 'tgt', 'agc','a--']):
+            self.assertEqual(len(l[i].codons), 1)
+            self.assertEqual(l[i].codons[0].seq, seq)
+
+    def test_parse_sequence_to_loci(self):
+        s = 'atgatgccagtcgatcgatcgtagcatcgtagctgtagc'
+        l = models.parse_sequence_to_loci(s)
+        for i,seq in enumerate(['atg', 'atg', 'cca', 'gtc', 'gat', 'cga', 'tcg', 'tag', 'cat', 'cgt', 'agc', 'tgt', 'agc']):
             self.assertEqual(len(l[i].codons), 1)
             self.assertEqual(l[i].codons[0].seq, seq)
 
@@ -68,6 +75,11 @@ class ModelTester(unittest.TestCase):
         self.assertEqual(l1, [1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
         self.assertEqual(s1, ['atg', 'atg', 'ttt', 'cca', 'gtc', 'gat', 'cga', 'tcg', 'tag', 'cat', 'cgt', 'agc', 'tgt', 'agc', 'a--'])
 
+    def test_parse_loci_to_sequence_string(self):
+        s0 = 'atgatgccagtcgatcgatcgtagcatcgtagctgtagc'
+        l = models.parse_sequence_to_loci(s0)
+        s1 = models.parse_loci_to_sequence_string(l)
+        self.assertEqual(s1, s0)
 
 
 if __name__=='__main__':

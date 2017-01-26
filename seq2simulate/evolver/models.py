@@ -1,3 +1,5 @@
+from numpy import array, ones
+
 
 class ValidationMixin(object):
 
@@ -116,8 +118,32 @@ class Locus(object):
         sequence = [codon.seq for codon in self.codons]
         return [self.loc_aa]*len(sequence), sequence
 
+class Sequence(object):
+    """
+    Convenience class to collect a set of loci.
+    """
+    def __init__(self, seq):
+        self.loci = parse_sequence_to_loci(seq) 
+
+    @property
+    def codons(self):
+        return [j for i in [locus.codons for locus in self.loci] for j in i]
+
+    @property
+    def seq(self):
+        return parse_loci_to_sequence_string(self.loci)
+    
+    @property
+    def location_seq(self):
+        return parse_loci_to_sequence(self.loci)
+    
 def parse_sequence_to_loci(sequence):
-    codon_strings = [sequence[i*3:i*3+3] for i in range(1+len(sequence)//3)]
+    nfloor = len(sequence)//3.0
+    nfloat = len(sequence)/3.0
+    if nfloat > nfloor:
+        nfloor += 1
+    nfloor = int(nfloor)
+    codon_strings = [sequence[i*3:i*3+3] for i in range(nfloor)]
     loci = [Locus(codons=[j], loc=i) for i,j in enumerate(codon_strings)]
     return loci
 
@@ -129,6 +155,14 @@ def parse_loci_to_sequence(loci):
         locations.append(location)
         sequences.append(sequence)
     return [j for i in locations for j in i], [j for i in sequences for j in i]
+
+def parse_loci_to_sequence_string(loci):
+    sequences = []
+    return ''.join([locus.sequence for locus in loci])
+
+def goldman_Q(loci):
+    ct = CodonTable(stop_codons=False)
+    q = ones()
 
 if __name__=='__main__':
     pass
