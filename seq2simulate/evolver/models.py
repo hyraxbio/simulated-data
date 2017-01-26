@@ -1,5 +1,6 @@
 from numpy import array, ones, identity
 import numpy, pylab
+from scipy.linalg import expm
 from codon_frequencies import CodonTable, FEqual
 
 
@@ -298,7 +299,24 @@ def mutations(seq1, seq2):
             
 
 if __name__=='__main__':
+    
     q, qdict = goldman_Q()
-    #pylab.plot([numpy.exp(q*t)[0][0] for t in numpy.arange(0, 10, 100)])
-    #pylab.show()
+    codons = sorted(qdict)
+
+    qs = numpy.array([expm(q*t) for t in numpy.linspace(0, 100, 50)])
+    #qs = qs.transpose()
+    n_i = 0
+    dim = numpy.sqrt(len(q))+1
+    fig = pylab.figure(figsize=[25, 25])
+    axs = [fig.add_subplot(dim, dim, i+1) for i in range(len(q))]
+    qq = numpy.transpose([x[n_i] for x in qs])
+    for i, ax in enumerate(axs):
+        ax.plot(qq[i])
+        ax.set_ylim([0, 0.1])
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title('{}-{}'.format(codons[n_i], codons[i]))
+    fig.subplots_adjust(hspace=0.3)
+    fig.show() 
+     
 
