@@ -5,12 +5,12 @@ import codon_frequencies
 class ModelTester(unittest.TestCase):
   
     def test_codontable_init(self):
-        ct = models.CodonTable()
+        ct = codon_frequencies.CodonTable()
         self.assertEqual(ct.__str__(), '<CodonTable ***AAAACCDDEEFFGGGGHHIIIKKLLLLLLMNNPPPPQQRRRRRRSSSSSSTTTTVVVVWYY>')
 
     def test_codontable_can_exclude_stop_codons(self):
-        ct = models.CodonTable()
-        cts = models.CodonTable(stop_codons=False)
+        ct = codon_frequencies.CodonTable()
+        cts = codon_frequencies.CodonTable(stop_codons=False)
         for codon in ['taa', 'tag', 'tga']:
             self.assertIn(codon, ct.codon_dict)
             getattr(ct, codon)
@@ -83,14 +83,14 @@ class ModelTester(unittest.TestCase):
         self.assertEqual(s1, s0)
 
     def test_mutation_category_validation(self):
-        ct = models.CodonTable(stop_codons=False)
+        ct = codon_frequencies.CodonTable(stop_codons=False)
         with self.assertRaises(ValueError):
             models.mutation_category('atg', 'acc')
         with self.assertRaises(ValueError):
             models.mutation_category('atg', 2, codon_table=ct)
         
     def test_mutation_category(self):
-        ct = models.CodonTable(stop_codons=False)
+        ct = codon_frequencies.CodonTable(stop_codons=False)
         self.assertEqual(models.mutation_category('atg', 'acc', codon_table=ct), ['multisite'])
         self.assertEqual(models.mutation_category('gca', 'gcg', codon_table=ct), ['synonymous',    'transition'])
         self.assertEqual(models.mutation_category('gca', 'gct', codon_table=ct), ['synonymous',    'transversion'])
@@ -98,8 +98,8 @@ class ModelTester(unittest.TestCase):
         self.assertEqual(models.mutation_category('atg', 'atc', codon_table=ct), ['nonsynonymous', 'transversion'])
 
     def test_mutation_rate_validation(self):
-        ct = models.CodonTable(stop_codons=False)
-        cf = codon_frequencies.CodonFrequencies().paml_fcodon
+        ct = codon_frequencies.CodonTable(stop_codons=False)
+        cf = codon_frequencies.Fcodon()
         with self.assertRaises(ValueError):
             models.mutation_rate('atg', 'acc')
         with self.assertRaises(ValueError):
@@ -110,8 +110,8 @@ class ModelTester(unittest.TestCase):
             models.mutation_rate('atg', 2, codon_table=ct, codon_freq=cf)
         
     def test_mutation_rate(self):
-        ct = models.CodonTable(stop_codons=False)
-        cf = codon_frequencies.CodonFrequencies().paml_fcodon
+        ct = codon_frequencies.CodonTable(stop_codons=False)
+        cf = codon_frequencies.Fcodon()
         self.assertEqual(models.mutation_rate('atg', 'acc', codon_table=ct, codon_freq=cf), 0)
         self.assertIsInstance(models.mutation_rate('gca', 'gcg', codon_table=ct, codon_freq=cf), float)
 

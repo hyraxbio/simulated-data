@@ -1,8 +1,6 @@
 from numpy import array, ones, identity
 import numpy
-from codon_frequencies import CodonFrequencies
-
-
+from codon_frequencies import CodonTable, Fcodon
 
 
 class ValidationMixin(object):
@@ -14,26 +12,6 @@ class ValidationMixin(object):
                 return False
         return True, ''
 
-class CodonTable(object):
-    """
-    A simple implementation of the standard genetic code table.
-
-    Args:
-        stop_codons: include stop codons (default True)
-    """
-    def __init__(self, stop_codons=True):
-        bases = ['t', 'c', 'a', 'g']
-        codons = [a+b+c for a in bases for b in bases for c in bases]
-        amino_acids = 'FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG'
-        self.codon_dict = dict(zip(codons, amino_acids))
-        if not stop_codons:
-            for codon in ['taa', 'tag', 'tga']:
-                self.codon_dict.pop(codon)        
-        for codon,aa in self.codon_dict.items():
-            setattr(self, codon, aa)
-
-    def __str__(self):
-        return '<CodonTable {}>'.format(''.join(sorted([aa for aa in self.codon_dict.values()])))
 
 class Codon(ValidationMixin, object):
     """
@@ -164,13 +142,13 @@ def parse_loci_to_sequence_string(loci):
     sequences = []
     return ''.join([locus.sequence for locus in loci])
 
-def goldman_Q(kappa=2.0, omega=1.0, codon_freq_dict=None):
+def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None):
     ct = CodonTable(stop_codons=False)
     codons = sorted(ct.codon_dict)
     n = len(codons)
     q = ones([n, n])
     idmatrix = identity(n)
-    cf = CodonFrequencies().paml_fcodon
+    cf = Fcodon()
 
     for i in range(n):
         codon1 = codons[i]
@@ -247,7 +225,7 @@ def mutation_rate(codon1, codon2,
         codon_table: CodonTable instance
         kappa: transition/transversion ratio
         omega: dN/dS
-        codon_freq: dictionary of codon equilibrium frequencies
+        codon_freq: codon equilibrium frequencies (found in codon_frequencies.py)
 
     Returns instantaneous rate of mutation using the simplified Goldman model in Nielsen and Yang (1998).
     """
@@ -265,8 +243,8 @@ def mutation_rate(codon1, codon2,
         raise ValueError('omega must be a number')
     if not isinstance(kappa, (int, float)):
         raise ValueError('kappa must be a number')
-    if not isinstance(codon_freq, dict):
-        raise ValueError('codon_freq must be a dictionary')
+    if not isinstance(codon_freq, Fcodon):
+        raise ValueError('codon_freq must be an instance of Fcodon')
 
 
     cat = mutation_category(codon1, codon2, codon_table=codon_table)
@@ -274,13 +252,13 @@ def mutation_rate(codon1, codon2,
     if cat == 'multisite':
         rate = 0 
     if cat == ['synonymous', 'transversion' ]:
-        rate = codon_freq[codon2]
+        rate = getattr(codon_freq, codon2)
     if cat == ['synonymous', 'transition' ]:
-        rate = codon_freq[codon2]*kappa
+        rate = getattr(codon_freq, codon2)*kappa
     if cat == ['nonsynonymous', 'transversion']:
-        rate = codon_freq[codon2]*omega
+        rate = getattr(codon_freq, codon2)*omega
     if cat == ['nonsynonymous', 'transition']:
-        rate = codon_freq[codon2]*kappa*omega
+        rate = getattr(codon_freq, codon2)*kappa*omega
     return rate 
 
 def diff_index(s1, s2):
