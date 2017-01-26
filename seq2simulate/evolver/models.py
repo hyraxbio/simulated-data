@@ -1,6 +1,6 @@
 from numpy import array, ones, identity
 import numpy
-
+from codon_frequencies import CodonFrequencies
 
 
 
@@ -13,73 +13,6 @@ class ValidationMixin(object):
             if i not in valids: 
                 return False
         return True, ''
-
-
-codon_frequencies = {
-    'aaa': 0.016393442623,
-    'aac': 0.016393442623,
-    'aag': 0.016393442623,
-    'aat': 0.016393442623,
-    'aca': 0.016393442623,
-    'acc': 0.016393442623,
-    'acg': 0.016393442623,
-    'act': 0.016393442623,
-    'aga': 0.016393442623,
-    'agc': 0.016393442623,
-    'agg': 0.016393442623,
-    'agt': 0.016393442623,
-    'ata': 0.016393442623,
-    'atc': 0.016393442623,
-    'atg': 0.016393442623,
-    'att': 0.016393442623,
-    'caa': 0.016393442623,
-    'cac': 0.016393442623,
-    'cag': 0.016393442623,
-    'cat': 0.016393442623,
-    'cca': 0.016393442623,
-    'ccc': 0.016393442623,
-    'ccg': 0.016393442623,
-    'cct': 0.016393442623,
-    'cga': 0.016393442623,
-    'cgc': 0.016393442623,
-    'cgg': 0.016393442623,
-    'cgt': 0.016393442623,
-    'cta': 0.016393442623,
-    'ctc': 0.016393442623,
-    'ctg': 0.016393442623,
-    'ctt': 0.016393442623,
-    'gaa': 0.016393442623,
-    'gac': 0.016393442623,
-    'gag': 0.016393442623,
-    'gat': 0.016393442623,
-    'gca': 0.016393442623,
-    'gcc': 0.016393442623,
-    'gcg': 0.016393442623,
-    'gct': 0.016393442623,
-    'gga': 0.016393442623,
-    'ggc': 0.016393442623,
-    'ggg': 0.016393442623,
-    'ggt': 0.016393442623,
-    'gta': 0.016393442623,
-    'gtc': 0.016393442623,
-    'gtg': 0.016393442623,
-    'gtt': 0.016393442623,
-    'tac': 0.016393442623,
-    'tat': 0.016393442623,
-    'tca': 0.016393442623,
-    'tcc': 0.016393442623,
-    'tcg': 0.016393442623,
-    'tct': 0.016393442623,
-    'tgc': 0.016393442623,
-    'tgg': 0.016393442623,
-    'tgt': 0.016393442623,
-    'tta': 0.016393442623,
-    'ttc': 0.016393442623,
-    'ttg': 0.016393442623,
-    'ttt': 0.016393442623,
-}
-
-
 
 class CodonTable(object):
     """
@@ -231,18 +164,19 @@ def parse_loci_to_sequence_string(loci):
     sequences = []
     return ''.join([locus.sequence for locus in loci])
 
-def goldman_Q(kappa=0.2, omega=1.1, codon_freq_dict=None):
+def goldman_Q(kappa=2.0, omega=1.0, codon_freq_dict=None):
     ct = CodonTable(stop_codons=False)
     codons = sorted(ct.codon_dict)
     n = len(codons)
     q = ones([n, n])
     idmatrix = identity(n)
+    cf = CodonFrequencies().paml_fcodon
 
-    #for i in range(n):
-    #    codon1 = codons[i]
-    #    for j in range(n):
-    #        codon2 = codons[j] 
-             
+    for i in range(n):
+        codon1 = codons[i]
+        for j in range(n):
+            codon2 = codons[j] 
+            q[i, j] = mutation_rate(codon1, codon2, codon_table=ct, codon_freq=cf)
 
     # diagonal equals negative sum of row
     q[idmatrix==1] = 0.0
@@ -301,7 +235,12 @@ def mutation_category(codon1, codon2, codon_table=None):
 
     return cat
 
-def mutation_rate(codon1, codon2, codon_table=None, kappa=0.2, omega=1.1, codon_freq=None):
+def mutation_rate(codon1, codon2, 
+    kappa=2.0, 
+    omega=1.0, 
+    codon_table=None, 
+    codon_freq=None
+    ):
     """
     Args:
         codon1/codon2: three-letter strings
@@ -335,13 +274,13 @@ def mutation_rate(codon1, codon2, codon_table=None, kappa=0.2, omega=1.1, codon_
     if cat == 'multisite':
         rate = 0 
     if cat == ['synonymous', 'transversion' ]:
-        rate = codon_frequencies[codon2]
+        rate = codon_freq[codon2]
     if cat == ['synonymous', 'transition' ]:
-        rate = codon_frequencies[codon2]
+        rate = codon_freq[codon2]*kappa
     if cat == ['nonsynonymous', 'transversion']:
-        rate = codon_frequencies[codon2]
+        rate = codon_freq[codon2]*omega
     if cat == ['nonsynonymous', 'transition']:
-        rate = codon_frequencies[codon2]
+        rate = codon_freq[codon2]*kappa*omega
     return rate 
 
 def diff_index(s1, s2):
@@ -381,7 +320,6 @@ def mutations(seq1, seq2):
             
 
 if __name__=='__main__':
-    #q, qdict = goldman_Q()
-    codon_table = CodonTable(stop_codons=False)
+    q, qdict = goldman_Q()
     pass
 

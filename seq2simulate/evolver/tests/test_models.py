@@ -1,5 +1,6 @@
 import unittest
 import models
+import codon_frequencies
 
 class ModelTester(unittest.TestCase):
   
@@ -98,17 +99,21 @@ class ModelTester(unittest.TestCase):
 
     def test_mutation_rate_validation(self):
         ct = models.CodonTable(stop_codons=False)
+        cf = codon_frequencies.CodonFrequencies().paml_fcodon
         with self.assertRaises(ValueError):
-            models.mutation_rate('atg', 'acc', codon_freq=models.codon_frequencies)
+            models.mutation_rate('atg', 'acc')
         with self.assertRaises(ValueError):
             models.mutation_rate('atg', 'acc', codon_table=ct)
         with self.assertRaises(ValueError):
-            models.mutation_rate('atg', 2, codon_table=ct)
+            models.mutation_rate('atg', 'acc', codon_freq=cf)
+        with self.assertRaises(ValueError):
+            models.mutation_rate('atg', 2, codon_table=ct, codon_freq=cf)
         
     def test_mutation_rate(self):
         ct = models.CodonTable(stop_codons=False)
-        self.assertEqual(models.mutation_rate('atg', 'acc', codon_table=ct, codon_freq=models.codon_frequencies), 0)
-        self.assertIsInstance(models.mutation_rate('gca', 'gcg', codon_table=ct, codon_freq=models.codon_frequencies), float)
+        cf = codon_frequencies.CodonFrequencies().paml_fcodon
+        self.assertEqual(models.mutation_rate('atg', 'acc', codon_table=ct, codon_freq=cf), 0)
+        self.assertIsInstance(models.mutation_rate('gca', 'gcg', codon_table=ct, codon_freq=cf), float)
 
 if __name__=='__main__':
     unittest.main()
