@@ -231,23 +231,18 @@ def parse_loci_to_sequence_string(loci):
     sequences = []
     return ''.join([locus.sequence for locus in loci])
 
-def goldman_Q():
+def goldman_Q(kappa=0.2, omega=1.1, codon_freq_dict=None):
     ct = CodonTable(stop_codons=False)
     codons = sorted(ct.codon_dict)
     n = len(codons)
     q = ones([n, n])
     idmatrix = identity(n)
 
-    pars = {
-        'k': 0.2,
-        'w': 1.1,
-    }
-
-
     #for i in range(n):
     #    codon1 = codons[i]
     #    for j in range(n):
     #        codon2 = codons[j] 
+             
 
     # diagonal equals negative sum of row
     q[idmatrix==1] = 0.0
@@ -302,14 +297,18 @@ def mutation_category(codon1, codon2, codon_table=None):
         else:
             aminoacid_mutation_type = 'nonsynonymous'
 
-        cat = [nucleotide_mutation_type, aminoacid_mutation_type]
+        cat = [aminoacid_mutation_type, nucleotide_mutation_type]
 
     return cat
 
-def mutation_rate(codon1, codon2, codon_table=None):
+def mutation_rate(codon1, codon2, codon_table=None, kappa=0.2, omega=1.1, codon_freq=None):
     """
     Args:
         codon1/codon2: three-letter strings
+        codon_table: CodonTable instance
+        kappa: transition/transversion ratio
+        omega: dN/dS
+        codon_freq: dictionary of codon equilibrium frequencies
 
     Returns instantaneous rate of mutation using the simplified Goldman model in Nielsen and Yang (1998).
     """
@@ -323,18 +322,25 @@ def mutation_rate(codon1, codon2, codon_table=None):
         raise ValueError('codon must be a three-letter str')
     if not isinstance(codon_table, CodonTable):
         raise ValueError('codon must be a three-letter str')
+    if not isinstance(omega, (int, float)):
+        raise ValueError('omega must be a number')
+    if not isinstance(kappa, (int, float)):
+        raise ValueError('kappa must be a number')
+    if not isinstance(codon_freq, dict):
+        raise ValueError('codon_freq must be a dictionary')
+
 
     cat = mutation_category(codon1, codon2, codon_table=codon_table)
     rate = 0
     if cat == 'multisite':
         rate = 0 
-    if cat == ['transversion', 'synonymous']:
+    if cat == ['synonymous', 'transversion' ]:
         rate = codon_frequencies[codon2]
-    if cat == ['transition', 'synonymous']:
+    if cat == ['synonymous', 'transition' ]:
         rate = codon_frequencies[codon2]
-    if cat == ['transversion', 'nonsynonymous']:
+    if cat == ['nonsynonymous', 'transversion']:
         rate = codon_frequencies[codon2]
-    if cat == ['transition', 'nonsynonymous']:
+    if cat == ['nonsynonymous', 'transition']:
         rate = codon_frequencies[codon2]
     return rate 
 

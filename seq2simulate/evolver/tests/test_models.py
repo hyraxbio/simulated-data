@@ -91,22 +91,24 @@ class ModelTester(unittest.TestCase):
     def test_mutation_category(self):
         ct = models.CodonTable(stop_codons=False)
         self.assertEqual(models.mutation_category('atg', 'acc', codon_table=ct), ['multisite'])
-        self.assertEqual(models.mutation_category('gca', 'gcg', codon_table=ct), ['transition', 'synonymous'])
-        self.assertEqual(models.mutation_category('gca', 'gct', codon_table=ct), ['transversion', 'synonymous'])
-        self.assertEqual(models.mutation_category('atg', 'ata', codon_table=ct), ['transition', 'nonsynonymous'])
-        self.assertEqual(models.mutation_category('atg', 'atc', codon_table=ct), ['transversion', 'nonsynonymous'])
+        self.assertEqual(models.mutation_category('gca', 'gcg', codon_table=ct), ['synonymous',    'transition'])
+        self.assertEqual(models.mutation_category('gca', 'gct', codon_table=ct), ['synonymous',    'transversion'])
+        self.assertEqual(models.mutation_category('atg', 'ata', codon_table=ct), ['nonsynonymous', 'transition'])
+        self.assertEqual(models.mutation_category('atg', 'atc', codon_table=ct), ['nonsynonymous', 'transversion'])
 
     def test_mutation_rate_validation(self):
         ct = models.CodonTable(stop_codons=False)
         with self.assertRaises(ValueError):
-            models.mutation_rate('atg', 'acc')
+            models.mutation_rate('atg', 'acc', codon_freq=models.codon_frequencies)
+        with self.assertRaises(ValueError):
+            models.mutation_rate('atg', 'acc', codon_table=ct)
         with self.assertRaises(ValueError):
             models.mutation_rate('atg', 2, codon_table=ct)
         
     def test_mutation_rate(self):
         ct = models.CodonTable(stop_codons=False)
-        self.assertEqual(models.mutation_rate('atg', 'acc', codon_table=ct), 0)
-        self.assertIsInstance(models.mutation_rate('gca', 'gcg', codon_table=ct), float)
+        self.assertEqual(models.mutation_rate('atg', 'acc', codon_table=ct, codon_freq=models.codon_frequencies), 0)
+        self.assertIsInstance(models.mutation_rate('gca', 'gcg', codon_table=ct, codon_freq=models.codon_frequencies), float)
 
 if __name__=='__main__':
     unittest.main()
