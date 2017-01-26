@@ -306,17 +306,37 @@ def mutation_category(codon1, codon2, codon_table=None):
 
     return cat
 
-#    if cat == 'multisite':
-#        rate = 0 
-#    if cat == ['transversion', 'synonymous']:
-#        rate = codon_frequencies[codon2]
-#    if cat == ['transition', 'synonymous']:
-#        rate = codon_frequencies[codon2]
-#    if cat == ['transversion', 'nonsynonymous']:
-#        rate = codon_frequencies[codon2]
-#    if cat == ['transition', 'nonsynonymous']:
-#        rate = codon_frequencies[codon2]
-#    return rate 
+def mutation_rate(codon1, codon2, codon_table=None):
+    """
+    Args:
+        codon1/codon2: three-letter strings
+
+    Returns instantaneous rate of mutation using the simplified Goldman model in Nielsen and Yang (1998).
+    """
+    if not isinstance(codon1, str):
+        raise ValueError('codon must be a three-letter str')
+    if len(codon1) != 3:
+        raise ValueError('codon must be a three-letter str')
+    if not isinstance(codon2, str):
+        raise ValueError('codon must be a three-letter str')
+    if len(codon2) != 3:
+        raise ValueError('codon must be a three-letter str')
+    if not isinstance(codon_table, CodonTable):
+        raise ValueError('codon must be a three-letter str')
+
+    cat = mutation_category(codon1, codon2, codon_table=codon_table)
+    rate = 0
+    if cat == 'multisite':
+        rate = 0 
+    if cat == ['transversion', 'synonymous']:
+        rate = codon_frequencies[codon2]
+    if cat == ['transition', 'synonymous']:
+        rate = codon_frequencies[codon2]
+    if cat == ['transversion', 'nonsynonymous']:
+        rate = codon_frequencies[codon2]
+    if cat == ['transition', 'nonsynonymous']:
+        rate = codon_frequencies[codon2]
+    return rate 
 
 def diff_index(s1, s2):
     index = []
@@ -353,10 +373,6 @@ def mutations(seq1, seq2):
         mutations.append(mut_dict.get(i+j, -1))
     return mutations
             
-        
-        
-             
-
 
 if __name__=='__main__':
     #q, qdict = goldman_Q()
