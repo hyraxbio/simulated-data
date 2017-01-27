@@ -30,6 +30,7 @@ class Tree(object):
         if not isinstance(left, (Tree, NoneType)):
             raise ValueError('left must be of class Tree, or NoneType.')
         self._left = left
+        # this is convenient but it concerns me...
         if left is not None:
             left.parent = self
 
@@ -42,6 +43,7 @@ class Tree(object):
         if not isinstance(right, (Tree, NoneType)):
             raise ValueError('right must be of class Tree, or NoneType.')
         self._right = right
+        # this is convenient but it concerns me...
         if right is not None:
             right.parent = self
 

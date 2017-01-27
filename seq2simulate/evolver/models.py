@@ -119,14 +119,24 @@ class Sequence(object):
     @property
     def location_seq(self):
         return parse_loci_to_sequence(self.loci)
-    
-def parse_sequence_to_loci(sequence):
+
+def break_sequence_into_triplets(sequence):
     nfloor = len(sequence)//3.0
     nfloat = len(sequence)/3.0
     if nfloat > nfloor:
         nfloor += 1
     nfloor = int(nfloor)
-    codon_strings = [sequence[i*3:i*3+3] for i in range(nfloor)]
+    return [sequence[i*3:i*3+3] for i in range(nfloor)]
+
+def convert_dna_to_aa(sequence, codon_table=None):
+    if codon_table is None:
+        codon_table = CodonTable()
+    codon_strings = break_sequence_into_triplets(sequence)
+    aa = [getattr(codon_table, i) for i in codon_strings]
+    return ''.join([i for i in aa])
+    
+def parse_sequence_to_loci(sequence):
+    codon_strings = break_sequence_into_triplets(sequence)
     loci = [Locus(codons=[j], loc=i) for i,j in enumerate(codon_strings)]
     return loci
 
