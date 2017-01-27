@@ -147,11 +147,20 @@ class ModelTester(unittest.TestCase):
         p = models.convert_q_to_p(q, t=1)
         self.assertTrue((p.max() <= 1.0))
 
-    def test_get_cumulative_p(p):
+    def test_get_cumulative_p_validation(self):
         q = models.goldman_Q(scale_q=False)
         p = models.convert_q_to_p(q, t=10)
-        pc = models.get_cumulative_p(p)
-        self.assertTrue((pc.max() == 1.0))
+        with self.assertRaises(ValueError):
+            models.convert_q_to_p(['blah'])
+        with self.assertRaises(ValueError):
+            models.convert_q_to_p(p, codon_table='asdf')
+
+    def test_get_cumulative_p(self):
+        q = models.goldman_Q(scale_q=False)
+        p = models.convert_q_to_p(q, t=10)
+        pc, pcod = models.get_cumulative_p(p)
+        for i in pc:
+            self.assertTrue(isclose(i[-1], 1))
         
                 
 
