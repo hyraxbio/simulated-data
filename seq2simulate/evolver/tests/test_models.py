@@ -1,6 +1,7 @@
 import unittest
 import models
 import codon_frequencies
+from numpy import isclose, identity
 
 class ModelTester(unittest.TestCase):
   
@@ -85,7 +86,7 @@ class ModelTester(unittest.TestCase):
     def test_mutation_category_validation(self):
         ct = codon_frequencies.CodonTable(stop_codons=False)
         with self.assertRaises(ValueError):
-            models.mutation_category('atg', 'acc')
+            models.mutation_category('atg', 'acc', codon_table=[123])
         with self.assertRaises(ValueError):
             models.mutation_category('atg', 2, codon_table=ct)
         
@@ -114,6 +115,39 @@ class ModelTester(unittest.TestCase):
         cf = codon_frequencies.FEqual
         self.assertEqual(models.mutation_rate('atg', 'acc', codon_table=ct, codon_freq=cf), 0)
         self.assertIsInstance(models.mutation_rate('gca', 'gcg', codon_table=ct, codon_freq=cf), float)
+
+    def test_goldman_Q_validation(self):
+        cf = codon_frequencies.FEqual
+        with self.assertRaises(ValueError):
+            models.goldman_Q(kappa='2')
+        with self.assertRaises(ValueError):
+            models.goldman_Q(omega='2')
+        with self.assertRaises(ValueError):
+            models.goldman_Q(codon_freq=['test'])
+        
+    def test_goldman_Q(self):
+        cf = codon_frequencies.FEqual
+        q, qdict = models.goldman_Q(codon_freq=cf, scale_q=False, return_dict=True)
+        self.assertEqual(q.shape, (61, 61))
+        for row in q:
+            self.assertTrue(isclose(row.sum(), 0))
+
+    def test_convert_q_to_p_validation(self):
+        q = models.goldman_Q()
+        with self.assertRaises(ValueError):
+            models.convert_q_to_p(['blah'])
+        with self.assertRaises(ValueError):
+            models.convert_q_to_p(q, t='3')
+
+    def test_convert_q_to_p(self):
+        q = models.goldman_Q()
+        p = models.convert_q_to_p(q, t=0)
+        self.assertEqual(p.shape, (61, 61))
+        self.assertTrue((p==identity(61)).all())
+        p = models.convert_q_to_p(q, t=1)
+        self.assertTrue((p.max() <= 1.0))
+
+                
 
 if __name__=='__main__':
     unittest.main()

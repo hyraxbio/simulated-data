@@ -2,6 +2,7 @@ from numpy import array, ones, identity
 import numpy, pylab
 from scipy.linalg import expm
 from codon_frequencies import CodonTable, FEqual
+from types import NoneType
 
 
 class ValidationMixin(object):
@@ -143,28 +144,116 @@ def parse_loci_to_sequence_string(loci):
     sequences = []
     return ''.join([locus.sequence for locus in loci])
 
-def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None):
+def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None, scale_q=True, return_dict=False):
+    """
+    Generate Q matrix of instantaneous rates of replacement for each codon.
+    Diagonals are set to values that cause row sums to equal 0. 
+
+    Args:
+        kappa: transition/transversion ratio
+        omega: dN/dS
+        codon_freq: codon equilibrium frequencies (found in codon_frequencies.py, dict)
+        scale_q: scales Q so that the average rate of substitution at
+            equilibrium equals 1. Branch lengths are thus expected number of nucleotide
+            substitutions per codon. See Goldman (1994).
+        return_dict: return a dictionary version of the matrix for convenience
+
+    Returns:
+        q: a 61x61 matrix
+        qdict: q in dict form for convenience
+
+    Refs:
+        Goldman, N., & Yang, Z. (1994). A codon-based model of nucleotide
+        substitution for protein-coding DNA sequences. Molecular Biology and Evolution,
+        11(5), 725-736.
+    """
+
+    if not isinstance(kappa, (float, int)):
+        raise ValueError('kappa must be a number')
+    if kappa < 0:
+        raise ValueError('kappa must be positive')
+    if not isinstance(omega, (float, int)):
+        raise ValueError('omega must be a number')
+    if omega < 0:
+        raise ValueError('omega must be positive')
+    if not isinstance(codon_freq, (dict, NoneType)):
+        raise ValueError('codon_freq must be a dictionary or None')
+    if not isinstance(scale_q, bool):
+        raise ValueError('scale_q must either be True or False')
+    if not isinstance(return_dict, bool):
+        raise ValueError('return_dict must either be True or False')
+     
+    if codon_freq is None:
+        codon_freq = FEqual
     ct = CodonTable(stop_codons=False)
     codons = sorted(ct.codon_dict)
     n = len(codons)
     q = ones([n, n])
     idmatrix = identity(n)
-    cf = FEqual
 
     for i in range(n):
         codon1 = codons[i]
         for j in range(n):
             codon2 = codons[j] 
-            q[i, j] = mutation_rate(codon1, codon2, codon_table=ct, codon_freq=cf)
+            q[i, j] = mutation_rate(codon1, codon2, codon_table=ct, codon_freq=codon_freq)
 
     # diagonal equals negative sum of row
     q[idmatrix==1] = 0.0
     q[idmatrix==1] = -q.sum(1)
 
-    # convert matrix to codon-indexed dict
-    qdict = dict(zip(codons, [dict(zip(codons, qq)) for qq in q]))
+    # scale Q so that average rate of substitution at equilibrium is 1
+    if scale_q:
+        qdiagonal = q.diagonal()
+        pvalues = numpy.array([codon_freq[codon] for codon in codons])
+        scaling_factor = 1.0/(-sum(qdiagonal*pvalues))
+        q *= scaling_factor
 
-    return q, qdict
+    if return_dict:
+        # convert matrix to codon-indexed dict
+        qdict = dict(zip(codons, [dict(zip(codons, qq)) for qq in q]))
+        return q, qdict
+
+    return q
+
+def convert_q_to_p(q, t=0, codon_table=None, return_dict=False):
+    """
+
+    Convert Q matrix (from goldman_Q()) to probabilities by solving matrix
+    differential: P'(t) = QP(t) to yield P(t) = exp(Qt). P is a matrix of
+    probabilities of a codon mutating to another over time. See Kubatko (2016).
+
+    Args:
+        q: Q matrix
+        t: time (or extent) in arbitrary units
+        codon_table: CodonTable instance
+        return_dict: return a dictionary version of the matrix for convenience
+
+    Refs: 
+        Kubatko, L., Shah, P., Herbei, R., & Gilchrist, M. A. (2016). A codon model
+        of nucleotide substitution with selection on synonymous codon usage. Molecular
+        Phylogenetics and Evolution, 94(Pt A), 290-297. doi:10.1016/j.ympev.2015.08.026
+    
+    """
+    if not isinstance(q, numpy.ndarray):
+        raise ValueError('q must be a NumPy array')
+    if not isinstance(t, (float, int)):
+        raise ValueError('t must be a number')
+    if not isinstance(codon_table, (CodonTable, NoneType)):
+        raise ValueError('codon_table must be instance of CodonTable or None')
+    if codon_table is None:
+        codon_table = CodonTable(stop_codons=False)
+    if not isinstance(return_dict, bool):
+        raise ValueError('return_dict must either be True or False')
+
+    p = expm(q*t)
+
+    # convert matrix to codon-indexed dict
+    if return_dict:
+        codons = sorted(codon_table.codon_dict)
+        pdict = dict(zip(codons, [dict(zip(codons, pp)) for pp in p]))
+        return p, pdict
+
+    return p
 
 def mutation_category(codon1, codon2, codon_table=None):
     """
@@ -186,8 +275,11 @@ def mutation_category(codon1, codon2, codon_table=None):
         raise ValueError('codon must be a three-letter str')
     if len(codon2) != 3:
         raise ValueError('codon must be a three-letter str')
-    if not isinstance(codon_table, CodonTable):
-        raise ValueError('codon must be a three-letter str')
+    if not isinstance(codon_table, (CodonTable, NoneType)):
+        raise ValueError('codon_table must be instance of CodonTable or None')
+
+    if codon_table is None:
+        codon_table = CodonTable(stop_codons=False)
 
     mscores = mutations(codon1, codon2)
     
@@ -226,7 +318,7 @@ def mutation_rate(codon1, codon2,
         codon_table: CodonTable instance
         kappa: transition/transversion ratio
         omega: dN/dS
-        codon_freq: codon equilibrium frequencies (found in codon_frequencies.py)
+        codon_freq: codon equilibrium frequencies (found in codon_frequencies.py, dict)
 
     Returns instantaneous rate of mutation using the simplified Goldman model in Nielsen and Yang (1998).
     """
@@ -298,25 +390,52 @@ def mutations(seq1, seq2):
     return mutations
             
 
-if __name__=='__main__':
-    
-    q, qdict = goldman_Q()
-    codons = sorted(qdict)
+def plot_p_over_time(q, t=10, codon='atg', codon_table=None):
+    """
+    Plot the probabilities of mutation of a particular codon. Requires Matplotlib.
 
-    qs = numpy.array([expm(q*t) for t in numpy.linspace(0, 100, 50)])
-    #qs = qs.transpose()
-    n_i = 0
+    Args:
+        q: Q matrix (generated by goldman_Q())
+        t: time or branch length over which to plot(if q was scaled, this is
+        the expected number of nucleotide mutations per codon)
+        codon: codon triplet to plot
+         
+    """
+
+    if not isinstance(q, numpy.ndarray):
+        raise ValueError('q must be a NumPy array')
+    if not isinstance(codon_table, (CodonTable, NoneType)):
+        raise ValueError('codon_table must be instance of CodonTable or None')
+    if not isinstance(t, (float, int)):
+        raise ValueError('t must be a number')
+    if not isinstance(codon, str):
+        raise ValueError('codon must be a string')
+    if len(codon) != 3:
+        raise ValueError('codon must be a string of length 3')
+    
+    if codon_table is None:
+        codon_table = CodonTable(stop_codons=False)
+    codons = sorted(codon_table.codon_dict)
+    tarray = numpy.linspace(0, t, 30)
+    ps = numpy.array([convert_q_to_p(q, t=t, codon_table=codon_table) for t in tarray])
+
+    n_i = codons.index(codon)
     dim = numpy.sqrt(len(q))+1
     fig = pylab.figure(figsize=[25, 25])
     axs = [fig.add_subplot(dim, dim, i+1) for i in range(len(q))]
-    qq = numpy.transpose([x[n_i] for x in qs])
-    for i, ax in enumerate(axs):
-        ax.plot(qq[i])
-        ax.set_ylim([0, 0.1])
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_title('{}-{}'.format(codons[n_i], codons[i]))
-    fig.subplots_adjust(hspace=0.3)
+    p_codon = numpy.transpose([x[n_i] for x in ps])
+    for n_j, ax in enumerate(axs):
+        ax.semilogy(tarray, p_codon[n_j], basey=10)
+        ax.set_ylim([1e-6, 1])
+        ax.set_xticks([0, t])
+        ax.set_yticks(ax.get_ylim())
+        ax.set_title('{} ({})'.format(codons[n_j], getattr(codon_table, codons[n_j])))
+    fig.suptitle('{} ({})'.format(codons[n_i], getattr(codon_table, codons[n_i])), size=30)
+    fig.subplots_adjust(wspace=0.3, hspace=0.3)
     fig.show() 
+
+if __name__=='__main__':
+    q, qdict = goldman_Q(scale_q=False)
+    plot_p_over_time(q)
      
 
