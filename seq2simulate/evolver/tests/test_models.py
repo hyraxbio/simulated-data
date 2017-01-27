@@ -147,6 +147,12 @@ class ModelTester(unittest.TestCase):
         p = models.convert_q_to_p(q, t=1)
         self.assertTrue((p.max() <= 1.0))
 
+    def test_get_cumulative_p(p):
+        q = models.goldman_Q(scale_q=False)
+        p = models.convert_q_to_p(q, t=10)
+        pc = models.get_cumulative_p(p)
+        self.assertTrue((pc.max() == 1.0))
+        
                 
 
 if __name__=='__main__':

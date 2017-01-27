@@ -255,6 +255,12 @@ def convert_q_to_p(q, t=0, codon_table=None, return_dict=False):
 
     return p
 
+def get_cumulative_p(p):
+    if not isinstance(p, numpy.ndarray):
+        raise ValueError('p must be a NumPy array')
+    return p.cumsum(1)
+ 
+
 def mutation_category(codon1, codon2, codon_table=None):
     """
     Args:
@@ -390,7 +396,7 @@ def mutations(seq1, seq2):
     return mutations
             
 
-def plot_p_over_time(q, t=10, codon='atg', codon_table=None):
+def plot_p_over_time(q, t=10, codon='atg', codon_table=None, logscale=True):
     """
     Plot the probabilities of mutation of a particular codon. Requires Matplotlib.
 
@@ -399,6 +405,7 @@ def plot_p_over_time(q, t=10, codon='atg', codon_table=None):
         t: time or branch length over which to plot(if q was scaled, this is
         the expected number of nucleotide mutations per codon)
         codon: codon triplet to plot
+        logscale: log-scaled axes
          
     """
 
@@ -412,6 +419,8 @@ def plot_p_over_time(q, t=10, codon='atg', codon_table=None):
         raise ValueError('codon must be a string')
     if len(codon) != 3:
         raise ValueError('codon must be a string of length 3')
+    if not isinstance(logscale, bool):
+        raise ValueError('logscale must either be True or False')
     
     if codon_table is None:
         codon_table = CodonTable(stop_codons=False)
@@ -425,8 +434,12 @@ def plot_p_over_time(q, t=10, codon='atg', codon_table=None):
     axs = [fig.add_subplot(dim, dim, i+1) for i in range(len(q))]
     p_codon = numpy.transpose([x[n_i] for x in ps])
     for n_j, ax in enumerate(axs):
-        ax.semilogy(tarray, p_codon[n_j], basey=10)
-        ax.set_ylim([1e-6, 1])
+        if logscale:
+            ax.semilogy(tarray, p_codon[n_j], basey=10)
+            ax.set_ylim([1e-5, 1])
+        else:
+            ax.plot(tarray, p_codon[n_j])
+            ax.set_ylim([0, 1])
         ax.set_xticks([0, t])
         ax.set_yticks(ax.get_ylim())
         ax.set_title('{} ({})'.format(codons[n_j], getattr(codon_table, codons[n_j])))
@@ -435,7 +448,7 @@ def plot_p_over_time(q, t=10, codon='atg', codon_table=None):
     fig.show() 
 
 if __name__=='__main__':
-    q, qdict = goldman_Q(scale_q=False)
-    plot_p_over_time(q)
+    q = goldman_Q(scale_q=True)
+    plot_p_over_time(q, codon='aaa', logscale=True)
      
 
