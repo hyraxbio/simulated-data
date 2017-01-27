@@ -165,10 +165,11 @@ class ModelTester(unittest.TestCase):
     def test_call_mutation_from_cumulative_p_validation(self):
         q = models.goldman_Q(scale_q=False)
         p = models.convert_q_to_p(q, t=10)
+        pc, pcod, pcdict = models.get_cumulative_p(p, return_dict=True)
         with self.assertRaises(ValueError):
-            models.get_cumulative_p([123], return_dict=True)
+            models.call_mutation_from_cumulative_p(3, pcdict)
         with self.assertRaises(ValueError):
-            models.get_cumulative_p(123, return_dict=True)
+            models.call_mutation_from_cumulative_p('aaa', 'blah')
 
     def test_call_mutation_from_cumulative_p(self):
         q = models.goldman_Q(scale_q=False)
@@ -177,6 +178,25 @@ class ModelTester(unittest.TestCase):
         old_codon = 'aaa'
         new_codon = models.call_mutation_from_cumulative_p(old_codon, pcdict)
                 
+    def test_call_mutation_from_q_validation(self):
+        q = models.goldman_Q(scale_q=False)
+        with self.assertRaises(ValueError):
+            models.call_mutation_from_q(123, q, t=10)
+        with self.assertRaises(ValueError):
+            models.call_mutation_from_q('aaa', 'blha', t=10)
+        with self.assertRaises(ValueError):
+            models.call_mutation_from_q('aaa', q, t='s')
+
+    def test_call_mutation_from_q(self):
+        q = models.goldman_Q(scale_q=False)
+        old_codon = 'aaa'
+        new_codon = models.call_mutation_from_q(old_codon, q, t=10)
+        self.assertIsInstance(new_codon, str)
+        self.assertEqual(len(new_codon), 3)
+        allowed_letters = 'atgc'
+        for i in new_codon:
+            self.assertIn(i, allowed_letters)
+
 
 if __name__=='__main__':
     unittest.main()
