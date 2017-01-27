@@ -162,6 +162,20 @@ class ModelTester(unittest.TestCase):
         for i in pc:
             self.assertTrue(isclose(i[-1], 1))
         
+    def test_call_mutation_from_cumulative_p_validation(self):
+        q = models.goldman_Q(scale_q=False)
+        p = models.convert_q_to_p(q, t=10)
+        with self.assertRaises(ValueError):
+            models.get_cumulative_p([123], return_dict=True)
+        with self.assertRaises(ValueError):
+            models.get_cumulative_p(123, return_dict=True)
+
+    def test_call_mutation_from_cumulative_p(self):
+        q = models.goldman_Q(scale_q=False)
+        p = models.convert_q_to_p(q, t=10)
+        pc, pcod, pcdict = models.get_cumulative_p(p, return_dict=True)
+        old_codon = 'aaa'
+        new_codon = models.call_mutation_from_cumulative_p(old_codon, pcdict)
                 
 
 if __name__=='__main__':
