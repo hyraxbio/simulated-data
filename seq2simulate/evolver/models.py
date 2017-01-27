@@ -200,7 +200,7 @@ def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None, scale_q=True, return_dict=F
         codon1 = codons[i]
         for j in range(n):
             codon2 = codons[j] 
-            q[i, j] = mutation_rate(codon1, codon2, codon_table=ct, codon_freq=codon_freq)
+            q[i, j] = mutation_rate(codon1, codon2, omega=omega, kappa=kappa, codon_table=ct, codon_freq=codon_freq)
 
     # diagonal equals negative sum of row
     q[idmatrix==1] = 0.0
@@ -220,7 +220,7 @@ def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None, scale_q=True, return_dict=F
 
     return q
 
-def convert_q_to_p(q, t=0, codon_table=None, return_dict=False):
+def convert_q_to_p(q, t=0.01, codon_table=None, return_dict=False):
     """
 
     Convert Q matrix (from goldman_Q()) to probabilities by solving matrix
@@ -389,11 +389,11 @@ def mutation_rate(codon1, codon2,
     if cat == ['synonymous', 'transversion' ]:
         rate = codon_freq[codon2]
     if cat == ['synonymous', 'transition' ]:
-        rate = codon_freq[codon2]
+        rate = kappa*codon_freq[codon2]
     if cat == ['nonsynonymous', 'transversion']:
-        rate = codon_freq[codon2]
+        rate = omega*codon_freq[codon2]
     if cat == ['nonsynonymous', 'transition']:
-        rate = codon_freq[codon2]
+        rate = omega*kappa*codon_freq[codon2]
     return rate 
 
 def diff_index(s1, s2):

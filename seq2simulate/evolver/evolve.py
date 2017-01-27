@@ -35,7 +35,7 @@ def evolve_sequence_with_q(sequence, q, t=0.1):
 
 def evolve_tree(sequence,
     taxa=10,
-    t=0.1, 
+    t=0.01, 
     omega=1.0, 
     kappa=2.0, 
     codon_freq=None, 
