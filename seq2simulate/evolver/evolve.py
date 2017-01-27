@@ -42,6 +42,30 @@ def evolve_tree(sequence,
     scale_q=True, 
     model='simple_goldman'):
 
+    """
+    Evolve a parent DNA sequence into a set of daughter sequences (taxa) by:
+        1. generating a random phylogenetic tree
+        2. intantiating a mutational model (e.g. Goldman-Yang-like by default) represented by Q-matrix
+        3. mutate sequence according to tree shape using model 
+
+    Args:
+        sequence: string of DNA nucleotides
+        taxa: number of daughter sequences to evolve
+        t: evolution time or branch length
+        omega: dN/dS 
+        kappa: ratio of transition to transversion rates
+        codon_freq: dictionary of codon_frequencies, also know as equilibrium
+        frequencies
+
+        scale_q: scales Q so that the average rate of substitution at
+        equilibrium equals 1. Branch lengths are thus expected number of nucleotide
+        substitutions per codon. See Goldman (1994).
+        model: mutational model, 'simple_goldman' will use a Goldman-Yang-like model
+
+    Returns:
+        tree instance populated with new sequence strings
+    """
+    sequence = sequence.lower()
     qfunc = model_qfuncs[model]
     q = qfunc(kappa=kappa, omega=omega, codon_freq=codon_freq, scale_q=scale_q, return_dict=False)
    
@@ -51,6 +75,18 @@ def evolve_tree(sequence,
         node.value = evolve_sequence_with_q(node.parent.value, q, t=t)
     return tree 
         
+def evolve(sequence,
+    taxa=10,
+    t=0.01, 
+    omega=1.0, 
+    kappa=2.0, 
+    codon_freq=None, 
+    scale_q=True, 
+    model='simple_goldman'):
+
+    tree = evolve_tree(**locals())
+    return [i.value for i in trees.get_list_of_tree_leaves(tree)]
+
 
 def print_mutations(old_sequence, new_sequence, colour=True):
     """

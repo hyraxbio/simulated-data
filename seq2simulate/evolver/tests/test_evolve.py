@@ -23,5 +23,11 @@ class EvolveTester(unittest.TestCase):
         for i in new_sequences:
             self.assertNotEqual(self.old_sequence, i)
 
+    def test_evolve(self):
+        new_sequences = evolve.evolve(self.old_sequence, taxa=10, t=0.1, omega=1.1, kappa=1.5)
+        self.assertEqual(len(new_sequences), 10)
+        for i in new_sequences:
+            self.assertNotEqual(self.old_sequence, i)
+
 if __name__=='__main__':
     unittest.main()
