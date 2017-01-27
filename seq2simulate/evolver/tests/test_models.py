@@ -197,6 +197,22 @@ class ModelTester(unittest.TestCase):
         for i in new_codon:
             self.assertIn(i, allowed_letters)
 
+    def test_sample_model_mutation_probabilities_validation(self):
+        q = models.goldman_Q(scale_q=False)
+        with self.assertRaises(ValueError):
+            models.sample_model_mutation_probabilities(123, q)
+        with self.assertRaises(ValueError):
+            models.sample_model_mutation_probabilities('ata', 'blah')
+        with self.assertRaises(ValueError):
+            models.sample_model_mutation_probabilities('ata', q, t=-1)
+        with self.assertRaises(ValueError):
+            models.sample_model_mutation_probabilities('ata', q, n=0)
+
+    def test_sample_model_mutation_probabilities_validation(self):
+        q = models.goldman_Q(scale_q=False)
+        sample = models.sample_model_mutation_probabilities('aaa', q)
+        self.assertIsInstance(sample, list)
+        self.assertEqual(len(sample), 100) 
 
 if __name__=='__main__':
     unittest.main()

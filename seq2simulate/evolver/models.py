@@ -517,14 +517,51 @@ def call_mutation_from_q(codon, q, t=0):
     p_cumsum, p_codons, p_cumsum_dict = get_cumulative_p(p, return_dict=True)
     new_codon = call_mutation_from_cumulative_p(codon, p_cumsum_dict)
     return new_codon
-    
+
+def plot_codon_hist(codons):
+    """
+    Plots a histogram of a list of items (codons in this instance).
+
+    Args:
+        codons: 1-dimensional list
+    """
+    if not isinstance(codons, list):
+        raise ValueError('codons must be a list')
+
+    codons = numpy.array(codons)
+    set_codons = list(set(codons))
+    codon_bins = numpy.array([sum(codons == i) for i in set_codons])
+    sort_ind = numpy.argsort(codon_bins)[::-1]
+    codon_bins = codon_bins[sort_ind]
+    set_codons = [set_codons[i] for i in sort_ind] 
+     
+    fig, ax = pylab.subplots()
+    ax.bar(range(len(codon_bins)), codon_bins, 0.8)
+    ax.set_xticks(numpy.arange(len(codon_bins)))
+    ax.set_xticklabels(set_codons, rotation='vertical')
+    ax.set_ylabel('n')
+    fig.show() 
+
+def sample_model_mutation_probabilities(codon, q, t=0, n=100):
+    if not isinstance(codon, str):
+        raise ValueError('codon must be a string')
+    if len(codon) != 3:
+        raise ValueError('codon must be a string of length 3')
+    if not isinstance(q, numpy.ndarray):
+        raise ValueError('q must be a NumPy array')
+    if not isinstance(t, (float, int)):
+        raise ValueError('t must be a number')
+    if not isinstance(n, (float, int)):
+        raise ValueError('n must be a number')
+    if t < 0:
+        raise ValueError('t must be positive')
+    if n <= 0:
+        raise ValueError('n must be > 0')
+    return [call_mutation_from_q(codon, q, t=t) for i in range(n)]
 
 if __name__=='__main__':
-    q = goldman_Q(scale_q=False)
-    p = convert_q_to_p(q, t=1)
-    pc, pcod, pcdict = get_cumulative_p(p, return_dict=True)
-    #plot_p_over_time(q, codon='ttt', logscale=False)
-    new_codons = [call_mutation_from_cumulative_p('aaa', pcdict) for i in range(1000)]
+    pass
+
     
      
 
