@@ -84,7 +84,6 @@ def print_mutations(old_sequence, new_sequence, colour=True):
     print(new_sequence_aa)
 
 if __name__=='__main__':
-    pass
- 
+    pass 
     
 
