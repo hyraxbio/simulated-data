@@ -1,8 +1,10 @@
 import copy
+import itertools
 import os
 import random
 import shutil
 import subprocess
+import sys
 import uuid
 
 import Bio
@@ -24,7 +26,11 @@ simulated_fq_1_name = "_art1.fastq"
 simulated_fq_2_name = "_art2.fastq"
 
 # K65R, K103N
-pcr_error_positions = [650, 774]
+pcr_error_positions = [672, 789]
+
+# flag numbers indicating forward and reverse
+FORWARD_FLAG = 8
+REVERSE_FLAG = 24
 
 package_dir = seq2simulate.__path__[0]
 contamination_dir = os.path.join(package_dir, 'contamination')
@@ -42,10 +48,18 @@ def merge_files_single(filenames, out_filename):
     """
 
     with open(out_filename, 'w') as out_handle:
-        for filename in filenames:
-            with open(filename, 'r') as in_handle:
-                for line in in_handle:
+        handles = [open(f, 'r') for f in filenames]
+        while True:
+            all_eof = True
+            for handle in handles:
+                line = "".join([handle.readline() for _ in range(4)])
+                if line is not None and line != "":
+                    all_eof = False
                     out_handle.write(line)
+            if all_eof:
+                break
+        for handle in handles:
+            handle.close()
 
 def merge_files(filenames, out_filename, paired_end):
     """
@@ -202,6 +216,45 @@ def correct_sam_file(original_sam_file, working_dir):
 
     shutil.move(corrected_sam_filename, original_sam_file)
 
+def select_only_flag(
+    fastq_file, sam_file, working_dir, flag):
+    """
+    Select only fastq entries that have a particular SAM flag
+    associated with them (usually forward or reverse).
+
+    Args:
+        fastq_file: the FASTQ file to take from
+        sam_file: the SAM file to take from
+        working_dir: the working directory
+        flag: the flag to select
+
+    Returns: (new fq file, new sam file)
+
+    """
+
+    out_fq_path = os.path.join(working_dir, str(uuid.uuid4()))
+    out_sam_path = os.path.join(working_dir, str(uuid.uuid4()))
+
+    with open(fastq_file, 'r') as fq_handle, \
+         open(sam_file, 'r') as sam_handle:
+
+        in_generator = itertools.izip(
+            custom_generators.parse_fastq(fq_handle), 
+            custom_generators.parse_sam(sam_handle)
+        )
+
+        in_generator, in_generator2 = itertools.tee(in_generator)
+
+        with open(out_fq_path, 'w') as fq_out, \
+             open(out_sam_path, 'w') as sam_out:
+
+            for p in in_generator:
+                if int(p[1][custom_generators.FLAG]) != flag:
+                    continue
+                fq_out.write("".join(p[0]))
+                sam_out.write("\t".join(p[1]))
+
+    return out_fq_path, out_sam_path
 
 def run_art(
     sequence, platform, coverage, paired_end, working_dir, 
@@ -211,15 +264,19 @@ def run_art(
     A wrapper for running the ART simulator from a SeqRecord object.
 
     Args:
-        sequence_: The SeqRecord to simulate.
+        sequence: The SeqRecord to simulate.
         platform: A Platform object.
         coverage: The required coverage.
         working_dir: Where to place temporary files.
+        forward_only: only simulate forward sequences.
+        reverse_only: only simulate reverse sequences.
 
     Returns:
         The filename of the simulated data
         
     """
+
+    assert not (forward_only and reverse_only)
 
     temp_file = os.path.join(working_dir, str(uuid.uuid4()))
     with open(temp_file, 'w') as out_handle:
@@ -229,9 +286,17 @@ def run_art(
                                 temp_file, platform, coverage,
                                 paired_end, working_dir
                             )
-    print '.',
     os.unlink(temp_file)
-    
+
+    print '.',
+    sys.stdout.flush()
+
+    if forward_only:
+        return select_only_flag(result_file, sam_file,
+            working_dir, 0)
+    elif reverse_only:
+        return select_only_flag(result_file, sam_file,
+            working_dir, 16)
     
     return result_file, sam_file
 
@@ -267,13 +332,14 @@ def run_art_with_pcr_error(
     pcr_error_sequence = copy.deepcopy(sequence)
 
     for error_pos in pcr_error_positions:
-        error_to_add = random.choice(['A','C','G','T'])
+        error_to_add = 'C'
         seq_list = list(str(pcr_error_sequence.seq))
-        seq_list.insert(error_pos, error_to_add)
-        pcr_error_sequence.seq = Bio.Seq.Seq(
+        for i in range(-10, 10, 3):
+            seq_list[error_pos + i] = error_to_add
+        pcr_error_sequence = Bio.SeqRecord.SeqRecord(Bio.Seq.Seq(
             ''.join(seq_list), 
             Bio.Alphabet.Alphabet()
-        )
+            ), id=sequence.id, name=sequence.name)
 
     forward_dirty_fq, forward_dirty_sam = run_art(
         pcr_error_sequence, platform, coverage/4, 
@@ -291,13 +357,13 @@ def run_art_with_pcr_error(
         
 
     merge_files(
-        [forward_clean_fq, reverse_clean_fq, forward_dirty_fq], out_file,
+        [forward_clean_fq, forward_dirty_fq, reverse_clean_fq], out_file,
         paired_end
     )
 
     out_sam = os.path.join(working_dir, str(uuid.uuid4()))
     merge_sam_files(
-        [forward_clean_sam, reverse_clean_sam, forward_dirty_sam], out_sam
+        [forward_clean_sam, forward_dirty_sam, reverse_clean_sam], out_sam
     )
 
     return out_file, out_sam
