@@ -5,7 +5,7 @@ import drm
 import hiv_drms
 import platform as plat
 import prevalence
-import sierra_wrapper as sierra
+import sierra_ws as sierra
 
 resistance_scores = [(60, 'R'), (15, 'I')]
 

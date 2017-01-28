@@ -132,6 +132,12 @@ def run(
             'Only illumina paired-end reads can be simulated.'
         )
 
+    if paired_end and pcr_error:
+        raise ValueError(
+            'Cannot presently introduce pcr error into paired_end illumina'\
+            'sequences.'
+        )
+
     if diversity_only and error_only:
         raise ValueError(
             'Can\'t run with both --diversity-only and --error-only.' \
