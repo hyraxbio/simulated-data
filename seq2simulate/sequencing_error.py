@@ -14,6 +14,7 @@ import art
 
 import custom_generators
 import platform as plat
+import drm as drm_mod
 import seq2simulate
 
 # values for ion torrent and miseq taken from
@@ -466,7 +467,7 @@ def shuffle_and_assign_error_types(sequences, pcr_error=True):
         for sequence in sequences:
             can_add_pcr = True
             for drm in sequence.drms:
-                if drm.locus == RT and not \
+                if drm.locus == drm_mod.RT and not \
                 ((drm.relative_pos > pcr_error_inclusion_cutoff) \
                 or (drm.delete)):
                     can_add_pcr = False
