@@ -185,8 +185,6 @@ def run(
             )
         print 'Output folder:', out
 
-
-
     print 'Working directory:', working_dir.replace(' ', '\ ')
 
     if not error_only and not prevalence_only:
@@ -194,7 +192,10 @@ def run(
             susceptible, resistant,
             pcr_error, env_error, human_error, remove_rt,
             randomize,
-            working_dir
+            working_dir,
+            randomize_includes_pcr_error = (not paired_end) 
+                                         # we can't currently do pcr for
+                                         # paired end sequences 
         )
 
     if not diversity_only and not prevalence_only:
