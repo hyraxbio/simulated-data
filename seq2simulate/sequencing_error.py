@@ -25,8 +25,11 @@ simulated_sam_name = "_art.sam"
 simulated_fq_1_name = "_art1.fastq"
 simulated_fq_2_name = "_art2.fastq"
 
-# K65R, K103N
-pcr_error_positions = [672, 789]
+# approximate locations of K65R, K103N, taken from the end of integrase
+# the gag-pol region is very variable, so better to count from end.
+pcr_error_offsets = [2353, 2236]
+# we'll only include pcr error when DRMs don't work.
+pcr_error_inclusion_cutoff = 140
 
 # flag numbers indicating forward and reverse
 FORWARD_FLAG = 8
@@ -331,11 +334,11 @@ def run_art_with_pcr_error(
 
     pcr_error_sequence = copy.deepcopy(sequence)
 
-    for error_pos in pcr_error_positions:
+    for error_pos in pcr_error_offsets:
         error_to_add = 'C'
         seq_list = list(str(pcr_error_sequence.seq))
-        for i in range(-10, 10, 3):
-            seq_list[error_pos + i] = error_to_add
+        for i in range(-9, 9, 3):
+            seq_list[len(seq_list) - error_pos + i] = error_to_add
         pcr_error_sequence = Bio.SeqRecord.SeqRecord(Bio.Seq.Seq(
             ''.join(seq_list), 
             Bio.Alphabet.Alphabet()
@@ -455,13 +458,24 @@ def shuffle_and_assign_error_types(sequences, pcr_error=True):
     
     random.shuffle(sequences)
 
-    if len(sequences) >= 3 and len(sequences) < 6:
-        if pcr_error:
-            sequences[0].pcr_error = True
-        sequences[1].env_error = True
-        sequences[2].human_error = True
-    elif len(sequences) >= 6:
-        if pcr_error:
-            sequences[3].pcr_error = True
-        sequences[4].env_error = True
-        sequences[5].human_error = True
+    sequences[0].human_error = True
+    sequences[1].env_error = True
+    
+    if pcr_error:
+        pcr_added = False
+        for sequence in sequences:
+            can_add_pcr = True
+            for drm in sequence.drms:
+                if drm.locus == RT and not \
+                ((drm.relative_pos > pcr_error_inclusion_cutoff) \
+                or (drm.delete)):
+                    can_add_pcr = False
+                    break
+            if can_add_pcr:
+                sequence.pcr_error = True
+                pcr_added = True
+                break
+        if not pcr_added:
+            print "Failed to add PCR error."
+
+

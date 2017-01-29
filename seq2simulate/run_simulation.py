@@ -95,7 +95,8 @@ def run_diversity(
     raw_susceptible, raw_resistant,
     pcr_error, env_error, human_error, remove_rt,
     randomize,
-    working_dir, 
+    working_dir,
+    randomize_includes_pcr_error = False 
 
 ):
     """
@@ -130,8 +131,9 @@ def run_diversity(
             )
         print "Shuffling and randomly assigning error types."
 
+
         sequencing_error.shuffle_and_assign_error_types(sequences, 
-                                                        pcr_error=False)
+                                    pcr_error=randomize_includes_pcr_error)
 
     
     threads = []
