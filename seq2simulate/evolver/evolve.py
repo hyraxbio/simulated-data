@@ -6,23 +6,6 @@ model_qfuncs = {
     'simple_goldman': models.goldman_Q,
 }
 
-#def evolve_sequence(sequence, 
-#    t=0.1, 
-#    omega=1.0, 
-#    kappa=2.0, 
-#    codon_freq=None, 
-#    scale_q=True, 
-#    model='simple_goldman'):
-#
-#    qfunc = model_qfuncs[model]
-#    q = qfunc(kappa=kappa, omega=omega, codon_freq=codon_freq, scale_q=scale_q, return_dict=False)
-#   
-#    loci = models.parse_sequence_to_loci(sequence)
-#    for locus in loci:
-#        for codon in locus.codons:
-#            codon.seq = models.call_sub_from_q(codon.seq, q, t=t)
-#    return models.parse_loci_to_sequence_string(loci)
-
 def evolve_sequence_with_q(sequence, q, t=0.1, lmbda=0.01, ti_td=0.1, indel_codon_freq=None): 
     if not isinstance(t, (float, int)):
         raise ValueError('t must be a number')
@@ -41,12 +24,10 @@ def evolve_sequence_with_q(sequence, q, t=0.1, lmbda=0.01, ti_td=0.1, indel_codo
     loci = models.parse_sequence_to_loci(sequence)
     for locus in loci:
         for codon in locus.codons:
-            codon.seq = models.call_sub_from_q(codon.seq, q, t=t)
+            models.make_sub_from_q(codon, q, t=t)
         for i in range(len(locus.codons)):
             if uniform(0, 1) <= lmbda:
                 models.make_indel(locus, index=i, ti_td=ti_td, codon_freq=indel_codon_freq)
-            
-        
         
     return models.parse_loci_to_sequence_string(loci)
 
@@ -77,7 +58,6 @@ def evolve_tree(sequence,
         ti_td: ratio of insertions to deletions
         codon_freq: dictionary of codon_frequencies, also know as equilibrium
         frequencies
-
         scale_q: scales Q so that the average rate of substitution at
         equilibrium equals 1. Branch lengths are thus expected number of nucleotide
         substitutions per codon. See Goldman (1994).
@@ -108,6 +88,21 @@ def evolve(sequence,
     model='simple_goldman'):
     """
     Wrapper around evolve_tree(). Returns a list of evolved sequences.
+
+    Args:
+        sequence: string of DNA nucleotides
+        taxa: number of daughter sequences to evolve
+        t: evolution time or branch length
+        omega: dN/dS 
+        kappa: ratio of transition to transversion rates
+        lmbda: probability of indel at codon
+        ti_td: ratio of insertions to deletions
+        codon_freq: dictionary of codon_frequencies, also know as equilibrium
+        frequencies
+        scale_q: scales Q so that the average rate of substitution at
+        equilibrium equals 1. Branch lengths are thus expected number of nucleotide
+        substitutions per codon. See Goldman (1994).
+        model: mutational model, 'simple_goldman' will use a Goldman-Yang-like model
     """
 
     tree = evolve_tree(**locals())

@@ -184,23 +184,23 @@ class ModelTester(unittest.TestCase):
         old_codon = 'aaa'
         new_codon = models.get_mutation_from_cumulative_p(old_codon, pcdict)
                 
-    def test_call_sub_from_q_validation(self):
+    def test_make_sub_from_q_validation(self):
         q = models.goldman_Q(scale_q=False)
         with self.assertRaises(ValueError):
-            models.call_sub_from_q(123, q, t=10)
+            models.make_sub_from_q(123, q, t=10)
         with self.assertRaises(ValueError):
-            models.call_sub_from_q('aaa', 'blha', t=10)
+            models.make_sub_from_q('aaa', 'blha', t=10)
         with self.assertRaises(ValueError):
-            models.call_sub_from_q('aaa', q, t='s')
+            models.make_sub_from_q('aaa', q, t='s')
 
-    def test_call_sub_from_q(self):
+    def test_make_sub_from_q(self):
         q = models.goldman_Q(scale_q=False)
-        old_codon = 'aaa'
-        new_codon = models.call_sub_from_q(old_codon, q, t=10)
-        self.assertIsInstance(new_codon, str)
-        self.assertEqual(len(new_codon), 3)
+        old_codon_seq = 'aaa'
+        old_codon = models.Codon(seq=old_codon_seq)
+        models.make_sub_from_q(old_codon, q, t=10)
+        self.assertEqual(len(old_codon.seq), 3)
         allowed_letters = 'atgc'
-        for i in new_codon:
+        for i in old_codon.seq:
             self.assertIn(i, allowed_letters)
 
     def test_sample_model_mutation_probabilities_validation(self):
