@@ -1,12 +1,14 @@
 import trees, models, codon_frequencies
 import numpy
-from random import uniform
+from random import uniform, seed
+from copy import deepcopy
+seed()
 
 model_qfuncs = {
     'simple_goldman': models.goldman_Q,
 }
 
-def evolve_sequence_with_q(sequence, q, t=0.1, lmbda=0.01, ti_td=0.1, indel_codon_freq=None): 
+def evolve_sequence_with_q(sequence, q, t=0.1, lmbda=0.001, ti_td=0.1, indel_codon_freq=None): 
     if not isinstance(t, (float, int)):
         raise ValueError('t must be a number')
     if not isinstance(q, numpy.ndarray):
@@ -21,26 +23,27 @@ def evolve_sequence_with_q(sequence, q, t=0.1, lmbda=0.01, ti_td=0.1, indel_codo
         raise ValueError('lmbda must be in range 0-1')
     if not ti_td >= 0:
         raise ValueError('ti_td must be positive')
-    loci = models.parse_sequence_to_loci(sequence)
-    for locus in loci:
-        for codon in locus.codons:
-            models.make_sub_from_q(codon, q, t=t)
+
+    new_sequence = deepcopy(sequence)
+    for locus in new_sequence.loci:
+        models.make_subs_in_locus(locus, q, t=t)
         for i in range(len(locus.codons)):
             if uniform(0, 1) <= lmbda:
                 models.make_indel(locus, index=i, ti_td=ti_td, codon_freq=indel_codon_freq)
-        
-    return models.parse_loci_to_sequence_string(loci)
+    return new_sequence
 
 def evolve_tree(sequence,
     taxa=10,
     t=0.01, 
     omega=1.0, 
     kappa=2.0, 
-    lmbda=0.01,
+    lmbda=0.001,
     ti_td=0.1,
     codon_freq=None, 
     scale_q=True, 
-    model='simple_goldman'):
+    model='simple_goldman',
+    log=False,
+    ):
 
     """
     Evolve a parent DNA sequence into a set of daughter sequences (taxa) by:
@@ -49,7 +52,7 @@ def evolve_tree(sequence,
         3. mutate sequence according to tree shape using model 
 
     Args:
-        sequence: string of DNA nucleotides
+        sequence: a model.Sequence instance
         taxa: number of daughter sequences to evolve
         t: evolution time or branch length
         omega: dN/dS 
@@ -66,7 +69,6 @@ def evolve_tree(sequence,
     Returns:
         tree instance populated with new sequence strings
     """
-    sequence = sequence.lower()
     qfunc = model_qfuncs[model]
     q = qfunc(kappa=kappa, omega=omega, codon_freq=codon_freq, scale_q=scale_q, return_dict=False)
    
@@ -81,11 +83,13 @@ def evolve(sequence,
     t=0.01, 
     omega=1.0, 
     kappa=2.0, 
-    lmbda=0.01,
+    lmbda=0.001,
     ti_td=0.1,
     codon_freq=None, 
     scale_q=True, 
-    model='simple_goldman'):
+    model='simple_goldman',
+    log=False,
+    ):
     """
     Wrapper around evolve_tree(). Returns a list of evolved sequences.
 
@@ -104,9 +108,9 @@ def evolve(sequence,
         substitutions per codon. See Goldman (1994).
         model: mutational model, 'simple_goldman' will use a Goldman-Yang-like model
     """
-
+    sequence = models.Sequence(seq=sequence.lower()) 
     tree = evolve_tree(**locals())
-    return [i.value for i in trees.get_list_of_tree_leaves(tree)]
+    return [i.value.seq for i in trees.get_list_of_tree_leaves(tree)]
 
 
 def print_mutations(old_sequence, new_sequence, colour=True):
@@ -141,5 +145,33 @@ def print_mutations(old_sequence, new_sequence, colour=True):
     print(new_sequence_aa)
     print('\n')
 
+def compile_histories(tree):
+    """
+    Args:
+        tree: Tree instance
+    """
+    histories = []
+    nodes = trees.get_list_of_tree_nodes(tree)
+    for t in nodes:
+        history = [t.id, t.value.history]
+        histories.append(history)
+    return histories
+ 
+
 if __name__=='__main__':
-    pass 
+    qfunc = model_qfuncs['simple_goldman']
+    q = qfunc(scale_q=True)
+    old_sequence = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatcgc'
+    #old_sequence = models.parse_sequence_to_loci(old_sequence)
+    #new = evolve_sequence_with_q(old_sequence, q, t=0.5, lmbda=0.1, ti_td=0.5, indel_codon_freq=None)
+    sequence = models.Sequence(old_sequence)
+    new0 = evolve_tree(sequence, taxa=5, t=0.1, lmbda=0.1)
+    h0 = compile_histories(new0)
+    new1 = evolve_tree(sequence, taxa=5, t=0.1, lmbda=0.1)
+    h1 = compile_histories(new1)
+
+
+    #new_nodes = evolve(old_sequence, t=0.1, taxa=10)
+    #for i in new_nodes:
+    #    print_mutations(old_sequence, i)
+    #pass 

@@ -59,6 +59,7 @@ class Locus(object):
         self._codons = []
         for codon in codons:
             self.add_codon(codon)             
+        self.history = []
    
     @property 
     def loc_aa(self):
@@ -109,7 +110,10 @@ class Sequence(object):
     Convenience class to collect a set of loci.
     """
     def __init__(self, seq):
-        self.loci = parse_sequence_to_loci(seq) 
+        try:
+            self.loci = parse_sequence_to_loci(seq) 
+        except:
+            self.loci = []
 
     @property
     def codons(self):
@@ -122,6 +126,10 @@ class Sequence(object):
     @property
     def location_seq(self):
         return parse_loci_to_sequence(self.loci)
+
+    @property
+    def history(self):
+        return [locus.history for locus in self.loci]
 
 def break_sequence_into_triplets(sequence):
     nfloor = len(sequence)//3.0
@@ -512,7 +520,7 @@ def get_mutation_from_cumulative_p(codon, p_cumsum_dict):
     new_codon = codons[numpy.where(probabilities > uniform(0, 1))[0][0]]
     return new_codon
 
-def make_indel(locus, index=0, ti_td=0.1, codon_freq=None, log=False):
+def make_indel(locus, index=0, ti_td=0.1, codon_freq=None):
     """
     Makes a codon-length indel at locus.
     
@@ -530,9 +538,8 @@ def make_indel(locus, index=0, ti_td=0.1, codon_freq=None, log=False):
         indel_type = 'insertion'
 
     if indel_type == 'deletion':
+        locus.history.append([indel_type, locus.codons[index].seq, index]) 
         locus.codons[index].delete()
-        if log:
-            return [indel_type, index]
     elif indel_type == 'insertion':
         new_codon = choose_random_codon(codon_freq=codon_freq)
         new_codon = Codon(seq=new_codon)
@@ -540,9 +547,8 @@ def make_indel(locus, index=0, ti_td=0.1, codon_freq=None, log=False):
         if bef_aft == 'after':
             index += 1 
         locus.codons = locus.codons[:index] + [new_codon] + locus.codons[index:]
-        if log:
-            return [indel_type, index]
-        
+        locus.history.append([indel_type, new_codon.seq, index]) 
+
 def choose_random_codon(codon_freq=None):
     """
     Args:
@@ -557,7 +563,23 @@ def choose_random_codon(codon_freq=None):
     cum_freq = numpy.array([i for i in codon_freq.values()]).cumsum()
     new_codon = codons[numpy.where(cum_freq > uniform(0, 1))[0][0]]
     return new_codon
-    
+
+def make_subs_in_locus(locus, q, t=0):
+    """
+    Mutates all codons in locus according to Q.
+    """
+    if not isinstance(locus, Locus):
+        raise ValueError('locus must be an instance of Locus')
+    if not isinstance(q, numpy.ndarray):
+        raise ValueError('q must be a NumPy array')
+    if not isinstance(t, (float, int)):
+        raise ValueError('t must be a number')
+    for i, codon in enumerate(locus.codons):
+        old_seq = codon.seq
+        make_sub_from_q(codon, q, t=t)
+        new_seq = codon.seq
+        if old_seq != new_seq:
+            locus.history.append([old_seq, new_seq, i])
  
 def make_sub_from_q(codon, q, t=0):
     """

@@ -184,6 +184,16 @@ class ModelTester(unittest.TestCase):
         old_codon = 'aaa'
         new_codon = models.get_mutation_from_cumulative_p(old_codon, pcdict)
                 
+    def test_make_subs_in_locus(self):
+        q = models.goldman_Q(scale_q=False)
+        old_codon_seq = 'aaa'
+        old_codons = [models.Codon(seq=old_codon_seq)]*2
+        locus = models.Locus(codons=old_codons)
+        old_seq = locus.sequence
+        while locus.sequence == old_seq:
+            models.make_subs_in_locus(locus, q, t=10)
+            self.assertNotEqual(locus.history, [])
+
     def test_make_sub_from_q_validation(self):
         q = models.goldman_Q(scale_q=False)
         with self.assertRaises(ValueError):
