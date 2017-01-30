@@ -154,13 +154,14 @@ def compile_histories(tree):
     """
     if not isinstance(tree.value, models.Sequence):
         raise ValueError('tree.value must be instance of models.Sequence')
-    histories = []
+    histories = {}
     nodes = trees.get_list_of_tree_nodes(tree)
     for t in nodes:
-        history = [t.id, t.value.history]
-        histories.append(history)
+        histories[t.id] = t.value.history
     return histories
  
 
 if __name__=='__main__':
-    pass 
+    old_sequence = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatcgc'
+    t10 = evolve_tree(models.Sequence(old_sequence), taxa=10, t=0.1, omega=1.1, kappa=1.5)
+    histories = compile_histories(t10)

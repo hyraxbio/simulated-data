@@ -53,5 +53,14 @@ class EvolveTester(unittest.TestCase):
         for i,j in zip(new_sequences0, new_sequences1):
             self.assertNotEqual(i, j)
 
+    def test_compile_histories(self):
+        t10 = evolve.evolve_tree(models.Sequence(self.old_sequence), taxa=10, t=0.1, omega=1.1, kappa=1.5)
+        histories = evolve.compile_histories(t10)
+        self.assertIsInstance(histories, dict)
+        for i in trees.get_list_of_tree_nodes(t10):
+            self.assertIn(i.id, histories)
+         
+
+
 if __name__=='__main__':
     unittest.main()
