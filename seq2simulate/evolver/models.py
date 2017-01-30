@@ -642,22 +642,6 @@ def sample_model_mutation_probabilities(seq, q, t=0, n=100):
         raise ValueError('n must be > 0')
     return [make_sub_from_q(Codon(seq=seq), q, t=t) for i in range(n)]
 
-#def get_mutations(old_loci, new_loci):
-#
-#    if len(old_loci) != len(new_loci):
-#        raise ValueError('old_loci and new_loci must have same length')
-#
-#    loci_mutations = []
-#    for old, new in zip(old_loci, new_loci):
-#        locus_mutations = {}
-#        insertion = False
-#        if len(old.codons) > len(new_codons):
-#            insertion = True
-#        for old_codon in old.codons:
-#            for new_codon in new.codons:
-#                if old_codon !
-            
-    
 
 if __name__=='__main__':
     pass

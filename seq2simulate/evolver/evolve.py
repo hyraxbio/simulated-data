@@ -8,7 +8,9 @@ model_qfuncs = {
     'simple_goldman': models.goldman_Q,
 }
 
-def evolve_sequence_with_q(sequence, q, t=0.1, lmbda=0.001, ti_td=0.1, indel_codon_freq=None): 
+def evolve_sequence_with_q(sequence, q, t=0.1, lmbda=0.001, ti_td=0.1, indel_codon_freq=None):
+    if not isinstance(sequence, models.Sequence):
+        raise ValueError('sequence must be an instance of models.Sequence')
     if not isinstance(t, (float, int)):
         raise ValueError('t must be a number')
     if not isinstance(q, numpy.ndarray):
@@ -148,8 +150,10 @@ def print_mutations(old_sequence, new_sequence, colour=True):
 def compile_histories(tree):
     """
     Args:
-        tree: Tree instance
+        tree: Tree instance with models.Sequence as value
     """
+    if not isinstance(tree.value, models.Sequence):
+        raise ValueError('tree.value must be instance of models.Sequence')
     histories = []
     nodes = trees.get_list_of_tree_nodes(tree)
     for t in nodes:
@@ -159,19 +163,4 @@ def compile_histories(tree):
  
 
 if __name__=='__main__':
-    qfunc = model_qfuncs['simple_goldman']
-    q = qfunc(scale_q=True)
-    old_sequence = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatcgc'
-    #old_sequence = models.parse_sequence_to_loci(old_sequence)
-    #new = evolve_sequence_with_q(old_sequence, q, t=0.5, lmbda=0.1, ti_td=0.5, indel_codon_freq=None)
-    sequence = models.Sequence(old_sequence)
-    new0 = evolve_tree(sequence, taxa=5, t=0.1, lmbda=0.1)
-    h0 = compile_histories(new0)
-    new1 = evolve_tree(sequence, taxa=5, t=0.1, lmbda=0.1)
-    h1 = compile_histories(new1)
-
-
-    #new_nodes = evolve(old_sequence, t=0.1, taxa=10)
-    #for i in new_nodes:
-    #    print_mutations(old_sequence, i)
-    #pass 
+    pass 
