@@ -135,8 +135,14 @@ def convert_dna_to_aa(sequence, codon_table=None):
     if codon_table is None:
         codon_table = CodonTable()
     codon_strings = break_sequence_into_triplets(sequence)
-    aa = [getattr(codon_table, i) for i in codon_strings]
-    return ''.join([i for i in aa])
+    aas = []
+    for i in codon_strings:
+        if i == '---':
+            aa = '-' 
+        else:
+            aa = getattr(codon_table, i)
+        aas.append(aa)
+    return ''.join([i for i in aas])
     
 def parse_sequence_to_loci(sequence):
     codon_strings = break_sequence_into_triplets(sequence)
@@ -506,26 +512,13 @@ def get_mutation_from_cumulative_p(codon, p_cumsum_dict):
     new_codon = codons[numpy.where(probabilities > uniform(0, 1))[0][0]]
     return new_codon
 
-def call_sub_or_indel(lmbda=0.1):
-    """
-    Call substitution or indel.
-
-    Args:
-        lmbda: propbability of an indel
-
-    Returns either 'sub' or 'indel'
-    """
-    if uniform(0, 1) > lmbda:
-        return 'sub'
-    else:
-        return 'indel'
-
-def make_indel(locus, ti_td=0.1, codon_freq=None):
+def make_indel(locus, index=0, ti_td=0.1, codon_freq=None):
     """
     Makes a codon-length indel at locus.
     
     Args:
         locus: and instance of Locus
+        index: indel codon index
         ti_td: ratio of insertions to deletions 
         codon_feq: a codon frequency dictionary
 
@@ -537,13 +530,16 @@ def make_indel(locus, ti_td=0.1, codon_freq=None):
         indel_type = 'insertion'
 
     if indel_type == 'deletion':
-        choice(locus.codons).delete()
+        locus.codons[index].delete()
 
     elif indel_type == 'insertion':
-        i = randint(0, len(locus.codons))
         new_codon = choose_random_codon(codon_freq=codon_freq)
         new_codon = Codon(seq=new_codon)
-        locus.codons = locus.codons[:i] + [new_codon] + locus.codons[i:]
+        bef_aft =  choice(['before', 'after'])
+        if bef_aft == 'before':
+            locus.codons = locus.codons[:index] + [new_codon] + locus.codons[index:]
+        elif bef_aft == 'after':
+            locus.codons = locus.codons[:index+1] + [new_codon] + locus.codons[index+1:]
         
 def choose_random_codon(codon_freq=None):
     """
@@ -575,6 +571,8 @@ def call_sub_from_q(codon, q, t=0):
     """
     if not isinstance(codon, str):
         raise ValueError('codon must be a string')
+    if codon == '---':
+        return codon
     if len(codon) != 3:
         raise ValueError('codon must be a three-letter str')
     if not isinstance(q, numpy.ndarray):
@@ -628,14 +626,6 @@ def sample_model_mutation_probabilities(codon, q, t=0, n=100):
     return [call_sub_from_q(codon, q, t=t) for i in range(n)]
 
 if __name__=='__main__':
-    old_sequence = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatcgc'
-    loci = parse_sequence_to_loci(old_sequence)
-    l = loci[0]
-    print(l)
-    make_indel(l, ti_td=0.1, codon_freq=None)
-    print(l)
-    
-    
     pass
 
     

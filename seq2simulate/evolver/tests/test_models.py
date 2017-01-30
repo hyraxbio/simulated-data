@@ -220,25 +220,16 @@ class ModelTester(unittest.TestCase):
         self.assertIsInstance(sample, list)
         self.assertEqual(len(sample), 100) 
 
-    def test_call_sub_or_indel(self):
-        lmbda = 0.4
-        n = 10000
-        results = [models.call_sub_or_indel(lmbda=lmbda) for i in range(n)]
-        indels = len([i for i in results if i=='indel'])/float(n)
-        # this has a small probability of failing
-        self.assertTrue(indels > 0.3)
-        self.assertTrue(indels < 0.5)
-
     def test_make_indel_force_deletion(self):
         c = models.Codon(seq='atg')
         l = models.Locus(codons=[c])
-        models.make_indel(l, ti_td=0.0, codon_freq=None)
-        self.assertEqual(l.codons[0].seq, '---')
+        models.make_indel(l, index=0, ti_td=0.0, codon_freq=None)
+        self.assertIn('---', [i.seq for i in l.codons])
         
     def test_make_indel_force_insertion(self):
         c = models.Codon(seq='atg')
         l = models.Locus(codons=[c])
-        models.make_indel(l, ti_td=1.0, codon_freq=None)
+        models.make_indel(l, index=0, ti_td=1e12, codon_freq=None)
         self.assertEqual(len(l.codons), 2)
         self.assertFalse(any(i.seq == '---' for i in l.codons))
         

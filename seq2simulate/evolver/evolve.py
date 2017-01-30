@@ -1,36 +1,53 @@
 import trees, models, codon_frequencies
 import numpy
+from random import uniform
 
 model_qfuncs = {
     'simple_goldman': models.goldman_Q,
 }
 
-def evolve_sequence(sequence, 
-    t=0.1, 
-    omega=1.0, 
-    kappa=2.0, 
-    codon_freq=None, 
-    scale_q=True, 
-    model='simple_goldman'):
+#def evolve_sequence(sequence, 
+#    t=0.1, 
+#    omega=1.0, 
+#    kappa=2.0, 
+#    codon_freq=None, 
+#    scale_q=True, 
+#    model='simple_goldman'):
+#
+#    qfunc = model_qfuncs[model]
+#    q = qfunc(kappa=kappa, omega=omega, codon_freq=codon_freq, scale_q=scale_q, return_dict=False)
+#   
+#    loci = models.parse_sequence_to_loci(sequence)
+#    for locus in loci:
+#        for codon in locus.codons:
+#            codon.seq = models.call_sub_from_q(codon.seq, q, t=t)
+#    return models.parse_loci_to_sequence_string(loci)
 
-    qfunc = model_qfuncs[model]
-    q = qfunc(kappa=kappa, omega=omega, codon_freq=codon_freq, scale_q=scale_q, return_dict=False)
-   
-    loci = models.parse_sequence_to_loci(sequence)
-    for locus in loci:
-        for codon in locus.codons:
-            codon.seq = models.call_sub_from_q(codon.seq, q, t=t)
-    return models.parse_loci_to_sequence_string(loci)
-
-def evolve_sequence_with_q(sequence, q, t=0.1): 
+def evolve_sequence_with_q(sequence, q, t=0.1, lmbda=0.01, ti_td=0.1, indel_codon_freq=None): 
     if not isinstance(t, (float, int)):
         raise ValueError('t must be a number')
     if not isinstance(q, numpy.ndarray):
         raise ValueError('q must be a NumPy array')
+    if not isinstance(lmbda, (float, int)):
+        raise ValueError('lmbda must be a number')
+    if not isinstance(ti_td, (float, int)):
+        raise ValueError('ti_td must be a number')
+    if not lmbda >= 0:
+        raise ValueError('lmbda must be in range 0-1')
+    if not lmbda <= 1:
+        raise ValueError('lmbda must be in range 0-1')
+    if not ti_td >= 0:
+        raise ValueError('ti_td must be positive')
     loci = models.parse_sequence_to_loci(sequence)
     for locus in loci:
         for codon in locus.codons:
             codon.seq = models.call_sub_from_q(codon.seq, q, t=t)
+        for i in range(len(locus.codons)):
+            if uniform(0, 1) <= lmbda:
+                models.make_indel(locus, index=i, ti_td=ti_td, codon_freq=indel_codon_freq)
+            
+        
+        
     return models.parse_loci_to_sequence_string(loci)
 
 def evolve_tree(sequence,
@@ -38,6 +55,8 @@ def evolve_tree(sequence,
     t=0.01, 
     omega=1.0, 
     kappa=2.0, 
+    lmbda=0.01,
+    ti_td=0.1,
     codon_freq=None, 
     scale_q=True, 
     model='simple_goldman'):
@@ -45,7 +64,7 @@ def evolve_tree(sequence,
     """
     Evolve a parent DNA sequence into a set of daughter sequences (taxa) by:
         1. generating a random phylogenetic tree
-        2. intantiating a mutational model (e.g. Goldman-Yang-like by default) represented by Q-matrix
+        2. intantiating a mutational model (e.g. Goldman-Yang-like by default) represented by Q-matrix, with indels
         3. mutate sequence according to tree shape using model 
 
     Args:
@@ -54,6 +73,8 @@ def evolve_tree(sequence,
         t: evolution time or branch length
         omega: dN/dS 
         kappa: ratio of transition to transversion rates
+        lmbda: probability of indel at codon
+        ti_td: ratio of insertions to deletions
         codon_freq: dictionary of codon_frequencies, also know as equilibrium
         frequencies
 
@@ -72,7 +93,7 @@ def evolve_tree(sequence,
     tree = trees.random_tree(taxa)
     tree.value = sequence
     for node in trees.get_list_of_tree_nodes(tree)[1:]:
-        node.value = evolve_sequence_with_q(node.parent.value, q, t=t)
+        node.value = evolve_sequence_with_q(node.parent.value, q, t=t, lmbda=lmbda, ti_td=ti_td)
     return tree 
         
 def evolve(sequence,
@@ -80,6 +101,8 @@ def evolve(sequence,
     t=0.01, 
     omega=1.0, 
     kappa=2.0, 
+    lmbda=0.01,
+    ti_td=0.1,
     codon_freq=None, 
     scale_q=True, 
     model='simple_goldman'):
