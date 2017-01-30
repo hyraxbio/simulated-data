@@ -31,6 +31,12 @@ class ModelTester(unittest.TestCase):
         c.seq = 'a'
         self.assertEqual(c.seq, 'a--')
 
+    def test_codon_delete(self):
+        c = models.Codon(seq='atg')
+        self.assertEqual(c.seq, 'atg')
+        c.delete()
+        self.assertEqual(c.seq, '---')
+
     def test_locus_init(self):
         l = models.Locus()
         self.assertEqual(l.loc, 0)
@@ -162,35 +168,35 @@ class ModelTester(unittest.TestCase):
         for i in pc:
             self.assertTrue(isclose(i[-1], 1))
         
-    def test_call_mutation_from_cumulative_p_validation(self):
+    def test_get_mutation_from_cumulative_p_validation(self):
         q = models.goldman_Q(scale_q=False)
         p = models.convert_q_to_p(q, t=10)
         pc, pcod, pcdict = models.get_cumulative_p(p, return_dict=True)
         with self.assertRaises(ValueError):
-            models.call_mutation_from_cumulative_p(3, pcdict)
+            models.get_mutation_from_cumulative_p(3, pcdict)
         with self.assertRaises(ValueError):
-            models.call_mutation_from_cumulative_p('aaa', 'blah')
+            models.get_mutation_from_cumulative_p('aaa', 'blah')
 
-    def test_call_mutation_from_cumulative_p(self):
+    def test_get_mutation_from_cumulative_p(self):
         q = models.goldman_Q(scale_q=False)
         p = models.convert_q_to_p(q, t=10)
         pc, pcod, pcdict = models.get_cumulative_p(p, return_dict=True)
         old_codon = 'aaa'
-        new_codon = models.call_mutation_from_cumulative_p(old_codon, pcdict)
+        new_codon = models.get_mutation_from_cumulative_p(old_codon, pcdict)
                 
-    def test_call_mutation_from_q_validation(self):
+    def test_call_sub_from_q_validation(self):
         q = models.goldman_Q(scale_q=False)
         with self.assertRaises(ValueError):
-            models.call_mutation_from_q(123, q, t=10)
+            models.call_sub_from_q(123, q, t=10)
         with self.assertRaises(ValueError):
-            models.call_mutation_from_q('aaa', 'blha', t=10)
+            models.call_sub_from_q('aaa', 'blha', t=10)
         with self.assertRaises(ValueError):
-            models.call_mutation_from_q('aaa', q, t='s')
+            models.call_sub_from_q('aaa', q, t='s')
 
-    def test_call_mutation_from_q(self):
+    def test_call_sub_from_q(self):
         q = models.goldman_Q(scale_q=False)
         old_codon = 'aaa'
-        new_codon = models.call_mutation_from_q(old_codon, q, t=10)
+        new_codon = models.call_sub_from_q(old_codon, q, t=10)
         self.assertIsInstance(new_codon, str)
         self.assertEqual(len(new_codon), 3)
         allowed_letters = 'atgc'
@@ -213,6 +219,31 @@ class ModelTester(unittest.TestCase):
         sample = models.sample_model_mutation_probabilities('aaa', q)
         self.assertIsInstance(sample, list)
         self.assertEqual(len(sample), 100) 
+
+    def test_call_sub_or_indel(self):
+        lmbda = 0.4
+        n = 10000
+        results = [models.call_sub_or_indel(lmbda=lmbda) for i in range(n)]
+        indels = len([i for i in results if i=='indel'])/float(n)
+        # this has a small probability of failing
+        self.assertTrue(indels > 0.3)
+        self.assertTrue(indels < 0.5)
+
+    def test_make_indel_force_deletion(self):
+        c = models.Codon(seq='atg')
+        l = models.Locus(codons=[c])
+        models.make_indel(l, ti_td=0.0, codon_freq=None)
+        self.assertEqual(l.codons[0].seq, '---')
+        
+    def test_make_indel_force_insertion(self):
+        c = models.Codon(seq='atg')
+        l = models.Locus(codons=[c])
+        models.make_indel(l, ti_td=1.0, codon_freq=None)
+        self.assertEqual(len(l.codons), 2)
+        self.assertFalse(any(i.seq == '---' for i in l.codons))
+        
+
+
 
 if __name__=='__main__':
     unittest.main()

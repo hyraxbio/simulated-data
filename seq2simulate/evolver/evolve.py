@@ -19,7 +19,7 @@ def evolve_sequence(sequence,
     loci = models.parse_sequence_to_loci(sequence)
     for locus in loci:
         for codon in locus.codons:
-            codon.seq = models.call_mutation_from_q(codon.seq, q, t=t)
+            codon.seq = models.call_sub_from_q(codon.seq, q, t=t)
     return models.parse_loci_to_sequence_string(loci)
 
 def evolve_sequence_with_q(sequence, q, t=0.1): 
@@ -30,7 +30,7 @@ def evolve_sequence_with_q(sequence, q, t=0.1):
     loci = models.parse_sequence_to_loci(sequence)
     for locus in loci:
         for codon in locus.codons:
-            codon.seq = models.call_mutation_from_q(codon.seq, q, t=t)
+            codon.seq = models.call_sub_from_q(codon.seq, q, t=t)
     return models.parse_loci_to_sequence_string(loci)
 
 def evolve_tree(sequence,
@@ -83,6 +83,9 @@ def evolve(sequence,
     codon_freq=None, 
     scale_q=True, 
     model='simple_goldman'):
+    """
+    Wrapper around evolve_tree(). Returns a list of evolved sequences.
+    """
 
     tree = evolve_tree(**locals())
     return [i.value for i in trees.get_list_of_tree_leaves(tree)]
