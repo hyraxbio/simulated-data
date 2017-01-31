@@ -167,6 +167,4 @@ def compile_histories(tree):
 
 
 if __name__=='__main__':
-    old_sequence = open('../../data/split/Seq2_Sus', 'r').read()[10:].replace('\n', '')
-    new_sequences, mutations = evolve(old_sequence, taxa=3, t=1e-2, omega=1.1, kappa=1.5, lmbda=1e-4, ti_td=0.1, log=True)
     pass
