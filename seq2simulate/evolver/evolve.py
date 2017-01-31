@@ -8,7 +8,7 @@ model_qfuncs = {
     'simple_goldman': models.goldman_Q,
 }
 
-def evolve_sequence_with_q(sequence, q, t=0.1, lmbda=0.001, ti_td=0.1, indel_codon_freq=None):
+def evolve_sequence_with_q(sequence, q, t=1e-2, lmbda=1e-4, ti_td=0.1, indel_codon_freq=None):
     if not isinstance(sequence, models.Sequence):
         raise ValueError('sequence must be an instance of models.Sequence')
     if not isinstance(t, (float, int)):
@@ -36,10 +36,10 @@ def evolve_sequence_with_q(sequence, q, t=0.1, lmbda=0.001, ti_td=0.1, indel_cod
 
 def evolve_tree(sequence,
     taxa=10,
-    t=0.01, 
+    t=1e-2,
     omega=1.0, 
     kappa=2.0, 
-    lmbda=0.001,
+    lmbda=1e-4,
     ti_td=0.1,
     codon_freq=None, 
     scale_q=True, 
@@ -82,10 +82,10 @@ def evolve_tree(sequence,
         
 def evolve(sequence,
     taxa=10,
-    t=0.01, 
+    t=1e-2,
     omega=1.0, 
     kappa=2.0, 
-    lmbda=0.001,
+    lmbda=1e-4,
     ti_td=0.1,
     codon_freq=None, 
     scale_q=True, 
@@ -167,4 +167,6 @@ def compile_histories(tree):
 
 
 if __name__=='__main__':
+    old_sequence = open('../../data/split/Seq2_Sus', 'r').read()[10:].replace('\n', '')
+    new_sequences, mutations = evolve(old_sequence, taxa=3, t=1e-2, omega=1.1, kappa=1.5, lmbda=1e-4, ti_td=0.1, log=True)
     pass

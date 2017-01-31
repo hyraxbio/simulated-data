@@ -62,7 +62,7 @@ class EvolveTester(unittest.TestCase):
 
     def test_evolve_with_log(self):
         new_sequences, mutations = evolve.evolve(self.old_sequence, taxa=10, t=0.1, omega=1.1, kappa=1.5, lmbda=0.01, ti_td=0.1, log=True)
-        print(mutations)
+        self.assertIsInstance(mutations, list)
 
 if __name__=='__main__':
     unittest.main()
