@@ -34,7 +34,6 @@ def evolve_tree(sequence,
     codon_freq=None, 
     scale_q=True, 
     model='simple_goldman',
-    log=False,
     ):
 
     """
