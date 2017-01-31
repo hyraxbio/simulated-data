@@ -4,6 +4,8 @@ import uuid
 from Bio import SeqIO
 from subprocess import call
 
+from evolver.evolve import evolve
+
 fasta_output_filename = 'evolveagene_raw'
 evolveagene_extension = '_Unaligned.FASTA'
 
@@ -44,26 +46,41 @@ def run(
     print 'Evolving sequence', sequence.id, '...',
     sys.stdout.flush()
 
+    new_sequences = evolve(str(sequence.seq), 
+        taxa=num_taxa, 
+        t=branch_length,
+        omega=dnds, 
+        lmbda=0.001,
+        log=False,
+        scale_q=True,
+        strip_deletions=False,
+        verbose=True)  
+
+
     sequence_file = os.path.join(working_dir, 
         fasta_output_filename + str(uuid.uuid4()))
 
-    # EvolveAGene doesn't like fasta headers, so we write plain text
-    # sequence rather than using SeqIO
-    with open(sequence_file, 'w') as out:
-        out.write(str(sequence.seq))
+    ## EvolveAGene doesn't like fasta headers, so we write plain text
+    ## sequence rather than using SeqIO
+    #with open(sequence_file, 'w') as out:
+    #    out.write(str(sequence.seq))
 
-    arg_list = ['EvolveAGene4',
-        '-f', '\"%s\"' % sequence_file, 
-        '-t', tree_types[tree_type],
-        '-n', str(num_taxa),
-        '-a', str(dnds),
-        '-b', str(branch_length),
-        '-ss', selection_types[selection_type],
-        ]
+    #arg_list = ['EvolveAGene4',
+    #    '-f', '\"%s\"' % sequence_file, 
+    #    '-t', tree_types[tree_type],
+    #    '-n', str(num_taxa),
+    #    '-a', str(dnds),
+    #    '-b', str(branch_length),
+    #    '-ss', selection_types[selection_type],
+    #    ]
 
-    call(" ".join(arg_list), shell=True)
+    #call(" ".join(arg_list), shell=True)
 
     print 'evolved.'
-
-
-    return sequence_file + evolveagene_extension
+    with open(sequence_file, 'w') as out:
+        #out.write(str(sequence.seq))
+        for i,j in enumerate(new_sequences):
+            out.write('>{}\n'.format(i))
+            out.write(j+'\n')
+    
+    return sequence_file# + evolveagene_extension

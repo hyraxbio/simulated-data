@@ -72,16 +72,16 @@ def simulate(sequence, working_dir):
                 branch_length, hiv_pol_dnds, working_dir
             )
 
-            # evolveagene OOMs aggressively, which is a pain
-            tries = 10
-            while not os.path.isfile(evolve_file) and tries > 0:
-                # doze a bit so the threads get out of sync
-                time.sleep(random.randint(1, 5))
-                evolve_file = evolveagene.run(
-                    seq, tree_type, selection_type, num_taxa, 
-                    branch_length, hiv_pol_dnds, working_dir
-                )
-                tries -= 1
+            ## evolveagene OOMs aggressively, which is a pain
+            #tries = 10
+            #while not os.path.isfile(evolve_file) and tries > 0:
+            #    # doze a bit so the threads get out of sync
+            #    time.sleep(random.randint(1, 5))
+            #    evolve_file = evolveagene.run(
+            #        seq, tree_type, selection_type, num_taxa, 
+            #        branch_length, hiv_pol_dnds, working_dir
+            #    )
+            #    tries -= 1
 
             drms = []
             if name == 'resistant':

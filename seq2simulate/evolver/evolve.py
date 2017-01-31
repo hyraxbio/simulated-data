@@ -82,7 +82,9 @@ def evolve(sequence,
     codon_freq=None, 
     scale_q=True, 
     model='simple_goldman',
+    strip_deletions=False,
     log=False,
+    verbose=True,
     ):
     """
     Wrapper around evolve_tree(). Returns a list of evolved sequences.
@@ -102,11 +104,37 @@ def evolve(sequence,
         substitutions per codon. See Goldman (1994).
         model: mutational model, 'simple_goldman' will use a Goldman-Yang-like model
         log: if True, returns list of evolved sequences AND list of mutations
+        verbose: if True, prints parameters
+        strip_deletions: False,
     """
+    if not isinstance(sequence, str):
+        raise TypeError('sequence must be a string')
+   
+    if verbose: 
+        print '\n\n---------------------------------------'
+        print 'evolving new sequences with parameters:'
+        print '---------------------------------------'
+        for i,j in zip(['taxa',
+            't',
+            'omega',
+            'kappa',
+            'lmbda',
+            'ti_td',
+            'scale_q',
+            'model',
+            'strip_deletions',
+            'log',
+            ],
+            [taxa, t, omega, kappa, lmbda, ti_td, scale_q, model, strip_deletions, log]):
+            print '{0:<10} {1:<15}'.format(i, j)
+        print '---------------------------------------\n\n'
+
     sequence = models.Sequence(seq=sequence.lower()) 
     tree = evolve_tree(**locals())
     leaves = trees.get_list_of_tree_leaves(tree)
     sequences = [i.value.seq for i in leaves]
+    if strip_deletions:
+        sequences = [i.replace('-', '') for i in sequences]
     if log:
         mutations = [i.value.mutations for i in leaves]
         return sequences, mutations

@@ -73,7 +73,7 @@ setup(
     author='Imogen Wright',
     author_email='imogen@hyraxbio.co.za',
     version='1.6.4',
-    packages=['seq2simulate'],
+    packages=['seq2simulate', 'seq2simulate/evolver'],
     scripts=[
         'bin/simulate', 
         'bin/package-simulation', 
