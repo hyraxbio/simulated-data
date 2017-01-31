@@ -17,8 +17,9 @@ def evolve_sequence_with_q(sequence, q, t=1e-2, lmbda=1e-4, ti_td=0.1, indel_cod
         raise ValueError('ti_td must be positive')
 
     new_sequence = deepcopy(sequence)
+    p = models.convert_q_to_p(q, t=t)
     for locus in new_sequence.loci:
-        models.make_subs_in_locus(locus, q, t=t)
+        models.make_subs_in_locus(locus, p)
         for i in range(len(locus.codons)):
             if uniform(0, 1) <= lmbda:
                 models.make_indel(locus, index=i, ti_td=ti_td, codon_freq=indel_codon_freq)
@@ -34,6 +35,7 @@ def evolve_tree(sequence,
     codon_freq=None, 
     scale_q=True, 
     model='simple_goldman',
+    **kwargs
     ):
 
     """

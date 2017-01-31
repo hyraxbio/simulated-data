@@ -134,19 +134,21 @@ class ModelTester(unittest.TestCase):
                 
     def test_make_subs_in_locus(self):
         q = models.goldman_Q(scale_q=False)
+        p = models.convert_q_to_p(q, t=10)
         old_codon_seq = 'aaa'
         old_codons = [models.Codon(seq=old_codon_seq)]*2
         locus = models.Locus(codons=old_codons)
         old_seq = locus.sequence
         while locus.sequence == old_seq:
-            models.make_subs_in_locus(locus, q, t=10)
+            models.make_subs_in_locus(locus, p)
         self.assertNotEqual(locus.history, [])
 
     def test_make_sub_from_q(self):
         q = models.goldman_Q(scale_q=False)
+        p = models.convert_q_to_p(q, t=10)
         old_codon_seq = 'aaa'
         old_codon = models.Codon(seq=old_codon_seq)
-        models.make_sub_from_q(old_codon, q, t=10)
+        models.make_sub_from_p(old_codon, p)
         self.assertEqual(len(old_codon.seq), 3)
         allowed_letters = 'atgc'
         for i in old_codon.seq:
