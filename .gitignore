@@ -4,3 +4,4 @@ dist
 simulate.egg-info
 *.pyc
 *.swp
+*.lprof
