@@ -18,8 +18,9 @@ def evolve_sequence_with_q(sequence, q, t=1e-2, lmbda=1e-4, ti_td=0.1, indel_cod
 
     new_sequence = deepcopy(sequence)
     p = models.convert_q_to_p(q, t=t)
+    p_cumsum, p_codons, p_cumsum_dict = models.get_cumulative_p(p, return_dict=True)
     for locus in new_sequence.loci:
-        models.make_subs_in_locus(locus, p)
+        models.make_subs_in_locus(locus, p_cumsum_dict)
         for i in range(len(locus.codons)):
             if uniform(0, 1) <= lmbda:
                 models.make_indel(locus, index=i, ti_td=ti_td, codon_freq=indel_codon_freq)
