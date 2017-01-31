@@ -20,9 +20,19 @@ def benchmark_evolve():
     taxa = 10 
     start_time = time.time()
     new_sequences, mutations = evolve.evolve(old_sequence, taxa=taxa, log=True)
-    print("taxa:{} (nodes={}), sec:{}".format(taxa, len(new_sequences), time.time() - start_time))
+    print("taxa:{}, sec:{}".format(taxa, time.time() - start_time))
+    return old_sequence, new_sequences, mutations
+
+def benchmark_evolve_big_set():
+    with open('../../data/split/Seq2_Sus', 'r') as f:
+        old_sequence = f.read()[10:].replace('\n', '').lower()
+    taxa = 100
+    start_time = time.time()
+    new_sequences, mutations = evolve.evolve(old_sequence, taxa=taxa, log=True, omega=0.1)
+    print("taxa:{}, sec:{}".format(taxa, time.time() - start_time))
     return old_sequence, new_sequences, mutations
 
 if __name__=='__main__':
     benchmark_evolve_tree()
     ols, ns, mt = benchmark_evolve()
+    ols, ns, mt = benchmark_evolve_big_set()

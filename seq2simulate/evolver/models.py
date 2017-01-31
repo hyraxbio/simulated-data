@@ -585,7 +585,7 @@ def sample_model_mutation_probabilities(seq, q, t=0, n=100):
     if n <= 0:
         raise ValueError('n must be > 0')
     p = convert_q_to_p(q, t=t)
-    p_cumsum, p_codons, p_cumsum_dict = models.get_cumulative_p(p, return_dict=True)
+    p_cumsum, p_codons, p_cumsum_dict = get_cumulative_p(p, return_dict=True)
     return [make_sub_from_p(Codon(seq=seq), p_cumsum_dict) for i in range(n)]
 
 
