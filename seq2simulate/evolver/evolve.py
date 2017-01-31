@@ -162,6 +162,4 @@ def compile_histories(tree):
  
 
 if __name__=='__main__':
-    old_sequence = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatcgc'
-    t10 = evolve_tree(models.Sequence(old_sequence), taxa=10, t=0.1, omega=1.1, kappa=1.5)
-    histories = compile_histories(t10)
+    pass

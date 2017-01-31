@@ -1,4 +1,4 @@
-
+import re
 import random
 from types import NoneType
 
@@ -79,7 +79,17 @@ class Tree(object):
         except:
             val = None
         return val
- 
+
+    def to_list(self):
+        _id = self.id
+        left = self.left
+        if left is not None:
+            left = left.to_list()
+        right = self.right
+        if right is not None:
+            right = right.to_list()
+        return [_id, left, right]
+
 def random_tree(num_taxa, mean_branch_length=0.1):
     """
     Returns a randomly generated phylogenetic tree.
@@ -184,6 +194,7 @@ def get_list_of_tree_leaves(tree):
 
     nodes = []
     return get_nodes(tree, nodes=nodes)
+
 
 if __name__=='__main__':
     pass
