@@ -9,16 +9,6 @@ model_qfuncs = {
 }
 
 def evolve_sequence_with_q(sequence, q, t=1e-2, lmbda=1e-4, ti_td=0.1, indel_codon_freq=None):
-    if not isinstance(sequence, models.Sequence):
-        raise ValueError('sequence must be an instance of models.Sequence')
-    if not isinstance(t, (float, int)):
-        raise ValueError('t must be a number')
-    if not isinstance(q, numpy.ndarray):
-        raise ValueError('q must be a NumPy array')
-    if not isinstance(lmbda, (float, int)):
-        raise ValueError('lmbda must be a number')
-    if not isinstance(ti_td, (float, int)):
-        raise ValueError('ti_td must be a number')
     if not lmbda >= 0:
         raise ValueError('lmbda must be in range 0-1')
     if not lmbda <= 1:
@@ -157,8 +147,6 @@ def compile_histories(tree):
     Args:
         tree: Tree instance with models.Sequence as value
     """
-    if not isinstance(tree.value, models.Sequence):
-        raise ValueError('tree.value must be instance of models.Sequence')
     histories = {}
     nodes = trees.get_list_of_tree_nodes(tree)
     for t in nodes:
@@ -167,4 +155,6 @@ def compile_histories(tree):
 
 
 if __name__=='__main__':
+    old_sequence = open('../../data/split/Seq2_Sus', 'r').read()[10:].replace('\n', '')
+    new_sequences, mutations = evolve(old_sequence, taxa=3, t=1e-2, omega=1.1, kappa=1.5, lmbda=1e-4, ti_td=0.1, log=True)
     pass

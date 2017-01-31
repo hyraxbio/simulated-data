@@ -28,9 +28,6 @@ class ModelTester(unittest.TestCase):
 
     def test_codon_seq_validation(self):
         c = models.Codon()
-        for seq in [1, 'abc']:
-            with self.assertRaises(ValueError):
-                c.seq = seq
         c.seq = 'a'
         self.assertEqual(c.seq, 'a--')
 
@@ -92,13 +89,6 @@ class ModelTester(unittest.TestCase):
         s1 = models.parse_loci_to_sequence_string(l)
         self.assertEqual(s1, s0)
 
-    def test_mutation_category_validation(self):
-        ct = codon_frequencies.CodonTable(stop_codons=False)
-        with self.assertRaises(ValueError):
-            models.mutation_category('atg', 'acc', codon_table=[123])
-        with self.assertRaises(ValueError):
-            models.mutation_category('atg', 2, codon_table=ct)
-        
     def test_mutation_category(self):
         ct = codon_frequencies.CodonTable(stop_codons=False)
         self.assertEqual(models.mutation_category('atg', 'acc', codon_table=ct), ['multisite'])
@@ -107,46 +97,18 @@ class ModelTester(unittest.TestCase):
         self.assertEqual(models.mutation_category('atg', 'ata', codon_table=ct), ['nonsynonymous', 'transition'])
         self.assertEqual(models.mutation_category('atg', 'atc', codon_table=ct), ['nonsynonymous', 'transversion'])
 
-    def test_mutation_rate_validation(self):
-        ct = codon_frequencies.CodonTable(stop_codons=False)
-        cf = codon_frequencies.FEqual
-        with self.assertRaises(ValueError):
-            models.mutation_rate('atg', 'acc')
-        with self.assertRaises(ValueError):
-            models.mutation_rate('atg', 'acc', codon_table=ct)
-        with self.assertRaises(ValueError):
-            models.mutation_rate('atg', 'acc', codon_freq=cf)
-        with self.assertRaises(ValueError):
-            models.mutation_rate('atg', 2, codon_table=ct, codon_freq=cf)
-        
     def test_mutation_rate(self):
         ct = codon_frequencies.CodonTable(stop_codons=False)
         cf = codon_frequencies.FEqual
         self.assertEqual(models.mutation_rate('atg', 'acc', codon_table=ct, codon_freq=cf), 0)
         self.assertIsInstance(models.mutation_rate('gca', 'gcg', codon_table=ct, codon_freq=cf), float)
 
-    def test_goldman_Q_validation(self):
-        cf = codon_frequencies.FEqual
-        with self.assertRaises(ValueError):
-            models.goldman_Q(kappa='2')
-        with self.assertRaises(ValueError):
-            models.goldman_Q(omega='2')
-        with self.assertRaises(ValueError):
-            models.goldman_Q(codon_freq=['test'])
-        
     def test_goldman_Q(self):
         cf = codon_frequencies.FEqual
         q, qdict = models.goldman_Q(codon_freq=cf, scale_q=False, return_dict=True)
         self.assertEqual(q.shape, (61, 61))
         for row in q:
             self.assertTrue(isclose(row.sum(), 0))
-
-    def test_convert_q_to_p_validation(self):
-        q = models.goldman_Q()
-        with self.assertRaises(ValueError):
-            models.convert_q_to_p(['blah'])
-        with self.assertRaises(ValueError):
-            models.convert_q_to_p(q, t='3')
 
     def test_convert_q_to_p(self):
         q = models.goldman_Q()
@@ -156,14 +118,6 @@ class ModelTester(unittest.TestCase):
         p = models.convert_q_to_p(q, t=1)
         self.assertTrue((p.max() <= 1.0))
 
-    def test_get_cumulative_p_validation(self):
-        q = models.goldman_Q(scale_q=False)
-        p = models.convert_q_to_p(q, t=10)
-        with self.assertRaises(ValueError):
-            models.convert_q_to_p(['blah'])
-        with self.assertRaises(ValueError):
-            models.convert_q_to_p(p, codon_table='asdf')
-
     def test_get_cumulative_p(self):
         q = models.goldman_Q(scale_q=False)
         p = models.convert_q_to_p(q, t=10)
@@ -171,15 +125,6 @@ class ModelTester(unittest.TestCase):
         for i in pc:
             self.assertTrue(isclose(i[-1], 1))
         
-    def test_get_mutation_from_cumulative_p_validation(self):
-        q = models.goldman_Q(scale_q=False)
-        p = models.convert_q_to_p(q, t=10)
-        pc, pcod, pcdict = models.get_cumulative_p(p, return_dict=True)
-        with self.assertRaises(ValueError):
-            models.get_mutation_from_cumulative_p(3, pcdict)
-        with self.assertRaises(ValueError):
-            models.get_mutation_from_cumulative_p('aaa', 'blah')
-
     def test_get_mutation_from_cumulative_p(self):
         q = models.goldman_Q(scale_q=False)
         p = models.convert_q_to_p(q, t=10)
@@ -197,15 +142,6 @@ class ModelTester(unittest.TestCase):
             models.make_subs_in_locus(locus, q, t=10)
         self.assertNotEqual(locus.history, [])
 
-    def test_make_sub_from_q_validation(self):
-        q = models.goldman_Q(scale_q=False)
-        with self.assertRaises(ValueError):
-            models.make_sub_from_q(123, q, t=10)
-        with self.assertRaises(ValueError):
-            models.make_sub_from_q('aaa', 'blha', t=10)
-        with self.assertRaises(ValueError):
-            models.make_sub_from_q('aaa', q, t='s')
-
     def test_make_sub_from_q(self):
         q = models.goldman_Q(scale_q=False)
         old_codon_seq = 'aaa'
@@ -215,17 +151,6 @@ class ModelTester(unittest.TestCase):
         allowed_letters = 'atgc'
         for i in old_codon.seq:
             self.assertIn(i, allowed_letters)
-
-    def test_sample_model_mutation_probabilities_validation(self):
-        q = models.goldman_Q(scale_q=False)
-        with self.assertRaises(ValueError):
-            models.sample_model_mutation_probabilities(123, q)
-        with self.assertRaises(ValueError):
-            models.sample_model_mutation_probabilities('ata', 'blah')
-        with self.assertRaises(ValueError):
-            models.sample_model_mutation_probabilities('ata', q, t=-1)
-        with self.assertRaises(ValueError):
-            models.sample_model_mutation_probabilities('ata', q, n=0)
 
     def test_sample_model_mutation_probabilities_validation(self):
         q = models.goldman_Q(scale_q=False)

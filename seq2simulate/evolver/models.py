@@ -30,10 +30,6 @@ class Codon(ValidationMixin, object):
 
     @seq.setter
     def seq(self, seq):
-        if not isinstance(seq, str):
-            raise ValueError('seq must be a str')
-        #if len(seq) > 3:
-        #    seq = seq[:3]    
         while len(seq) < 3:
             seq += '-'
         if not self._is_valid_dna(seq):
@@ -71,11 +67,6 @@ class Locus(object):
 
     @codons.setter 
     def codons(self, codons):
-        if not isinstance(codons, list):
-            raise ValueError('codons must be a list') 
-        for codon in codons:
-            if not isinstance(codon, Codon):
-                raise ValueError('codons must contain Codons')
         self._codons = codons
 
     def add_codon(self, codon):
@@ -220,16 +211,10 @@ def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None, scale_q=True, return_dict=F
         11(5), 725-736.
     """
 
-    if not isinstance(kappa, (float, int)):
-        raise ValueError('kappa must be a number')
     if kappa < 0:
         raise ValueError('kappa must be positive')
-    if not isinstance(omega, (float, int)):
-        raise ValueError('omega must be a number')
     if omega < 0:
         raise ValueError('omega must be positive')
-    if not isinstance(codon_freq, (dict, NoneType)):
-        raise ValueError('codon_freq must be a dictionary or None')
      
     if codon_freq is None:
         codon_freq = FEqual
@@ -283,12 +268,6 @@ def convert_q_to_p(q, t=0.01, codon_table=None, return_dict=False):
         Phylogenetics and Evolution, 94(Pt A), 290-297. doi:10.1016/j.ympev.2015.08.026
     
     """
-    if not isinstance(q, numpy.ndarray):
-        raise ValueError('q must be a NumPy array')
-    if not isinstance(t, (float, int)):
-        raise ValueError('t must be a number')
-    if not isinstance(codon_table, (CodonTable, NoneType)):
-        raise ValueError('codon_table must be instance of CodonTable or None')
     if codon_table is None:
         codon_table = CodonTable(stop_codons=False)
 
@@ -314,10 +293,6 @@ def get_cumulative_p(p, codon_table=None, return_dict=False):
         return_dict: return convenient cumulative p as dictionary with sorted codons
 
     """
-    if not isinstance(p, numpy.ndarray):
-        raise ValueError('p must be a NumPy array')
-    if not isinstance(codon_table, (CodonTable, NoneType)):
-        raise ValueError('codon_table must be instance of CodonTable or None')
     if codon_table is None:
         codon_table = CodonTable(stop_codons=False)
  
@@ -352,16 +327,10 @@ def mutation_category(codon1, codon2, codon_table=None):
         ['nonsynonymous', 'transversion],
         ['nonsynonymous', 'transition],
     """
-    if not isinstance(codon1, str):
-        raise ValueError('codon must be a three-letter str')
     if len(codon1) != 3:
-        raise ValueError('codon must be a three-letter str')
-    if not isinstance(codon2, str):
         raise ValueError('codon must be a three-letter str')
     if len(codon2) != 3:
         raise ValueError('codon must be a three-letter str')
-    if not isinstance(codon_table, (CodonTable, NoneType)):
-        raise ValueError('codon_table must be instance of CodonTable or None')
 
     if codon_table is None:
         codon_table = CodonTable(stop_codons=False)
@@ -407,22 +376,10 @@ def mutation_rate(codon1, codon2,
 
     Returns instantaneous rate of mutation using the simplified Goldman model in Nielsen and Yang (1998).
     """
-    if not isinstance(codon1, str):
-        raise ValueError('codon must be a three-letter str')
     if len(codon1) != 3:
-        raise ValueError('codon must be a three-letter str')
-    if not isinstance(codon2, str):
         raise ValueError('codon must be a three-letter str')
     if len(codon2) != 3:
         raise ValueError('codon must be a three-letter str')
-    if not isinstance(codon_table, CodonTable):
-        raise ValueError('codon must be a three-letter str')
-    if not isinstance(omega, (int, float)):
-        raise ValueError('omega must be a number')
-    if not isinstance(kappa, (int, float)):
-        raise ValueError('kappa must be a number')
-    if not isinstance(codon_freq, dict):
-        raise ValueError('codon_freq must be an instance of dict')
 
 
     cat = mutation_category(codon1, codon2, codon_table=codon_table)
@@ -488,14 +445,6 @@ def plot_p_over_time(q, t=10, codon='atg', codon_table=None, logscale=True):
          
     """
 
-    if not isinstance(q, numpy.ndarray):
-        raise ValueError('q must be a NumPy array')
-    if not isinstance(codon_table, (CodonTable, NoneType)):
-        raise ValueError('codon_table must be instance of CodonTable or None')
-    if not isinstance(t, (float, int)):
-        raise ValueError('t must be a number')
-    if not isinstance(codon, str):
-        raise ValueError('codon must be a string')
     if len(codon) != 3:
         raise ValueError('codon must be a string of length 3')
     
@@ -534,12 +483,8 @@ def get_mutation_from_cumulative_p(codon, p_cumsum_dict):
     Returns:
         mutated codon triplet
     """
-    if not isinstance(codon, str):
-        raise ValueError('codon must be a string')
     if len(codon) != 3:
         raise ValueError('codon must be a three-letter str')
-    if not isinstance(p_cumsum_dict, dict):
-        raise ValueError('p_cumsum_dict must be a NumPy array')
     codon_row = p_cumsum_dict[codon]
     probabilities = codon_row['p']
     codons = codon_row['codons']
@@ -582,8 +527,6 @@ def choose_random_codon(codon_freq=None):
     """
     if codon_freq is None:
         codon_freq = FEqual
-    if not isinstance(codon_freq, dict):
-        raise ValueError('codon_freq must be a dictionary')
 
     codons = [i for i in codon_freq.keys()]
     cum_freq = numpy.array([i for i in codon_freq.values()]).cumsum()
@@ -594,12 +537,6 @@ def make_subs_in_locus(locus, q, t=0):
     """
     Mutates all codons in locus according to Q.
     """
-    if not isinstance(locus, Locus):
-        raise ValueError('locus must be an instance of Locus')
-    if not isinstance(q, numpy.ndarray):
-        raise ValueError('q must be a NumPy array')
-    if not isinstance(t, (float, int)):
-        raise ValueError('t must be a number')
     for i, codon in enumerate(locus.codons):
         old_seq = codon.seq
         make_sub_from_q(codon, q, t=t)
@@ -619,14 +556,8 @@ def make_sub_from_q(codon, q, t=0):
     Returns:
         mutated codon triplet
     """
-    if not isinstance(codon, Codon):
-        raise ValueError('codons must contain Codons')
     if codon.seq == '---':
         return 
-    if not isinstance(q, numpy.ndarray):
-        raise ValueError('q must be a NumPy array')
-    if not isinstance(t, (float, int)):
-        raise ValueError('t must be a number')
     p = convert_q_to_p(q, t=t)
     p_cumsum, p_codons, p_cumsum_dict = get_cumulative_p(p, return_dict=True)
     codon.seq = get_mutation_from_cumulative_p(codon.seq, p_cumsum_dict)
@@ -638,9 +569,6 @@ def plot_codon_hist(codons):
     Args:
         codons: 1-dimensional list
     """
-    if not isinstance(codons, list):
-        raise ValueError('codons must be a list')
-
     codons = numpy.array(codons)
     set_codons = list(set(codons))
     codon_bins = numpy.array([sum(codons == i) for i in set_codons])
@@ -656,12 +584,6 @@ def plot_codon_hist(codons):
     fig.show() 
 
 def sample_model_mutation_probabilities(seq, q, t=0, n=100):
-    if not isinstance(q, numpy.ndarray):
-        raise ValueError('q must be a NumPy array')
-    if not isinstance(t, (float, int)):
-        raise ValueError('t must be a number')
-    if not isinstance(n, (float, int)):
-        raise ValueError('n must be a number')
     if t < 0:
         raise ValueError('t must be positive')
     if n <= 0:

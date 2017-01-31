@@ -27,8 +27,6 @@ class Tree(object):
 
     @left.setter
     def left(self, left):
-        if not isinstance(left, (Tree, NoneType)):
-            raise ValueError('left must be of class Tree, or NoneType.')
         self._left = left
         # this is convenient but it concerns me...
         if left is not None:
@@ -40,8 +38,6 @@ class Tree(object):
 
     @right.setter
     def right(self, right):
-        if not isinstance(right, (Tree, NoneType)):
-            raise ValueError('right must be of class Tree, or NoneType.')
         self._right = right
         # this is convenient but it concerns me...
         if right is not None:
@@ -53,8 +49,6 @@ class Tree(object):
 
     @length.setter
     def length(self, length):
-        if not isinstance(length, float):
-            raise ValueError('length must be a float')
         if length < 0.0 or length > 1.0:
             raise ValueError('length must be in range 0-1')
         self._length = length
@@ -102,10 +96,6 @@ def random_tree(num_taxa, mean_branch_length=0.1):
         mean_branch_length: The average substitution rate of the branches.
             
     """
-    if not isinstance(num_taxa, (int, float)):
-        raise ValueError('num_taxa must be a number')
-    if not isinstance(mean_branch_length, float):
-        raise ValueError('mean_branch_length must be a float')
     if mean_branch_length < 0.0 or mean_branch_length > 1.0:
         raise ValueError('mean_branch_length must be in range 0-1')
 
@@ -145,14 +135,6 @@ def preorder_exec(tree, function='__str__', arguments=[]):
     """
     Perform a preorder traversal of 'tree', and execute 'function' passing 'arguments'.
     """
-    if not isinstance(tree, (Tree, NoneType)):
-        raise ValueError('tree must be of class Tree, or NoneType.')
-
-    if not isinstance(function, (str)):
-        raise ValueError('function must be a str')
-
-    if not isinstance(arguments, (list)):
-        raise ValueError('nodes must be a list')
 
     if tree:
         getattr(tree, function)(*arguments)
@@ -163,8 +145,6 @@ def get_list_of_tree_nodes(tree):
     """
     Perform a preorder traversal of 'tree', and return a list of all nodes.
     """
-    if not isinstance(tree, (Tree, NoneType)):
-        raise ValueError('tree must be of class Tree, or NoneType.')
 
     def get_nodes(tree, nodes=[]):
 
@@ -182,8 +162,6 @@ def get_dict_of_tree_values(tree):
     """
     Return a dictionary of node values indexed by id.
     """
-    if not isinstance(tree, (Tree, NoneType)):
-        raise ValueError('tree must be of class Tree, or NoneType.')
     nodes = get_list_of_tree_nodes(tree)
     return {i.id:i.value for i in nodes}
 
@@ -191,8 +169,6 @@ def get_list_of_tree_leaves(tree):
     """
     Perform a preorder traversal of 'tree', and return a list of all terminal nodes.
     """
-    if not isinstance(tree, (Tree, NoneType)):
-        raise ValueError('tree must be of class Tree, or NoneType.')
 
     def get_nodes(tree, nodes=[]):
 
