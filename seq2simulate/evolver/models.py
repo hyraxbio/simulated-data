@@ -105,6 +105,24 @@ class Locus(object):
         sequence = [codon.seq for codon in self.codons]
         return [self.loc_aa]*len(sequence), sequence
 
+    @property
+    def mutations(self):
+        mutations = []
+        try:
+            for mutation in self.history:
+                if mutation[0] == 'deletion':
+                    mutations.append('del{}{}'.format(self.loc_aa, convert_dna_to_aa(mutation[1])))
+                elif mutation[0] == 'insertion':
+                    mutations.append('ins{}{}'.format(self.loc_aa, convert_dna_to_aa(mutation[1])))
+                else:
+                    aa0 = convert_dna_to_aa(mutation[0])
+                    aa1 = convert_dna_to_aa(mutation[1])
+                    if aa0 != aa1:
+                        mutations.append('{}{}{}'.format(aa0, self.loc_aa, aa1))
+        except:
+            pass
+        return mutations
+
 class Sequence(object):
     """
     Convenience class to collect a set of loci.
@@ -130,6 +148,14 @@ class Sequence(object):
     @property
     def history(self):
         return [locus.history for locus in self.loci]
+
+    @property
+    def mutations(self):
+        mutations = []
+        for i in [locus.mutations for locus in self.loci]:
+            if i != []:
+                mutations.append(i)
+        return mutations
 
 def break_sequence_into_triplets(sequence):
     nfloor = len(sequence)//3.0

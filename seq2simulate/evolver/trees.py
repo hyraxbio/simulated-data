@@ -88,7 +88,10 @@ class Tree(object):
         right = self.right
         if right is not None:
             right = right.to_list()
-        return [_id, left, right]
+        if left is None and right is None:
+            return _id
+        else:
+            return [_id, [left, right]]
 
 def random_tree(num_taxa, mean_branch_length=0.1):
     """
@@ -174,6 +177,15 @@ def get_list_of_tree_nodes(tree):
 
     nodes = []
     return get_nodes(tree, nodes=nodes)
+
+def get_dict_of_tree_values(tree):
+    """
+    Return a dictionary of node values indexed by id.
+    """
+    if not isinstance(tree, (Tree, NoneType)):
+        raise ValueError('tree must be of class Tree, or NoneType.')
+    nodes = get_list_of_tree_nodes(tree)
+    return {i.id:i.value for i in nodes}
 
 def get_list_of_tree_leaves(tree):
     """

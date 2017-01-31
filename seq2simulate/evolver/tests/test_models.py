@@ -1,10 +1,13 @@
 import unittest
-import models
+import models, evolve, trees
 import codon_frequencies
 from numpy import isclose, identity
 
 class ModelTester(unittest.TestCase):
   
+    def setUp(self):
+        self.old_sequence = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatcgc'
+
     def test_codontable_init(self):
         ct = codon_frequencies.CodonTable()
         self.assertEqual(ct.__str__(), '<CodonTable ***AAAACCDDEEFFGGGGHHIIIKKLLLLLLMNNPPPPQQRRRRRRSSSSSSTTTTVVVVWYY>')
@@ -192,7 +195,7 @@ class ModelTester(unittest.TestCase):
         old_seq = locus.sequence
         while locus.sequence == old_seq:
             models.make_subs_in_locus(locus, q, t=10)
-            self.assertNotEqual(locus.history, [])
+        self.assertNotEqual(locus.history, [])
 
     def test_make_sub_from_q_validation(self):
         q = models.goldman_Q(scale_q=False)
@@ -243,8 +246,16 @@ class ModelTester(unittest.TestCase):
         self.assertEqual(len(l.codons), 2)
         self.assertFalse(any(i.seq == '---' for i in l.codons))
         
-
-
-
+    def test_loci_mutations(self):
+        tree = evolve.evolve_tree(models.Sequence(self.old_sequence), taxa=10, t=0.1, omega=1.1, kappa=1.5, lmbda=0.1)
+        tree_dict = trees.get_dict_of_tree_values(tree)
+        min_index = min(tree_dict)
+        mutations = tree_dict[min_index].mutations
+        self.assertIsInstance(mutations, list)
+        for i in mutations:
+            self.assertIsInstance(i, list)
+            for j in i:
+                self.assertIsInstance(j, str)
+            
 if __name__=='__main__':
     unittest.main()

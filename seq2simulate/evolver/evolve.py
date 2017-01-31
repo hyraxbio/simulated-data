@@ -159,7 +159,7 @@ def compile_histories(tree):
     for t in nodes:
         histories[t.id] = t.value.history
     return histories
- 
+
 
 if __name__=='__main__':
     pass

@@ -59,8 +59,6 @@ class EvolveTester(unittest.TestCase):
         self.assertIsInstance(histories, dict)
         for i in trees.get_list_of_tree_nodes(t10):
             self.assertIn(i.id, histories)
-         
-
 
 if __name__=='__main__':
     unittest.main()
