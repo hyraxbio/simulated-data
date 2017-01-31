@@ -60,5 +60,9 @@ class EvolveTester(unittest.TestCase):
         for i in trees.get_list_of_tree_nodes(t10):
             self.assertIn(i.id, histories)
 
+    def test_evolve_with_log(self):
+        new_sequences, mutations = evolve.evolve(self.old_sequence, taxa=10, t=0.1, omega=1.1, kappa=1.5, lmbda=0.01, ti_td=0.1, log=True)
+        print(mutations)
+
 if __name__=='__main__':
     unittest.main()

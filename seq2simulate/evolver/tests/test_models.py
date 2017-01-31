@@ -246,16 +246,20 @@ class ModelTester(unittest.TestCase):
         self.assertEqual(len(l.codons), 2)
         self.assertFalse(any(i.seq == '---' for i in l.codons))
         
-    def test_loci_mutations(self):
-        tree = evolve.evolve_tree(models.Sequence(self.old_sequence), taxa=10, t=0.1, omega=1.1, kappa=1.5, lmbda=0.1)
-        tree_dict = trees.get_dict_of_tree_values(tree)
-        min_index = min(tree_dict)
-        mutations = tree_dict[min_index].mutations
-        self.assertIsInstance(mutations, list)
-        for i in mutations:
-            self.assertIsInstance(i, list)
-            for j in i:
-                self.assertIsInstance(j, str)
-            
+    def test_loci_mutations_indel(self):
+        s = models.Sequence(self.old_sequence)
+        loci = s.loci
+        models.make_indel(loci[3], ti_td=0)
+        self.assertIn('del4', loci[3].mutations[0])
+        s = models.Sequence(self.old_sequence)
+        loci = s.loci
+        models.make_indel(loci[3], ti_td=10)
+        while not 'ins' in loci[3].mutations[0]:
+            s = models.Sequence(self.old_sequence)
+            loci = s.loci
+            models.make_indel(loci[3], ti_td=10)
+        self.assertIn('ins4', loci[3].mutations[0])
+        self.assertEqual(loci[3].loc_aa, 4)
+ 
 if __name__=='__main__':
     unittest.main()

@@ -109,11 +109,16 @@ def evolve(sequence,
         equilibrium equals 1. Branch lengths are thus expected number of nucleotide
         substitutions per codon. See Goldman (1994).
         model: mutational model, 'simple_goldman' will use a Goldman-Yang-like model
+        log: if True, returns list of evolved sequences AND list of mutations
     """
     sequence = models.Sequence(seq=sequence.lower()) 
     tree = evolve_tree(**locals())
-    return [i.value.seq for i in trees.get_list_of_tree_leaves(tree)]
-
+    leaves = trees.get_list_of_tree_leaves(tree)
+    sequences = [i.value.seq for i in leaves]
+    if log:
+        mutations = [i.value.mutations for i in leaves]
+        return sequences, mutations
+    return sequences
 
 def print_mutations(old_sequence, new_sequence, colour=True):
     """
