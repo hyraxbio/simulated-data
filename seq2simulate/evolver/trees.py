@@ -121,15 +121,16 @@ def get_two_random_orphans(tree_nodes):
     """
     Returns two random orphaned Tree nodes from list of Trees.
     """
-    orphan_nodes = []
-    while len(orphan_nodes) < 2:
-        orphan_node = random.choice(tree_nodes)
-        if orphan_node in orphan_nodes:
+    orphan_nodes = [i for i in tree_nodes if i.parent is None]
+    if len(orphan_nodes) < 2:
+        return []
+    orphans = []
+    while len(orphans) < 2:
+        orphan_node = random.choice(orphan_nodes)
+        if orphan_node in orphans:
             continue
-        if orphan_node.parent is not None:
-            continue
-        orphan_nodes.append(orphan_node)
-    return orphan_nodes
+        orphans.append(orphan_node)
+    return orphans
 
 def preorder_exec(tree, function='__str__', arguments=[]):
     """

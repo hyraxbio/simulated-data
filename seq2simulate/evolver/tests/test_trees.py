@@ -16,7 +16,6 @@ class TreeTester(unittest.TestCase):
         tree1 = trees.Tree()
         self.assertEqual(tree1.id, tree0.id + 1)
 
-
     def test_get_two_random_orphans(self):
         nodes = [trees.Tree() for i in range(4)]
         nodes[0].left = nodes[1]
@@ -27,6 +26,12 @@ class TreeTester(unittest.TestCase):
         self.assertEqual(len(orphans), 2)
         for i in orphans:
             self.assertIsNone(i.parent) 
+
+    def test_get_two_random_orphans_returns_empty_list_if_less_than_two_orphans(self):
+        t5 = trees.random_tree(5)
+        nodes = trees.get_list_of_tree_nodes(t5)
+        orphans = trees.get_two_random_orphans(nodes)
+        self.assertEqual(orphans, [])
 
     def test_get_orphans(self):
         nodes = [trees.Tree() for i in range(4)]
