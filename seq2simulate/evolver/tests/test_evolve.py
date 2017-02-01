@@ -11,8 +11,7 @@ class EvolveTester(unittest.TestCase):
         self.old_sequence = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatcgc'
 
     def test_evolve_sequence_with_q(self):
-        qfunc = evolve.model_qfuncs['simple_goldman']
-        q = qfunc(scale_q=True)
+        q = models.goldman_Q(scale_q=True)
         new_sequence0 = evolve.evolve_sequence_with_q(models.Sequence(self.old_sequence), q, t=1)
         new_sequence1 = evolve.evolve_sequence_with_q(models.Sequence(self.old_sequence), q, t=1)
         new_seq0 = new_sequence0.seq

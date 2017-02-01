@@ -4,8 +4,9 @@ from random import uniform, seed
 from copy import deepcopy
 seed()
 
-model_qfuncs = {
-    'simple_goldman': models.goldman_Q,
+codon_freqs = {
+    'FEqual': codon_frequencies.FEqual,
+    'F1x4': codon_frequencies.F1x4,
 }
 
 def evolve_sequence_with_q(sequence, q, t=1e-2, lmbda=1e-4, ti_td=0.1, indel_codon_freq=None):
@@ -35,7 +36,6 @@ def evolve_tree(sequence,
     ti_td=0.1,
     codon_freq=None, 
     scale_q=True, 
-    model='simple_goldman',
     **kwargs
     ):
 
@@ -53,18 +53,20 @@ def evolve_tree(sequence,
         kappa: ratio of transition to transversion rates
         lmbda: probability of indel at codon
         ti_td: ratio of insertions to deletions
-        codon_freq: dictionary of codon_frequencies, also know as equilibrium
-        frequencies
+        codon_freq: codon frequency model, also know as equilibrium frequencies (default is F1x4)
         scale_q: scales Q so that the average rate of substitution at
         equilibrium equals 1. Branch lengths are thus expected number of nucleotide
         substitutions per codon. See Goldman (1994).
-        model: mutational model, 'simple_goldman' will use a Goldman-Yang-like model
 
     Returns:
         tree instance populated with new sequence strings
     """
-    qfunc = model_qfuncs[model]
-    q = qfunc(kappa=kappa, omega=omega, codon_freq=codon_freq, scale_q=scale_q, return_dict=False)
+    try:
+        codon_freq = codon_freqs[codon_freq](sequence)
+    except:
+        codon_freq = codon_freqs['FEqual']()
+
+    q = models.goldman_Q(kappa=kappa, omega=omega, codon_freq=codon_freq, scale_q=scale_q, return_dict=False)
    
     tree = trees.random_tree(taxa)
     tree.value = sequence
@@ -79,12 +81,12 @@ def evolve(sequence,
     kappa=2.0, 
     lmbda=1e-4,
     ti_td=0.1,
-    codon_freq=None, 
+    codon_freq='F1x4', 
     scale_q=True, 
     model='simple_goldman',
     strip_deletions=False,
     log=False,
-    verbose=True,
+    verbose=False,
     ):
     """
     Wrapper around evolve_tree(). Returns a list of evolved sequences.
@@ -97,12 +99,10 @@ def evolve(sequence,
         kappa: ratio of transition to transversion rates
         lmbda: probability of indel at codon
         ti_td: ratio of insertions to deletions
-        codon_freq: dictionary of codon_frequencies, also know as equilibrium
-        frequencies
+        codon_freq: codon frequency model, also know as equilibrium frequencies (default is F1x4)
         scale_q: scales Q so that the average rate of substitution at
         equilibrium equals 1. Branch lengths are thus expected number of nucleotide
         substitutions per codon. See Goldman (1994).
-        model: mutational model, 'simple_goldman' will use a Goldman-Yang-like model
         log: if True, returns list of evolved sequences AND list of mutations
         verbose: if True, prints parameters
         strip_deletions: False,
@@ -121,11 +121,11 @@ def evolve(sequence,
             'lmbda',
             'ti_td',
             'scale_q',
-            'model',
+            'codon_freq',
             'strip_deletions',
             'log',
             ],
-            [taxa, t, omega, kappa, lmbda, ti_td, scale_q, model, strip_deletions, log]):
+            [taxa, t, omega, kappa, lmbda, ti_td, scale_q, codon_freq, strip_deletions, log]):
             print '{0:<10} {1:<15}'.format(i, j)
         print '---------------------------------------\n\n'
 
@@ -185,4 +185,7 @@ def compile_histories(tree):
 
 
 if __name__=='__main__':
+    with open('../../data/split/Seq2_Sus', 'r') as f:
+        old_sequence = f.read()[10:].replace('\n', '').lower()
+    sequence = models.Sequence(old_sequence)
     pass

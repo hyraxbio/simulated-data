@@ -99,12 +99,12 @@ class ModelTester(unittest.TestCase):
 
     def test_mutation_rate(self):
         ct = codon_frequencies.CodonTable(stop_codons=False)
-        cf = codon_frequencies.FEqual
+        cf = codon_frequencies.FEqual()
         self.assertEqual(models.mutation_rate('atg', 'acc', codon_table=ct, codon_freq=cf), 0)
         self.assertIsInstance(models.mutation_rate('gca', 'gcg', codon_table=ct, codon_freq=cf), float)
 
     def test_goldman_Q(self):
-        cf = codon_frequencies.FEqual
+        cf = codon_frequencies.FEqual()
         q, qdict = models.goldman_Q(codon_freq=cf, scale_q=False, return_dict=True)
         self.assertEqual(q.shape, (61, 61))
         for row in q:
@@ -189,6 +189,11 @@ class ModelTester(unittest.TestCase):
             models.make_indel(loci[3], ti_td=10)
         self.assertIn('ins4', loci[3].mutations[0])
         self.assertEqual(loci[3].loc_aa, 4)
- 
+
+    def test_codon_freq_FEqual_F1x4(self):
+        codon_freq_fequal = codon_frequencies.FEqual(models.Sequence(self.old_sequence))
+        codon_freq_f1x4 = codon_frequencies.F1x4(models.Sequence(self.old_sequence))
+        self.assertNotEqual(codon_freq_fequal, codon_freq_f1x4)        
+
 if __name__=='__main__':
     unittest.main()

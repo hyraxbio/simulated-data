@@ -1,6 +1,6 @@
 import numpy, pylab
 from scipy.linalg import expm
-from codon_frequencies import CodonTable, FEqual
+from codon_frequencies import CodonTable, FEqual, F1x4
 from types import NoneType
 from random import uniform, choice, randint
 
@@ -189,13 +189,15 @@ def parse_loci_to_sequence_string(loci):
 
 def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None, scale_q=True, return_dict=False):
     """
+
     Generate Q matrix of instantaneous rates of replacement for each codon.
-    Diagonals are set to values that cause row sums to equal 0. 
+    Diagonals are set to values that cause row sums to equal 0. Follows the logic
+    of Nielsen (1998).
 
     Args:
         kappa: transition/transversion ratio
         omega: dN/dS
-        codon_freq: codon equilibrium frequencies (found in codon_frequencies.py, dict)
+        codon_freq: codon equilibrium frequencies (dict)
         scale_q: scales Q so that the average rate of substitution at
             equilibrium equals 1. Branch lengths are thus expected number of nucleotide
             substitutions per codon. See Goldman (1994).
@@ -206,6 +208,9 @@ def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None, scale_q=True, return_dict=F
         qdict: q in dict form for convenience
 
     Refs:
+        Nielsen, R., & Yang, Z. (1998). Likelihood models for detecting
+        positively selected amino acid sites and applications to the HIV-1 envelope
+        gene. Genetics, 148(3), 929-936.
         Goldman, N., & Yang, Z. (1994). A codon-based model of nucleotide
         substitution for protein-coding DNA sequences. Molecular Biology and Evolution,
         11(5), 725-736.
@@ -216,9 +221,9 @@ def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None, scale_q=True, return_dict=F
     if omega < 0:
         raise ValueError('omega must be positive')
      
-    if codon_freq is None:
-        codon_freq = FEqual
     ct = CodonTable(stop_codons=False)
+    if codon_freq is None:
+        codon_freq = FEqual(codon_table=ct)
     codons = sorted(ct.codon_dict)
     n = len(codons)
     q = numpy.ones([n, n])
@@ -372,9 +377,9 @@ def mutation_rate(codon1, codon2,
         codon_table: CodonTable instance
         kappa: transition/transversion ratio
         omega: dN/dS
-        codon_freq: codon equilibrium frequencies (found in codon_frequencies.py, dict)
+        codon_freq: codon equilibrium frequencies (dict)
 
-    Returns instantaneous rate of mutation using the simplified Goldman model in Nielsen and Yang (1998).
+    Returns instantaneous rate of mutation using the simplified Goldman model in Nielsen (1998).
     """
     if len(codon1) != 3:
         raise ValueError('codon must be a three-letter str')
@@ -526,7 +531,7 @@ def choose_random_codon(codon_freq=None):
         codon_freq: codon frequence dictionary
     """
     if codon_freq is None:
-        codon_freq = FEqual
+        codon_freq = FEqual()
 
     codons = [i for i in codon_freq.keys()]
     cum_freq = numpy.array([i for i in codon_freq.values()]).cumsum()
