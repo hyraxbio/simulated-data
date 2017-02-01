@@ -185,7 +185,4 @@ def compile_histories(tree):
 
 
 if __name__=='__main__':
-    with open('../../data/split/Seq2_Sus', 'r') as f:
-        old_sequence = f.read()[10:].replace('\n', '').lower()
-    sequence = models.Sequence(old_sequence)
     pass
