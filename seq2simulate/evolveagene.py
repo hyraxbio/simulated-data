@@ -51,6 +51,7 @@ def run(
         t=branch_length,
         omega=dnds, 
         lmbda=0.001,
+        codon_freq='F1x4',
         log=False,
         scale_q=True,
         strip_deletions=False,
