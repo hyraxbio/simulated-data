@@ -118,7 +118,9 @@ setup(
         'soappy == 0.12.22',
         'multiprocessing == 2.6.2.1',
         'wstools==0.4.3',
-        'sierrapy==0.1.1'
+        'sierrapy==0.1.1',
+        'numpy==1.12.0',
+        'scipy==0.18.1',
     ]
 )
 
