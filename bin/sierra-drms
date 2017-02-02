@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+import click
+
+from Bio import SeqIO
+from seq2simulate import sierra_ws as sierra
+from seq2simulate import drm, hiv_drms
+
+amino_acids = "ARNDCQEGHILKMFPSTWYV"
+start = 57
+end = 1003
+
+@click.command()
+
+def run():
+    """
+    Parse command line arguments and run sierra
+    """
+
+    for d in hiv_drms.drms:
+        print "\"%s\"," % unicode(d.locus_str())
+   
+
+if __name__ == '__main__':
+    run(auto_envvar_prefix='SIMULATE')
