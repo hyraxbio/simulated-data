@@ -53,10 +53,11 @@ class Drm:
             for region, position in locus_start_positions_tuple:
                 if self.absolute_pos > position:
                     self.relative_pos = self.absolute_pos - position
+                    self.locus = region
                     found = True
                     break
             if not found:
-                raise ValueError('DRM is not in a known gene region')
+                raise ValueError('DRM ' + drm_string + ' is not in a known gene region')
         self.nucleotide_pos = (self.absolute_pos - 1) * 3    
 
         self.mutation = drm.group(3)
@@ -73,8 +74,17 @@ class Drm:
             + str(self.relative_pos) \
             + self.mutation
 
+    def relative_str(self):
+        return self.wildtype \
+            + str(self.relative_pos) \
+            + self.mutation
+
     def __key(self):
-        return (self.wildtype, 
+        if self.locus is not None:
+            return (self.locus, self.wildtype, self.absolute_pos,
+                self.mutation)
+        else:
+            return (self.wildtype, 
                 self.absolute_pos, self.mutation)
 
     def __lt__(self, other):

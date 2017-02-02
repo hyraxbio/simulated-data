@@ -17,7 +17,64 @@ mutation_dict = {
     'IN' : drm.IN
 }
 
-def call_sierra(sequence):
+def parse_drms(response):
+    """
+    Parse a sierra generated json list of mutations.
+
+    Args:
+        response: the deserialized json response.
+    
+    Returns:
+        drms: all drms in the response
+    """
+    drms = []
+    for gene in response["drugResistance"]:
+        gene_name = gene["gene"]["name"]
+        for score in gene["drugScores"]:
+            for partial_score in score["partialScores"]:
+                if partial_score["score"] != 0:
+                    for mutation in partial_score["mutations"]:
+                        mut_text = mutation["text"]
+                        mut_text = mut_text.replace("Insertion", "i")
+                        mut_text = mut_text.replace("Deletion", "d")
+                        mut = drm.Drm(mut_text, mutation_dict[gene_name])
+                        if mut not in drms:
+                            drms.append(mut)
+    return drms                        
+
+def call_sierra_with_drms(drms):
+    """
+    Call the sierra web service with DRMs.
+    """
+
+    client = SierraClient(endpoint)
+    response = client.mutations_analysis(drms, 
+        fragments.MUTATIONS_ANALYSIS_DEFAULT)
+    return response
+
+def is_drm(potential_drms):
+    """
+    Check which of a list of amino acids is a DRM.
+
+    Args: 
+        potential_drms: a list of Drm objects.
+    Returns:
+        drms: a list of which ones were actually DRMs.
+    """
+    request_drms = [
+        drm.locus_names[d.locus] + ":" \
+        + d.relative_str()[1:].replace("i", "ins").replace("d", "del")
+         for d in potential_drms
+    ]
+    response = call_sierra_with_drms(request_drms)
+    #json.dump(response, sys.stdout, indent=2)
+    drms = []
+    if len(response) == 0 or "drugResistance" not in response:
+        raise ValueError("Not HIV DRMs.")
+
+    return parse_drms(response)
+
+def call_sierra_with_sequence(sequence):
     """
     Call the sierra web service.
 
@@ -53,7 +110,7 @@ def get_calls(sequence):
         A dictionary of {"drug_name": score}
     """
 
-    response = call_sierra(sequence)
+    response = call_sierra_with_sequence(sequence)
     #json.dump(response, sys.stdout, indent=2)
     calls = {}
     if len(response) == 0 or "drugResistance" not in response[0]:
@@ -78,21 +135,7 @@ def get_drms(sequence):
     Returns:
         A list of Drm objects
     """
-    response = call_sierra(sequence)
+    response = call_sierra_with_sequence(sequence)
     if len(response) == 0 or "drugResistance" not in response[0]:
         raise ValueError("Not HIV DNA.")
-    drms = []
-    for gene in response[0]["drugResistance"]:
-        gene_name = gene["gene"]["name"]
-        for score in gene["drugScores"]:
-            for partial_score in score["partialScores"]:
-                if partial_score["score"] != 0:
-                    for mutation in partial_score["mutations"]:
-                        mut_text = mutation["text"]
-                        mut_text = mut_text.replace("Insertion", "i")
-                        mut_text = mut_text.replace("Deletion", "d")
-                        mut = drm.Drm(mut_text, mutation_dict[gene_name])
-                        if mut not in drms:
-                            drms.append(mut)
-
-    return drms
+    return parse_drms(response[0])
