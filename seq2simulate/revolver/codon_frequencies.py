@@ -41,7 +41,7 @@ def FEqual(*args, **kwargs):
     
 def F1x4(sequence, codon_table=None):
     """
-    Estimates equilibrium codon frequencies from sequence as in Goldman (1994).
+    Estimates equilibrium codon frequencies from sequence as in Goldman (1994) (model 1).
     Codon frequency is the product of the frequencies of the three nucleotides in
     the triplet.
 
@@ -62,6 +62,40 @@ def F1x4(sequence, codon_table=None):
     codon_freq = []
     for codon in codons:
         codon_freq.append(numpy.product([nfreq[n] for n in codon]))
+    codon_freq = numpy.array(codon_freq)
+    codon_freq = codon_freq/codon_freq.sum()
+    return dict(zip(codons, codon_freq))
+
+def F3x4(sequence, codon_table=None):
+    """
+    Estimates equilibrium codon frequencies from sequence as in Goldman (1994) (model 2).
+    Codon frequency is the product of the frequencies of the three nucleotides in
+    the triplet at their position in the codon.
+
+    Args:
+        sequence: an instance of models.Sequence
+        codon_table: an instance of CodonTable
+
+    Refs:
+        Goldman, N., & Yang, Z. (1994). A codon-based model of nucleotide
+        substitution for protein-coding DNA sequences. Molecular Biology and Evolution,
+        11(5), 725-736.
+    """
+    if codon_table is None:
+        codon_table = CodonTable(stop_codons=False)
+    codon_seq = [i.seq for i in sequence.codons]
+    nts_at_pos = [''.join([codon[pos] for codon in codon_seq]) for pos in range(3)]
+    nt_pos_freqs = {}
+    for nt in 'atgc':
+        nt_pos_freq = []
+        for pos in nts_at_pos:
+            nt_pos_freq.append(pos.count(nt)/float(len(pos)))
+        nt_pos_freqs[nt] = nt_pos_freq
+       
+    codons = sorted(codon_table.codon_dict.keys())
+    codon_freq = []
+    for codon in codons:
+        codon_freq.append(numpy.product([nt_pos_freqs[n][i] for i,n in enumerate(codon)]))
     codon_freq = numpy.array(codon_freq)
     codon_freq = codon_freq/codon_freq.sum()
     return dict(zip(codons, codon_freq))

@@ -42,9 +42,11 @@ def plot_p():
     q = models.goldman_Q()
     models.plot_p_over_time(q, t=0.1, codon='aaa', logscale=False)
 
+
 if __name__=='__main__':
     benchmark_evolve_tree()
     ols, ns, mt = benchmark_evolve()
     ols, ns, mt = benchmark_evolve_big_set()
     evolve.print_mutations(ols, ns[0])
     #plot_p()
+

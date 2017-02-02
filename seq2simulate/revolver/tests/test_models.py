@@ -195,5 +195,10 @@ class ModelTester(unittest.TestCase):
         codon_freq_f1x4 = codon_frequencies.F1x4(models.Sequence(self.old_sequence))
         self.assertNotEqual(codon_freq_fequal, codon_freq_f1x4)        
 
+    def test_codon_freq_FEqual_F3x4(self):
+        codon_freq_fequal = codon_frequencies.FEqual(models.Sequence(self.old_sequence))
+        codon_freq_f3x4 = codon_frequencies.F3x4(models.Sequence(self.old_sequence))
+        self.assertNotEqual(codon_freq_fequal, codon_freq_f3x4)        
+
 if __name__=='__main__':
     unittest.main()
