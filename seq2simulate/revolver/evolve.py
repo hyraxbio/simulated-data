@@ -4,10 +4,6 @@ from random import uniform, seed
 from copy import deepcopy
 seed()
 
-codon_freqs = {
-    'FEqual': codon_frequencies.FEqual,
-    'F1x4': codon_frequencies.F1x4,
-}
 
 def evolve_sequence_with_q(sequence, q, t=1e-2, lmbda=1e-4, ti_td=0.1, indel_codon_freq=None):
     if not 0 <= lmbda <= 1:
@@ -32,7 +28,7 @@ def evolve_tree(sequence,
     kappa=2.0, 
     lmbda=1e-4,
     ti_td=0.1,
-    codon_freq=None, 
+    codon_freq='F1x4', 
     scale_q=True, 
     **kwargs
     ):
@@ -59,10 +55,8 @@ def evolve_tree(sequence,
     Returns:
         tree instance populated with new sequence strings
     """
-    try:
-        codon_freq = codon_freqs[codon_freq](sequence)
-    except:
-        codon_freq = codon_freqs['FEqual']()
+
+    codon_freq = getattr(codon_frequencies, codon_freq)(sequence)
 
     q = models.goldman_Q(kappa=kappa, omega=omega, codon_freq=codon_freq, scale_q=scale_q, return_dict=False)
    

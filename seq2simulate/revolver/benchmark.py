@@ -44,9 +44,9 @@ def plot_p():
 
 
 if __name__=='__main__':
-    benchmark_evolve_tree()
+    #benchmark_evolve_tree()
     ols, ns, mt = benchmark_evolve()
-    ols, ns, mt = benchmark_evolve_big_set()
+    #ols, ns, mt = benchmark_evolve_big_set()
     evolve.print_mutations(ols, ns[0])
     #plot_p()
 
