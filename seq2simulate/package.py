@@ -124,15 +124,16 @@ def illumina_paired(folder):
         f.write(illumina_details_preamble_paired)
         for s in file_list:
             pid = s.replace('.gz', '').replace('.fastq', '')
-            if pid.endswith('_1'):
-                pid = pid.replace('_1', '')
-                # only write out the first file of the pair
-                f.write("%s,%s,%s\n" % (pid, pid, illumina_details_postfix))
-                s2 = s.replace("_1.", "_2.")
-                if os.path.isfile(os.path.join(folder, s2)):
-                    samples.append(sample_record(pid, [s, s2]))
-                else:
-                    raise ValueError("Expecting pairs of files ending in _1 and _2")
+            for pair in [('_1', '_2'), ('_R1', '_R2')]:
+                if pid.endswith(pair[0]):
+                    pid = pid.replace(pair[0], '')
+                    # only write out the first file of the pair
+                    f.write("%s,%s,%s\n" % (pid, pid, illumina_details_postfix))
+                    s2 = s.replace(pair[0], pair[1])
+                    if os.path.isfile(os.path.join(folder, s2)):
+                        samples.append(sample_record(pid, [s, s2]))
+                    else:
+                        raise ValueError("Expecting pairs of files ending in " + pair[0] + " and " + pair[1])
             
     return samples
 
