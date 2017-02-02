@@ -1,7 +1,7 @@
 __all__ = [
     'diversity', 
     'evolveagene', 
-    'evolver',
+    'revolver',
     'parser', 
     'prevalence',
     'run_simulation', 
@@ -12,7 +12,7 @@ __all__ = [
 
 import diversity
 import evolveagene
-import evolver
+import revolver
 import parser
 import prevalence
 import run_simulation

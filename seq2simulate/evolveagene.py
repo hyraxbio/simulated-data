@@ -4,7 +4,7 @@ import uuid
 from Bio import SeqIO
 from subprocess import call
 
-from evolver.evolve import evolve
+from revolver.evolve import evolve
 
 fasta_output_filename = 'evolveagene_raw'
 evolveagene_extension = '_Unaligned.FASTA'

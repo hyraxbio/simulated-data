@@ -10,9 +10,7 @@ codon_freqs = {
 }
 
 def evolve_sequence_with_q(sequence, q, t=1e-2, lmbda=1e-4, ti_td=0.1, indel_codon_freq=None):
-    if not lmbda >= 0:
-        raise ValueError('lmbda must be in range 0-1')
-    if not lmbda <= 1:
+    if not 0 <= lmbda <= 1:
         raise ValueError('lmbda must be in range 0-1')
     if not ti_td >= 0:
         raise ValueError('ti_td must be positive')
