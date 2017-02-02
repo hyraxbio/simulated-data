@@ -133,15 +133,15 @@ def illumina_paired(folder):
                     samples.append(sample_record(pid, [s, s2]))
                 else:
                     raise ValueError("Expecting pairs of files ending in _1 and _2")
-            elif "_R1_" in pid:
-                pid = pid.replace('_R1_', '')
+            elif "_R1" in pid:
+                pid = pid.replace('_R1', '')
                 # only write out the first file of the pair
                 f.write("%s,%s,%s\n" % (pid, pid, illumina_details_postfix))
-                s2 = s.replace("_R1_.", "_R2_.")
+                s2 = s.replace("_R1.", "_R2.")
                 if os.path.isfile(os.path.join(folder, s2)):
                     samples.append(sample_record(pid, [s, s2]))
                 else:
-                    raise ValueError("Expecting pairs of files ending in _1 and _2")
+                    raise ValueError("Expecting pairs of files containing _R1 and _R2")
             
     return samples
 
