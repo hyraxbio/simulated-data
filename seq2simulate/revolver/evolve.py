@@ -1,5 +1,6 @@
-import trees, models, codon_frequencies
-import numpy
+import trees
+import models
+import codon_frequencies
 from random import uniform, seed
 from copy import deepcopy
 seed()
@@ -21,17 +22,18 @@ def evolve_sequence_with_q(sequence, q, t=1e-2, lmbda=1e-4, ti_td=0.1, indel_cod
                 models.make_indel(locus, index=i, ti_td=ti_td, codon_freq=indel_codon_freq)
     return new_sequence
 
+
 def evolve_tree(sequence,
-    taxa=10,
-    t=1e-2,
-    omega=1.0, 
-    kappa=2.0, 
-    lmbda=1e-4,
-    ti_td=0.1,
-    codon_freq='F1x4', 
-    scale_q=True, 
-    **kwargs
-    ):
+                taxa=10,
+                t=1e-2,
+                omega=1.0, 
+                kappa=2.0, 
+                lmbda=1e-4,
+                ti_td=0.1,
+                codon_freq='F1x4', 
+                scale_q=True, 
+                **kwargs
+                ):
 
     """
     Evolve a parent DNA sequence into a set of daughter sequences (taxa) by:
@@ -65,20 +67,21 @@ def evolve_tree(sequence,
     for node in trees.get_list_of_tree_nodes(tree)[1:]:
         node.value = evolve_sequence_with_q(node.parent.value, q, t=t, lmbda=lmbda, ti_td=ti_td)
     return tree 
-        
+       
+ 
 def evolve(sequence,
-    taxa=10,
-    t=1e-2,
-    omega=1.0, 
-    kappa=2.0, 
-    lmbda=1e-4,
-    ti_td=0.1,
-    codon_freq='F1x4', 
-    scale_q=True, 
-    strip_deletions=False,
-    log=False,
-    verbose=False,
-    ):
+           taxa=10,
+           t=1e-2,
+           omega=1.0, 
+           kappa=2.0, 
+           lmbda=1e-4,
+           ti_td=0.1,
+           codon_freq='F1x4', 
+           scale_q=True, 
+           strip_deletions=False,
+           log=False,
+           verbose=False,
+           ):
     """
     Wrapper around evolve_tree(). Returns a list of evolved sequences.
 
@@ -105,18 +108,18 @@ def evolve(sequence,
         print '\n\n---------------------------------------'
         print 'evolving new sequences with parameters:'
         print '---------------------------------------'
-        for i,j in zip(['taxa',
-            't',
-            'omega',
-            'kappa',
-            'lmbda',
-            'ti_td',
-            'scale_q',
-            'codon_freq',
-            'strip_deletions',
-            'log',
-            ],
-            [taxa, t, omega, kappa, lmbda, ti_td, scale_q, codon_freq, strip_deletions, log]):
+        for i, j in zip(['taxa',
+                         't',
+                         'omega',
+                         'kappa',
+                         'lmbda',
+                         'ti_td',
+                         'scale_q',
+                         'codon_freq',
+                         'strip_deletions',
+                         'log',
+                         ],
+                        [taxa, t, omega, kappa, lmbda, ti_td, scale_q, codon_freq, strip_deletions, log]):
             print '{0:<10} {1:<15}'.format(i, j)
         print '---------------------------------------\n\n'
 
@@ -131,14 +134,15 @@ def evolve(sequence,
         return sequences, mutations
     return sequences
 
+
 def print_mutations(old_sequence, new_sequence, colour=True):
     """
     Simple string comparison.
     """
 
     sim = ''
-    for i,j in zip(old_sequence, new_sequence):
-        if i==j:
+    for i, j in zip(old_sequence, new_sequence):
+        if i == j:
             sim += ' '
         else:
             sim += '|'
@@ -150,18 +154,18 @@ def print_mutations(old_sequence, new_sequence, colour=True):
         red = ['\x1b[31m', '\x1b[0m']
         for i in range(len(old_sequence_aa)):
             if old_sequence_aa[i] != new_sequence_aa[i]:
-                new_sequence_aa[i] = red[0]+new_sequence_aa[i]+red[1]
+                new_sequence_aa[i] = red[0] + new_sequence_aa[i] + red[1]
                 
     old_sequence_aa = '..'.join(old_sequence_aa)    
     new_sequence_aa = '..'.join(new_sequence_aa)    
               
-
     print(old_sequence_aa)
     print(old_sequence)
     print(sim)
     print(new_sequence)
     print(new_sequence_aa)
     print('\n')
+
 
 def compile_histories(tree):
     """
@@ -175,5 +179,5 @@ def compile_histories(tree):
     return histories
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     pass

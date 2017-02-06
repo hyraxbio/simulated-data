@@ -1,23 +1,22 @@
-import re
 import random
-from types import NoneType
+
 
 class Tree(object):
     id = 0
 
     def __init__(self, 
-        value=None, 
-        length=0.1, 
-        left=None, 
-        right=None, 
-        parent=None):
+                 value=None, 
+                 length=0.1, 
+                 left=None, 
+                 right=None, 
+                 parent=None
+                 ):
         
-
         self.id = Tree.id
         Tree.id += 1
         self.value = value
         self.length = length
-        self.left  = left
+        self.left = left
         self.right = right
         self.parent = parent
 
@@ -62,10 +61,10 @@ class Tree(object):
     def __str__(self):
         format_str = '<Tree {}: len:{} left:{} right:{} parent:{}>'
         return format_str.format(*(str(i) for i in [self.id, self.length, 
-            self._get_id_or_none(self.left),
-            self._get_id_or_none(self.right),
-            self._get_id_or_none(self.parent),
-            ]))
+                                                    self._get_id_or_none(self.left),
+                                                    self._get_id_or_none(self.right),
+                                                    self._get_id_or_none(self.parent),
+                                                    ]))
 
     def _get_id_or_none(self, obj):
         try:
@@ -87,6 +86,7 @@ class Tree(object):
         else:
             return [_id, [left, right]]
 
+
 def random_tree(num_taxa, mean_branch_length=0.1):
     """
     Returns a randomly generated phylogenetic tree.
@@ -105,8 +105,8 @@ def random_tree(num_taxa, mean_branch_length=0.1):
         orphan_nodes = get_two_random_orphans(nodes)
         new_node = Tree(left=orphan_nodes[0], 
                         right=orphan_nodes[1], 
-                        length=random.uniform(0, 2*mean_branch_length)
-                    )
+                        length=random.uniform(0, 2 * mean_branch_length)
+                        )
         nodes.append(new_node)
 
     return get_orphans(nodes)[0]
@@ -142,6 +142,7 @@ def preorder_exec(tree, function='__str__', arguments=[]):
         preorder_exec(tree.left, function=function, arguments=arguments)
         preorder_exec(tree.right, function=function, arguments=arguments)
 
+
 def get_list_of_tree_nodes(tree):
     """
     Perform a preorder traversal of 'tree', and return a list of all nodes.
@@ -159,12 +160,14 @@ def get_list_of_tree_nodes(tree):
     nodes = []
     return get_nodes(tree, nodes=nodes)
 
+
 def get_dict_of_tree_values(tree):
     """
     Return a dictionary of node values indexed by id.
     """
     nodes = get_list_of_tree_nodes(tree)
-    return {i.id:i.value for i in nodes}
+    return {i.id: i.value for i in nodes}
+
 
 def get_list_of_tree_leaves(tree):
     """
@@ -185,5 +188,5 @@ def get_list_of_tree_leaves(tree):
     return get_nodes(tree, nodes=nodes)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     pass

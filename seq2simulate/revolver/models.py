@@ -1,8 +1,17 @@
-import numpy, pylab
+import numpy
 from scipy.linalg import expm
-from codon_frequencies import CodonTable, FEqual, F1x4
-from types import NoneType
-from random import uniform, choice, randint
+from codon_frequencies import CodonTable, FEqual
+from random import uniform, choice
+
+# check for matplotlib
+_MATPLOTLIB_ERROR = 'Matplotlib not installed, plot_p_over_time() will not work.'
+try:
+    import pylab
+    _CAN_PLOT = True
+except ImportError:
+    _CAN_PLOT = False
+    print(_MATPLOTLIB_ERROR)
+
 
 class ValidationMixin(object):
 
@@ -37,11 +46,12 @@ class Codon(ValidationMixin, object):
         self._seq = seq
 
     def delete(self):
-        self.seq = '-'*len(self.seq)
+        self.seq = '-' * len(self.seq)
                     
     def __str__(self):
         return '<Codon {}>'.format(self._seq)
-        
+       
+ 
 class Locus(object):
     """
     Locus object containing codon(s) for grouping mutations by a reference codon.
@@ -59,7 +69,7 @@ class Locus(object):
    
     @property 
     def loc_aa(self):
-        return self.loc+1
+        return self.loc + 1
 
     @property 
     def codons(self):
@@ -94,7 +104,7 @@ class Locus(object):
         Returns codon location string and sequence string.
         """
         sequence = [codon.seq for codon in self.codons]
-        return [self.loc_aa]*len(sequence), sequence
+        return [self.loc_aa] * len(sequence), sequence
 
     @property
     def mutations(self):
@@ -113,6 +123,7 @@ class Locus(object):
         except:
             pass
         return mutations
+
 
 class Sequence(object):
     """
@@ -148,13 +159,15 @@ class Sequence(object):
                 mutations.append(i)
         return mutations
 
+
 def break_sequence_into_triplets(sequence):
-    nfloor = len(sequence)//3.0
-    nfloat = len(sequence)/3.0
+    nfloor = len(sequence) // 3.0
+    nfloat = len(sequence) / 3.0
     if nfloat > nfloor:
         nfloor += 1
     nfloor = int(nfloor)
-    return [sequence[i*3:i*3+3] for i in range(nfloor)]
+    return [sequence[i * 3:i * 3 + 3] for i in range(nfloor)]
+
 
 def convert_dna_to_aa(sequence, codon_table=None):
     if codon_table is None:
@@ -168,11 +181,13 @@ def convert_dna_to_aa(sequence, codon_table=None):
             aa = getattr(codon_table, i)
         aas.append(aa)
     return ''.join([i for i in aas])
+
     
 def parse_sequence_to_loci(sequence):
     codon_strings = break_sequence_into_triplets(sequence)
-    loci = [Locus(codons=[j], loc=i) for i,j in enumerate(codon_strings)]
+    loci = [Locus(codons=[j], loc=i) for i, j in enumerate(codon_strings)]
     return loci
+
 
 def parse_loci_to_sequence(loci):
     locations = []
@@ -183,9 +198,10 @@ def parse_loci_to_sequence(loci):
         sequences.append(sequence)
     return [j for i in locations for j in i], [j for i in sequences for j in i]
 
+
 def parse_loci_to_sequence_string(loci):
-    sequences = []
     return ''.join([locus.sequence for locus in loci])
+
 
 def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None, scale_q=True, return_dict=False):
     """
@@ -236,14 +252,14 @@ def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None, scale_q=True, return_dict=F
             q[i, j] = mutation_rate(codon1, codon2, omega=omega, kappa=kappa, codon_table=ct, codon_freq=codon_freq)
 
     # diagonal equals negative sum of row
-    q[idmatrix==1] = 0.0
-    q[idmatrix==1] = -q.sum(1)
+    q[idmatrix == 1] = 0.0
+    q[idmatrix == 1] = -q.sum(1)
 
     # scale Q so that average rate of substitution at equilibrium is 1
     if scale_q:
         qdiagonal = q.diagonal()
         pvalues = numpy.array([codon_freq[codon] for codon in codons])
-        scaling_factor = 1.0/(-sum(qdiagonal*pvalues))
+        scaling_factor = 1.0 / (-sum(qdiagonal * pvalues))
         q *= scaling_factor
 
     if return_dict:
@@ -252,6 +268,7 @@ def goldman_Q(kappa=2.0, omega=1.0, codon_freq=None, scale_q=True, return_dict=F
         return q, qdict
 
     return q
+
 
 def convert_q_to_p(q, t=0.01, codon_table=None, return_dict=False):
     """
@@ -276,7 +293,7 @@ def convert_q_to_p(q, t=0.01, codon_table=None, return_dict=False):
     if codon_table is None:
         codon_table = CodonTable(stop_codons=False)
 
-    p = expm(q*t)
+    p = expm(q * t)
 
     # convert matrix to codon-indexed dict
     if return_dict:
@@ -285,6 +302,7 @@ def convert_q_to_p(q, t=0.01, codon_table=None, return_dict=False):
         return p, pdict
 
     return p
+
 
 def get_cumulative_p(p, codon_table=None, return_dict=False):
     """
@@ -311,15 +329,12 @@ def get_cumulative_p(p, codon_table=None, return_dict=False):
 
     p_cumsum = numpy.array(p_cumsum)
     if return_dict:
-        p_cumsum_dict = {codons[i]: {'p':row, 'codons':p_codons[i]} for i, row in enumerate(p_cumsum)}
+        p_cumsum_dict = {codons[i]: {'p': row, 'codons': p_codons[i]} for i, row in enumerate(p_cumsum)}
         return p_cumsum, p_codons, p_cumsum_dict
 
     return p_cumsum, p_codons
-    
-    return numpy.array(p_cumsum), p_codons
 
- 
-      
+
 def mutation_category(codon1, codon2, codon_table=None):
     """
     Args:
@@ -365,12 +380,13 @@ def mutation_category(codon1, codon2, codon_table=None):
 
     return cat
 
+
 def mutation_rate(codon1, codon2, 
-    kappa=2.0, 
-    omega=1.0, 
-    codon_table=None, 
-    codon_freq=None
-    ):
+                  kappa=2.0, 
+                  omega=1.0, 
+                  codon_table=None, 
+                  codon_freq=None
+                  ):
     """
     Args:
         codon1/codon2: three-letter strings
@@ -386,30 +402,31 @@ def mutation_rate(codon1, codon2,
     if len(codon2) != 3:
         raise ValueError('codon must be a three-letter str')
 
-
     cat = mutation_category(codon1, codon2, codon_table=codon_table)
     rate = 0
     if cat == 'multisite':
-        rate = 0 
-    if cat == ['synonymous', 'transversion' ]:
+        rate = 0
+    if cat == ['synonymous', 'transversion']:
         rate = codon_freq[codon2]
-    if cat == ['synonymous', 'transition' ]:
-        rate = kappa*codon_freq[codon2]
+    if cat == ['synonymous', 'transition']:
+        rate = kappa * codon_freq[codon2]
     if cat == ['nonsynonymous', 'transversion']:
-        rate = omega*codon_freq[codon2]
+        rate = omega * codon_freq[codon2]
     if cat == ['nonsynonymous', 'transition']:
-        rate = omega*kappa*codon_freq[codon2]
+        rate = omega * kappa * codon_freq[codon2]
     return rate 
+
 
 def diff_index(s1, s2):
     index = []
-    for i,j in zip(s1, s2):
-        if i==j:
+    for i, j in zip(s1, s2):
+        if i == j:
             index.append(0)
         else: 
             index.append(1)
     return index
-     
+
+
 def mutations(seq1, seq2):
     """
     Returns list of mutation values: 0 for transversion, 1 for transition, -1 for neither.
@@ -432,8 +449,8 @@ def mutations(seq1, seq2):
         'cg': 1,
     }
     mutations = []
-    for i,j in zip(seq1, seq2):
-        mutations.append(mut_dict.get(i+j, -1))
+    for i, j in zip(seq1, seq2):
+        mutations.append(mut_dict.get(i + j, -1))
     return mutations
             
 
@@ -449,7 +466,8 @@ def plot_p_over_time(q, t=10, codon='atg', codon_table=None, logscale=True):
         logscale: log-scaled axes
          
     """
-
+    if not _CAN_PLOT:
+        print()
     if len(codon) != 3:
         raise ValueError('codon must be a string of length 3')
     
@@ -457,12 +475,12 @@ def plot_p_over_time(q, t=10, codon='atg', codon_table=None, logscale=True):
         codon_table = CodonTable(stop_codons=False)
     codons = sorted(codon_table.codon_dict)
     tarray = numpy.linspace(0, t, 30)
-    ps = numpy.array([convert_q_to_p(q, t=t, codon_table=codon_table) for t in tarray])
+    ps = numpy.array([convert_q_to_p(q, t=ti, codon_table=codon_table) for ti in tarray])
 
     n_i = codons.index(codon)
-    dim = numpy.sqrt(len(q))+1
+    dim = numpy.sqrt(len(q)) + 1
     fig = pylab.figure(figsize=[25, 25])
-    axs = [fig.add_subplot(dim, dim, i+1) for i in range(len(q))]
+    axs = [fig.add_subplot(dim, dim, i + 1) for i in range(len(q))]
     p_codon = numpy.transpose([x[n_i] for x in ps])
     for n_j, ax in enumerate(axs):
         if logscale:
@@ -477,6 +495,7 @@ def plot_p_over_time(q, t=10, codon='atg', codon_table=None, logscale=True):
     fig.suptitle('{} ({})'.format(codons[n_i], getattr(codon_table, codons[n_i])), size=30)
     fig.subplots_adjust(wspace=0.3, hspace=0.3)
     fig.show() 
+
 
 def get_mutation_from_cumulative_p(codon, p_cumsum_dict):
     """
@@ -496,6 +515,7 @@ def get_mutation_from_cumulative_p(codon, p_cumsum_dict):
     new_codon = codons[numpy.where(probabilities > uniform(0, 1))[0][0]]
     return new_codon
 
+
 def make_indel(locus, index=0, ti_td=0.1, codon_freq=None):
     """
     Makes a codon-length indel at locus.
@@ -509,7 +529,7 @@ def make_indel(locus, index=0, ti_td=0.1, codon_freq=None):
     Returns a mutated locus.
     """
     indel_type = 'deletion'
-    p_deletion = 1.0/(1+ti_td)
+    p_deletion = 1.0 / (1 + ti_td)
     if uniform(0, 1) > p_deletion:
         indel_type = 'insertion'
 
@@ -519,11 +539,12 @@ def make_indel(locus, index=0, ti_td=0.1, codon_freq=None):
     elif indel_type == 'insertion':
         new_codon = choose_random_codon(codon_freq=codon_freq)
         new_codon = Codon(seq=new_codon)
-        bef_aft =  choice(['before', 'after'])
+        bef_aft = choice(['before', 'after'])
         if bef_aft == 'after':
             index += 1 
         locus.codons = locus.codons[:index] + [new_codon] + locus.codons[index:]
         locus.history.append([indel_type, new_codon.seq, index]) 
+
 
 def choose_random_codon(codon_freq=None):
     """
@@ -538,6 +559,7 @@ def choose_random_codon(codon_freq=None):
     new_codon = codons[numpy.where(cum_freq > uniform(0, 1))[0][0]]
     return new_codon
 
+
 def make_subs_in_locus(locus, p):
     """
     Mutates all codons in locus according to P.
@@ -549,6 +571,7 @@ def make_subs_in_locus(locus, p):
         if old_seq != new_seq:
             locus.history.append([old_seq, new_seq, i])
  
+
 def make_sub_from_p(codon, p_cumsum_dict):
     """
     Makes a mutation call using a model Q matrix (generated by e.g. goldman_Q().
@@ -563,6 +586,7 @@ def make_sub_from_p(codon, p_cumsum_dict):
         return 
     codon.seq = get_mutation_from_cumulative_p(codon.seq, p_cumsum_dict)
 
+
 def plot_codon_hist(codons):
     """
     Plots a histogram of a list of items (codons in this instance).
@@ -570,6 +594,9 @@ def plot_codon_hist(codons):
     Args:
         codons: 1-dimensional list
     """
+    if not _CAN_PLOT:
+        print(_MATPLOTLIB_ERROR)
+        return
     codons = numpy.array(codons)
     set_codons = list(set(codons))
     codon_bins = numpy.array([sum(codons == i) for i in set_codons])
@@ -584,6 +611,7 @@ def plot_codon_hist(codons):
     ax.set_ylabel('n')
     fig.show() 
 
+
 def sample_model_mutation_probabilities(seq, q, t=0, n=100):
     if t < 0:
         raise ValueError('t must be positive')
@@ -594,9 +622,6 @@ def sample_model_mutation_probabilities(seq, q, t=0, n=100):
     return [make_sub_from_p(Codon(seq=seq), p_cumsum_dict) for i in range(n)]
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     pass
-
-    
-     
 
