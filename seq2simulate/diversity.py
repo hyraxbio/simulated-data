@@ -13,8 +13,8 @@ output_filename = 'evolveagene_checked.fasta'
 
 hiv_pol_dnds = 0.23
 hiv_pol_substitution_rate = 0.00072
-tree_type = evolveagene.RANDOM
-selection_type = evolveagene.CONSTANT
+hiv_pol_lambda = 0.001 #probability of indel at locus (~codon) in branch
+hiv_pol_ti_td = 0.1 #ratio of insertions to deletions
 num_taxa = 10
 min_taxa_to_keep = 4
 max_tries = 3
@@ -67,21 +67,9 @@ def simulate(sequence, working_dir):
                     * random.uniform(0.6, 1.0)
             )
 
-            evolve_file = evolveagene.run(
-                seq, tree_type, selection_type, num_taxa, 
-                branch_length, hiv_pol_dnds, working_dir
-            )
-
-            # evolveagene OOMs aggressively, which is a pain
-            tries = 10
-            while not os.path.isfile(evolve_file) and tries > 0:
-                # doze a bit so the threads get out of sync
-                time.sleep(random.randint(1, 5))
-                evolve_file = evolveagene.run(
-                    seq, tree_type, selection_type, num_taxa, 
-                    branch_length, hiv_pol_dnds, working_dir
-                )
-                tries -= 1
+            evolve_file = evolveagene.run( seq, num_taxa, branch_length,
+                hiv_pol_dnds, hiv_pol_lambda, hiv_pol_ti_td,
+                working_dir)
 
             drms = []
             if name == 'resistant':

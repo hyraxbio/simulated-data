@@ -72,13 +72,12 @@ setup(
     description='Simulated data generator for HIV drug resistance testing',
     author='Imogen Wright',
     author_email='imogen@hyraxbio.co.za',
-    version='1.8.0',
-    packages=['seq2simulate'],
+    version='1.9.0',
+    packages=['seq2simulate', 'seq2simulate/revolver'],
     scripts=[
         'bin/simulate', 
         'bin/package-simulation', 
         'bin/sierra',
-        'bin/sierra-drms',
         'bin/merge-samples'
     ],
     package_data={'seq2simulate': [
@@ -107,7 +106,9 @@ setup(
         'soappy == 0.12.22',
         'multiprocessing == 2.6.2.1',
         'wstools==0.4.3',
-        'sierrapy==0.1.1'
+        'sierrapy==0.1.1',
+        'numpy==1.12.0',
+        'scipy==0.18.1',
     ],
     setup_requires=[
         'appdirs == 1.4.0',
@@ -117,7 +118,8 @@ setup(
         'soappy == 0.12.22',
         'multiprocessing == 2.6.2.1',
         'wstools==0.4.3',
-        'sierrapy==0.1.1'
+        'sierrapy==0.1.1',
+        'numpy==1.12.0',
     ]
 )
 
