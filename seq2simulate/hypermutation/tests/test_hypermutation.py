@@ -45,6 +45,7 @@ class HypermutTester(unittest.TestCase):
 
     def test_motif_probs(self):
         self.seq.index_all_motifs()
-        expected_answer = {'CGGC': 0.0, 'TGGT': 0.3890518084067808, 'GA': 0.6109481915932192}
-        for i, j in expected_answer.iteritems():
+        expected_motifs = ['CGGC', 'TGGT', 'GA']
+        expected_probs = [0.0, 0.3890518084067808, 0.6109481915932192]
+        for i, j in zip(expected_motifs, expected_probs):
             self.assertTrue(numpy.isclose(self.seq.motif_probs[i], j))

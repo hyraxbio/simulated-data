@@ -1,3 +1,4 @@
+import numpy
 import re
 import mutation_probabilities
 
@@ -45,20 +46,6 @@ class Sequence(object):
 
         self.sequence_motif_dict = motif_dict
 
-    def mutate_sequence(self, n):
-        """
-        Perform n mutations of self.sequence.
-
-        Args:
-            n: int
-        """
-        if self.sequence_motif_dict is None:
-            print('First indexing sequence.')
-            self.index_all_motifs()
-
-        mutations = []
-        #while len(mutations) < n:
-            
    
     @property 
     def num_motifs(self):
@@ -83,6 +70,39 @@ class Sequence(object):
         return remaining_probabilities
             
 
+    def mutate_sequence(self, n):
+        """
+        Perform n mutations of self.sequence.
+
+        Args:
+            n: int
+        """
+        if self.sequence_motif_dict is None:
+            print('First indexing sequence.')
+            self.index_all_motifs()
+
+        mutations = []
+        #while len(mutations) < n:
+   
+    @property 
+    def motif_probs_cum(self):    
+        return self._get_cumulative_p(self.motif_probs)
+
+    def _get_cumulative_p(self, p):
+        """
+        Returns cumulatively probabilities from probability dict sorted by
+        cumulative probability. This function is useful for sampling mutations.
+    
+        Args:
+            p: sorted cumulative probability dict
+        """
+     
+        motifs = p.keys()
+        probabilities = p.values()
+        p_cumsum = numpy.array(probabilities).cumsum()
+        return dict(zip(p_cumsum, motifs))
+    
+        
 if __name__ == '__main__':
     seq = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatggtcgc'.upper()
     seq = Sequence(seq)
