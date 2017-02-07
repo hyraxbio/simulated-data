@@ -42,8 +42,4 @@ class Sequence(object):
 
 
 if __name__ == '__main__':
-    with open('../../data/split/Seq6_Sus', 'r') as f: 
-        seq = f.read()
-    seq = seq.replace('\n', '')[9:]
-    km = mutation_probabilities.KijakProbabilities()     
     pass

@@ -20,14 +20,18 @@ class HypermutTester(unittest.TestCase):
 
     def test_get_motif_indices(self):
         indices = self.seq.get_motif_indices('ATG')
-        self.assertTrue(indices, [0, 39])
+        self.assertEqual(indices, [0, 39])
+
 
     def test_index_all_motifs(self):
-        indices = self.seq.index_all_motifs()     
+        indices = self.seq.index_all_motifs()
+        self.assertEqual(indices['CGGC'], [6, 45])
+
 
     def test_motif_probabilities(self):
         motif_probabilities = mutation_probabilities.MotifProbabilities() 
         self.assertTrue(numpy.isclose(sum(motif_probabilities.motifs.values()), 1))
+
 
     def test_kijak_probabilities(self):
         motif_probabilities = mutation_probabilities.KijakProbabilities() 
