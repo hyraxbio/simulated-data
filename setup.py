@@ -120,7 +120,6 @@ setup(
         'wstools==0.4.3',
         'sierrapy==0.1.1',
         'numpy==1.12.0',
-        'scipy==0.18.1',
     ]
 )
 
