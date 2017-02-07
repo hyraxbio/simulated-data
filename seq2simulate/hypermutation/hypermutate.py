@@ -1,3 +1,4 @@
+import random
 import numpy
 import re
 import mutation_probabilities
@@ -81,9 +82,16 @@ class Sequence(object):
             print('First indexing sequence.')
             self.index_all_motifs()
 
-        mutations = []
-        #while len(mutations) < n:
-   
+        mutations = 0
+        while mutations < n:
+            motif_index = [i > random.uniform(0, 1) for i in sorted(seq.motif_probs_cum)].index(True)
+            current_prob = sorted(self.motif_probs_cum)[motif_index]
+            current_motif = self.motif_probs_cum[current_prob]
+            current_index = random.choice(self.sequence_motif_dict[current_motif])
+            mutation_index = current_index + current_motif.index('G')
+            self.sequence = self.sequence[:mutation_index] + 'A' + self.sequence[1 + mutation_index:]
+            mutations += 1
+ 
     @property 
     def motif_probs_cum(self):    
         return self._get_cumulative_p(self.motif_probs)
@@ -102,11 +110,27 @@ class Sequence(object):
         p_cumsum = numpy.array(probabilities).cumsum()
         return dict(zip(p_cumsum, motifs))
     
+def print_mutations(old_sequence, new_sequence, colour=True):
+    """
+    Simple string comparison.
+    """
+
+    sim = ''
+    for i, j in zip(old_sequence, new_sequence):
+        if i == j:
+            sim += ' '
+        else:
+            sim += '|'
+
+    print(old_sequence)
+    print(sim)
+    print(new_sequence)
+    print('\n')
         
 if __name__ == '__main__':
-    seq = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatggtcgc'.upper()
-    seq = Sequence(seq)
-    #km = mutation_probabilities.KijakProbabilities()     
-    i = seq.index_all_motifs()
+    oldseq = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatggtcgc'.upper()
+    seq = Sequence(oldseq)
+    seq.mutate_sequence(3)
+    print_mutations(oldseq, seq.sequence)
 
     pass
