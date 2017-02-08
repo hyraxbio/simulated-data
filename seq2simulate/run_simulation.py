@@ -76,7 +76,7 @@ class LoggingPool(Pool):
         return Pool.apply_async(self, LogExceptions(func), 
             args, kwds, callback)
 
-def run_diversity_thread(evolved_queue, sequence, working_dir):
+def run_diversity_thread(evolved_queue, sequence, working_dir, hypermutate_seqs):
 
     """
     Calculates diversity for a single sequence
@@ -87,7 +87,7 @@ def run_diversity_thread(evolved_queue, sequence, working_dir):
         working_dir: Put temp files here.
     """
     
-    files = diversity.simulate(sequence, working_dir)
+    files = diversity.simulate(sequence, working_dir, hypermutate_seqs = hypermutate_seqs)
     files["sequence"] = sequence
     evolved_queue.put(files)
 
@@ -96,8 +96,8 @@ def run_diversity(
     pcr_error, env_error, human_error, remove_rt,
     randomize,
     working_dir,
-    randomize_includes_pcr_error = False 
-
+    randomize_includes_pcr_error = False,
+    hypermutate_seqs = False,
 ):
     """
     Simulate diversity from sets of susceptible and resistant sequences.
@@ -158,7 +158,7 @@ def run_diversity(
             sequence.remove_rt = True
 
         p.apply_async(run_diversity_thread, [
-            evolved_queue, sequence, working_dir
+            evolved_queue, sequence, working_dir, hypermutate_seqs
         ])
     
     p.close()
