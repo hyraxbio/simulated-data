@@ -19,6 +19,8 @@ num_taxa = 10
 min_taxa_to_keep = 4
 max_tries = 3
 
+# proviral hypermutations per hundred bp
+hypermutation_rate = 3
 
 def drms_unchanged(id, drms1, drms2):
     """
@@ -36,7 +38,7 @@ def drms_unchanged(id, drms1, drms2):
     return sorted(drms1) == sorted(drms2)
 
 
-def simulate(sequence, working_dir):
+def simulate(sequence, working_dir, hypermutate=False):
     """
     Produce a simulated set of sequences that contain no added or removed
     DRMs with respect to the original sequence.
@@ -71,6 +73,8 @@ def simulate(sequence, working_dir):
                 hiv_pol_dnds, hiv_pol_lambda, hiv_pol_ti_td,
                 working_dir)
 
+            evolved_sequences = [s for s in Bio.SeqIO.parse(evolve_file, 'fasta')]
+
             drms = []
             if name == 'resistant':
                 drms = sequence.drms
@@ -80,7 +84,7 @@ def simulate(sequence, working_dir):
 
             try:
                 allowed_sequences = [
-                    s for s in Bio.SeqIO.parse(evolve_file, 'fasta') \
+                    s for s in evolved_sequences \
                         if drms_unchanged(seq.id, drms, 
                             sierra.get_drms(s))
                 ]
