@@ -98,7 +98,9 @@ def simulate(sequence, working_dir, hypermutate_seqs=False):
                     "sequences."
                 
                 if hypermutate:
+                    print('\n-------------------------------------------------------')
                     print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
+                    print('-------------------------------------------------------\n')
                     hypermutation_rates = [int(hypermutation_rate * len(str(s.seq)) // 100) for s in allowed_sequences]
                     hyper_evolved_sequences = hypermutate.mutate_sequences([str(s.seq) for s in allowed_sequences], hypermutation_rates)
                     for i, hseq in enumerate(hyper_evolved_sequences):
