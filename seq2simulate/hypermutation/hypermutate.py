@@ -52,6 +52,9 @@ class Sequence(object):
    
     @property 
     def _num_motifs(self):
+        """
+        Returns number of substrate motifs currently present in sequence.
+        """
         try:
             _num_motifs = sum([len(j) for i, j in self.sequence_motif_dict.iteritems()])
         except AttributeError:
