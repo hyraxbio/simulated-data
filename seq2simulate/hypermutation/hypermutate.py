@@ -14,8 +14,9 @@ class Sequence(object):
             sequence: a DNA string
             motif_probabilities: instance of mutation_probabilities
         """
-        if not all(nucleotide in 'ATGC' for nucleotide in set(sequence)):
-            raise ValueError('Sequences may only contain A, T, G, and/or C.')
+        sequence = sequence.upper()
+        if not all(nucleotide in 'ATGC-' for nucleotide in set(sequence)):
+            raise ValueError('Sequences may only contain A, T, G, and/or C ({})'.format(list(set(sequence))))
 
         self.sequence = sequence
         self.sequence_motif_dict = None
@@ -76,6 +77,11 @@ class Sequence(object):
         return remaining_probabilities
             
 
+    @property 
+    def _motif_probs_cum(self):    
+        return self._get_cumulative_p(self._motif_probs)
+
+
     def mutate_sequence(self, n):
         """
         Attempt to perform n mutations of self.sequence or until no more substrate motifs exist.
@@ -110,9 +116,6 @@ class Sequence(object):
         mutation_index = current_index + current_motif.index('G')
         return sequence[:mutation_index] + 'A' + sequence[1 + mutation_index:]
 
-    @property 
-    def _motif_probs_cum(self):    
-        return self._get_cumulative_p(self._motif_probs)
 
     def _get_cumulative_p(self, p):
         """
@@ -127,7 +130,22 @@ class Sequence(object):
         probabilities = p.values()
         p_cumsum = numpy.array(probabilities).cumsum()
         return dict(zip(p_cumsum, motifs))
+
+def mutate_sequences(sequences, n):
+    """
+    Hypermutate a list of sequences.
     
+    Args:
+        sequences: a list of DNA strings
+        n = number of hypermutations, int or list of ints
+    """
+    seqs = [Sequence(s) for s in sequences]
+    if isinstance(n, int):
+        n = [n]*len(seqs)
+    for seq, ni in zip(seqs, n):
+        seq.mutate_sequence(ni)
+    return [seq.sequence for seq in seqs]
+
 def print_mutations(old_sequence, new_sequence, colour=True):
     """
     Simple string comparison.

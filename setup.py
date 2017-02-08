@@ -73,7 +73,7 @@ setup(
     author='Imogen Wright',
     author_email='imogen@hyraxbio.co.za',
     version='1.10.0',
-    packages=['seq2simulate', 'seq2simulate/revolver'],
+    packages=['seq2simulate', 'seq2simulate/revolver', 'seq2simulate/hypermutation'],
     scripts=[
         'bin/simulate', 
         'bin/package-simulation', 

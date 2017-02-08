@@ -7,9 +7,9 @@ class HypermutTester(unittest.TestCase):
 
 
     def setUp(self):
-        self.old_sequence = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatggtcgc'.upper()
+        self.old_sequence = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatggtcgc--'.upper()
         self.seq = hypermutate.Sequence(self.old_sequence)
-
+    
 
     def test_sequence_init(self):
         self.assertEqual(self.old_sequence, self.seq.sequence)
@@ -67,7 +67,8 @@ class HypermutTester(unittest.TestCase):
         newseq = self.seq.sequence
         diffs = [i for i in xrange(len(oldseq)) if oldseq[i] != newseq[i]]
         self.assertEqual(len(diffs), 3)
-        
+       
+ 
     def test_mutate_sequence_is_limited_to__num_motifs(self):
         oldseq = self.seq.sequence
         n = self.seq._num_motifs 
@@ -75,3 +76,22 @@ class HypermutTester(unittest.TestCase):
         newseq = self.seq.sequence
         diffs = [i for i in xrange(len(oldseq)) if oldseq[i] != newseq[i]]
         self.assertEqual(len(diffs), n)
+
+
+    def test_mutate_sequences(self):
+        oldseqs = [self.seq.sequence]*5
+        newseqs = hypermutate.mutate_sequences(oldseqs, 3)
+        for i,j in zip(oldseqs, newseqs):
+            diffs = [x for x in xrange(len(i)) if i[x] != j[x]]
+            self.assertEqual(len(diffs), 3)
+
+
+    def test_mutate_sequences_list_of_ns(self):
+        oldseqs = [self.seq.sequence]*5
+        newseqs = hypermutate.mutate_sequences(oldseqs, [3]*5)
+        for i,j in zip(oldseqs, newseqs):
+            diffs = [x for x in xrange(len(i)) if i[x] != j[x]]
+            self.assertEqual(len(diffs), 3)
+
+
+

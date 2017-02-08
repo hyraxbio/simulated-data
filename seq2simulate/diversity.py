@@ -8,6 +8,7 @@ import Bio
 
 import evolveagene
 import sierra_ws as sierra
+from hypermutation import hypermutate
 
 output_filename = 'evolveagene_checked.fasta'
 
@@ -38,7 +39,7 @@ def drms_unchanged(id, drms1, drms2):
     return sorted(drms1) == sorted(drms2)
 
 
-def simulate(sequence, working_dir, hypermutate=False):
+def simulate(sequence, working_dir, hypermutate_seqs=False):
     """
     Produce a simulated set of sequences that contain no added or removed
     DRMs with respect to the original sequence.
@@ -96,6 +97,13 @@ def simulate(sequence, working_dir, hypermutate=False):
                 print "Kept a total of", len(allowed_sequences), "evolved " \
                     "sequences."
                 
+                if hypermutate:
+                    print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
+                    hypermutation_rates = [int(hypermutation_rate * len(str(s.seq)) // 100) for s in allowed_sequences]
+                    hyper_evolved_sequences = hypermutate.mutate_sequences([str(s.seq) for s in allowed_sequences], hypermutation_rates)
+                    for i, hseq in enumerate(hyper_evolved_sequences):
+                        allowed_sequences[i].seq = Bio.Seq.Seq(hseq, alphabet=Bio.Alphabet.SingleLetterAlphabet())
+
                 full_filename = os.path.join(
                     working_dir, 
                     seq.id + "_" + name + "_" + output_filename
