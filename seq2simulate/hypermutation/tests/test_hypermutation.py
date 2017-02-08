@@ -68,3 +68,10 @@ class HypermutTester(unittest.TestCase):
         diffs = [i for i in xrange(len(oldseq)) if oldseq[i] != newseq[i]]
         self.assertEqual(len(diffs), 3)
         
+    def test_mutate_sequence_is_limited_to__num_motifs(self):
+        oldseq = self.seq.sequence
+        n = self.seq._num_motifs 
+        self.seq.mutate_sequence(2*n)
+        newseq = self.seq.sequence
+        diffs = [i for i in xrange(len(oldseq)) if oldseq[i] != newseq[i]]
+        self.assertEqual(len(diffs), n)
