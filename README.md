@@ -43,7 +43,7 @@ simulate --prevalence 1 --susceptible data/split/Seq6_Sus --resistant data/split
 Create an Illumina simulation from all sequences, with randomized errors, at all prevalences:
 
 ```
-env/bin/simulate --susceptible data/SusceptibleSeqs_all.fasta --resistant data/ResistantSeqs_all.fasta --out temp_out --platform illumina --paired-end --randomize
+simulate --susceptible data/SusceptibleSeqs_all.fasta --resistant data/ResistantSeqs_all.fasta --out temp_out --platform illumina --paired-end --randomize
 ```
 
 

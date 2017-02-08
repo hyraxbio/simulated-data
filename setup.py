@@ -78,6 +78,7 @@ setup(
         'bin/simulate', 
         'bin/package-simulation', 
         'bin/sierra',
+        'bin/sierra-drms',
         'bin/merge-samples'
     ],
     package_data={'seq2simulate': [
