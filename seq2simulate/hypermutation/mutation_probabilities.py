@@ -8,9 +8,13 @@ class MotifProbabilities(object):
              }
 
     def __init__(self):
-      for motif, value in self.motifs.iteritems():
-          setattr(self, motif, value)
+        for motif, value in self.motifs.iteritems():
+            setattr(self, motif, value)
 
+    def __str__(self):
+        probability_strings = '\n'.join(['{}: {}'.format(i, j) for i, j in self.motifs.iteritems()])
+        return '<MotifProbabilities\n{}>'.format(probability_strings)
+    
     @property
     def motifs_cumulative(self):
         return self._get_cumulative_p(self.motifs)

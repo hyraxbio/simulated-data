@@ -24,7 +24,7 @@ class Sequence(object):
         else:
             self.motif_probabilities = motif_probabilities
 
-    def get_motif_indices(self, motif):
+    def _get_motif_indices(self, motif):
         """
         Find indices of substring motif in sequence.
     
@@ -43,7 +43,7 @@ class Sequence(object):
 
         motif_dict = {}
         for motif in self.motif_probabilities.motifs:
-            motif_indices = self.get_motif_indices(motif) 
+            motif_indices = self._get_motif_indices(motif) 
             if len(motif_indices) > 0:
                 motif_dict[motif] = motif_indices
 
@@ -51,15 +51,15 @@ class Sequence(object):
 
    
     @property 
-    def num_motifs(self):
+    def _num_motifs(self):
         try:
-            num_motifs = sum([len(j) for i, j in self.sequence_motif_dict.iteritems()])
+            _num_motifs = sum([len(j) for i, j in self.sequence_motif_dict.iteritems()])
         except AttributeError:
-            num_motifs = 0
-        return num_motifs
+            _num_motifs = 0
+        return _num_motifs
 
     @property
-    def motif_probs(self):
+    def _motif_probs(self):
         """
         A shortened rescaled dictionary of motif mutation probabilities
         including only the present motifs.
@@ -75,32 +75,42 @@ class Sequence(object):
 
     def mutate_sequence(self, n):
         """
-        Perform n mutations of self.sequence.
+        Attempt to perform n mutations of self.sequence until no more substrates exist.
 
         Args:
-            n: int, must be less than or equal to num_motifs
+            n: int
         """
 
         if self.sequence_motif_dict is None:
             self.index_all_motifs()
-        if n > self.num_motifs:
-            raise ValueError('n must be less than or equal to num_motifs ({})'.format(self.num_motifs))
+        if n > self._num_motifs:
+            n = self._num_motifs
+            #raise ValueError('n must be less than or equal to _num_motifs ({})'.format(self._num_motifs))
             
         mutations = 0
         while mutations < n:
             print(self.sequence_motif_dict)
-            motif_index = [i > random.uniform(0, 1) for i in sorted(seq.motif_probs_cum)].index(True)
-            current_prob = sorted(self.motif_probs_cum)[motif_index]
-            current_motif = self.motif_probs_cum[current_prob]
-            current_index = random.choice(self.sequence_motif_dict[current_motif])
-            mutation_index = current_index + current_motif.index('G')
-            self.sequence = self.sequence[:mutation_index] + 'A' + self.sequence[1 + mutation_index:]
+            self.sequence = self._mutate(self.sequence)
             self.index_all_motifs()
             mutations += 1
- 
+
+    def _mutate(self, sequence): 
+        """
+        Perform a single random mutation at the leftmost G residue in a motif
+        with probabilities defined by Sequence.motif_probabilites.
+        """
+        if self.sequence_motif_dict is None:
+            self.index_all_motifs()
+        motif_index = [i > random.uniform(0, 1) for i in sorted(self._motif_probs_cum)].index(True)
+        current_prob = sorted(self._motif_probs_cum)[motif_index]
+        current_motif = self._motif_probs_cum[current_prob]
+        current_index = random.choice(self.sequence_motif_dict[current_motif])
+        mutation_index = current_index + current_motif.index('G')
+        return sequence[:mutation_index] + 'A' + sequence[1 + mutation_index:]
+
     @property 
-    def motif_probs_cum(self):    
-        return self._get_cumulative_p(self.motif_probs)
+    def _motif_probs_cum(self):    
+        return self._get_cumulative_p(self._motif_probs)
 
     def _get_cumulative_p(self, p):
         """
@@ -136,7 +146,7 @@ def print_mutations(old_sequence, new_sequence, colour=True):
 if __name__ == '__main__':
     oldseq = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatggtcgc'.upper()
     seq = Sequence(oldseq, motif_probabilities=mutation_probabilities.MotifProbabilities())
-    seq.mutate_sequence(5)
+    seq.mutate_sequence(3)
     print_mutations(oldseq, seq.sequence)
 
     pass
