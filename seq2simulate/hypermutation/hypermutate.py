@@ -143,9 +143,4 @@ def print_mutations(old_sequence, new_sequence, colour=True):
     print('\n')
         
 if __name__ == '__main__':
-    oldseq = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatggtcgc'.upper()
-    seq = Sequence(oldseq, motif_probabilities=mutation_probabilities.MotifProbabilities())
-    seq.mutate_sequence(3)
-    print_mutations(oldseq, seq.sequence)
-
     pass
