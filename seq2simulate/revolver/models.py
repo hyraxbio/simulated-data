@@ -20,7 +20,7 @@ class ValidationMixin(object):
         for i in set(seq):
             if i not in valids: 
                 return False
-        return True, ''
+        return True
 
 
 class Codon(ValidationMixin, object):
@@ -86,7 +86,7 @@ class Locus(object):
             self._codons.append(Codon(seq=codon))
             
     def del_codon(self, codon_i):
-        self._codons = [codon for i, codon in enumerate(self._codons) if i != codon_i]
+        del self._codons[codon_i]
 
     def __str__(self):
         return '<Locus {}>'.format(' '.join([codon.__str__() for codon in self.codons]))
@@ -109,19 +109,16 @@ class Locus(object):
     @property
     def mutations(self):
         mutations = []
-        try:
-            for mutation in self.history:
-                if mutation[0] == 'deletion':
-                    mutations.append('del{}{}'.format(self.loc_aa, convert_dna_to_aa(mutation[1])))
-                elif mutation[0] == 'insertion':
-                    mutations.append('ins{}{}'.format(self.loc_aa, convert_dna_to_aa(mutation[1])))
-                else:
-                    aa0 = convert_dna_to_aa(mutation[0])
-                    aa1 = convert_dna_to_aa(mutation[1])
-                    if aa0 != aa1:
-                        mutations.append('{}{}{}'.format(aa0, self.loc_aa, aa1))
-        except:
-            pass
+        for mutation in self.history:
+            if mutation[0] == 'deletion':
+                mutations.append('del{}{}'.format(self.loc_aa, convert_dna_to_aa(mutation[1])))
+            elif mutation[0] == 'insertion':
+                mutations.append('ins{}{}'.format(self.loc_aa, convert_dna_to_aa(mutation[1])))
+            else:
+                aa0 = convert_dna_to_aa(mutation[0])
+                aa1 = convert_dna_to_aa(mutation[1])
+                if aa0 != aa1:
+                    mutations.append('{}{}{}'.format(aa0, self.loc_aa, aa1))
         return mutations
 
 
@@ -367,7 +364,7 @@ def mutation_category(codon1, codon2, codon_table=None):
         nucleotide_mutation_type = None
         if nscore == 0:
             nucleotide_mutation_type = 'transition'
-        if nscore == 1:
+        elif nscore == 1:
             nucleotide_mutation_type = 'transversion'
 
         aminoacid_mutation_type = None
@@ -403,17 +400,19 @@ def mutation_rate(codon1, codon2,
         raise ValueError('codon must be a three-letter str')
 
     cat = mutation_category(codon1, codon2, codon_table=codon_table)
-    rate = 0
-    if cat == 'multisite':
+
+    if cat == ['multisite'] or None in cat:
         rate = 0
-    if cat == ['synonymous', 'transversion']:
+    elif cat == ['synonymous', 'transversion']:
         rate = codon_freq[codon2]
-    if cat == ['synonymous', 'transition']:
+    elif cat == ['synonymous', 'transition']:
         rate = kappa * codon_freq[codon2]
-    if cat == ['nonsynonymous', 'transversion']:
+    elif cat == ['nonsynonymous', 'transversion']:
         rate = omega * codon_freq[codon2]
-    if cat == ['nonsynonymous', 'transition']:
+    elif cat == ['nonsynonymous', 'transition']:
         rate = omega * kappa * codon_freq[codon2]
+    else:
+        raise ValueError('{} does not match.'.format(cat))
     return rate 
 
 
@@ -467,7 +466,8 @@ def plot_p_over_time(q, t=10, codon='atg', codon_table=None, logscale=True):
          
     """
     if not _CAN_PLOT:
-        print()
+        print(_MATPLOTLIB_ERROR)
+        return
     if len(codon) != 3:
         raise ValueError('codon must be a string of length 3')
     
@@ -554,7 +554,7 @@ def choose_random_codon(codon_freq=None):
     if codon_freq is None:
         codon_freq = FEqual()
 
-    codons = [i for i in codon_freq.keys()]
+    codons = codon_freq.keys()
     cum_freq = numpy.array([i for i in codon_freq.values()]).cumsum()
     new_codon = codons[numpy.where(cum_freq > uniform(0, 1))[0][0]]
     return new_codon
