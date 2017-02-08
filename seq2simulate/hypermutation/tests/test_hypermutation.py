@@ -55,8 +55,16 @@ class HypermutTester(unittest.TestCase):
         oldseq = self.seq.sequence
         newseq = self.seq._mutate(oldseq)
         self.assertNotEqual(oldseq, newseq)
-        diff = set(oldseq).difference(set(newseq))
-        hypermutate.print_mutations(oldseq, newseq)
-        self.assertEqual(len(diff), 1)
-        self.assertEqual(list(diff)[0], 'G')
+        diffs = [i for i in xrange(len(oldseq)) if oldseq[i] != newseq[i]]
+        self.assertEqual(len(diffs), 1)
+        self.assertEqual(oldseq[diffs[0]], 'G')
+        self.assertEqual(newseq[diffs[0]], 'A')
 
+
+    def test_mutate_sequence(self):
+        oldseq = self.seq.sequence
+        self.seq.mutate_sequence(3)
+        newseq = self.seq.sequence
+        diffs = [i for i in xrange(len(oldseq)) if oldseq[i] != newseq[i]]
+        self.assertEqual(len(diffs), 3)
+        

@@ -75,7 +75,7 @@ class Sequence(object):
 
     def mutate_sequence(self, n):
         """
-        Attempt to perform n mutations of self.sequence until no more substrates exist.
+        Attempt to perform n mutations of self.sequence or until no more substrate motifs exist.
 
         Args:
             n: int
@@ -89,7 +89,6 @@ class Sequence(object):
             
         mutations = 0
         while mutations < n:
-            print(self.sequence_motif_dict)
             self.sequence = self._mutate(self.sequence)
             self.index_all_motifs()
             mutations += 1
