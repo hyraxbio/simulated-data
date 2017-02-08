@@ -2,7 +2,7 @@ import random
 import numpy
 import re
 import mutation_probabilities
-
+random.seed()
 
 class Sequence(object):
 
@@ -21,6 +21,8 @@ class Sequence(object):
         self.sequence_motif_dict = None
         if motif_probabilities is None:
             self.motif_probabilities = mutation_probabilities.KijakProbabilities()
+        else:
+            self.motif_probabilities = motif_probabilities
 
     def get_motif_indices(self, motif):
         """
@@ -76,20 +78,24 @@ class Sequence(object):
         Perform n mutations of self.sequence.
 
         Args:
-            n: int
+            n: int, must be less than or equal to num_motifs
         """
-        if self.sequence_motif_dict is None:
-            print('First indexing sequence.')
-            self.index_all_motifs()
 
+        if self.sequence_motif_dict is None:
+            self.index_all_motifs()
+        if n > self.num_motifs:
+            raise ValueError('n must be less than or equal to num_motifs ({})'.format(self.num_motifs))
+            
         mutations = 0
         while mutations < n:
+            print(self.sequence_motif_dict)
             motif_index = [i > random.uniform(0, 1) for i in sorted(seq.motif_probs_cum)].index(True)
             current_prob = sorted(self.motif_probs_cum)[motif_index]
             current_motif = self.motif_probs_cum[current_prob]
             current_index = random.choice(self.sequence_motif_dict[current_motif])
             mutation_index = current_index + current_motif.index('G')
             self.sequence = self.sequence[:mutation_index] + 'A' + self.sequence[1 + mutation_index:]
+            self.index_all_motifs()
             mutations += 1
  
     @property 
@@ -129,8 +135,8 @@ def print_mutations(old_sequence, new_sequence, colour=True):
         
 if __name__ == '__main__':
     oldseq = 'atgcaacggcgattatacgtatcgtgcatcgatcatcgcatgcaacggcgattatacgtatcgtgcatcgatcatggtcgc'.upper()
-    seq = Sequence(oldseq)
-    seq.mutate_sequence(3)
+    seq = Sequence(oldseq, motif_probabilities=mutation_probabilities.MotifProbabilities())
+    seq.mutate_sequence(5)
     print_mutations(oldseq, seq.sequence)
 
     pass

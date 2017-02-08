@@ -3,23 +3,8 @@ import numpy
 class MotifProbabilities(object):
 
     motifs = {
-             'GA':   0.058824,
-             'TGGG': 0.058824,
-             'TGGA': 0.058824,
-             'CGGG': 0.058824,
-             'AGGG': 0.058824,
-             'TGGT': 0.058824,
-             'GGGG': 0.058824,
-             'CGGA': 0.058824,
-             'GGGA': 0.058824,
-             'CGGT': 0.058824,
-             'AGGA': 0.058824,
-             'AGGT': 0.058824,
-             'GGGT': 0.058824,
-             'TGGC': 0.058824,
-             'GGGC': 0.058824,
-             'AGGC': 0.058824,
-             'CGGC': 0.058824,
+             'GA':   0.125,
+             'GG':   0.875,
              }
 
     def __init__(self):
