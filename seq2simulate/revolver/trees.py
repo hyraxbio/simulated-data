@@ -187,6 +187,3 @@ def get_list_of_tree_leaves(tree):
     nodes = []
     return get_nodes(tree, nodes=nodes)
 
-
-if __name__ == '__main__':
-    pass
