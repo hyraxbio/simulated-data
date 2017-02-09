@@ -116,10 +116,16 @@ def get_working_dir():
     is_flag=True
 )
 
+@click.option(
+    '--proviral',
+    help='After evolving sequences, hypermutates to mimic proviral DNA.',
+    is_flag=True
+)
+
 def run(
     susceptible, resistant, out, platform, working_dir, prevalence, 
     diversity_only, error_only, prevalence_only, pcr_error,
-    env_error, human_error, remove_rt, randomize, paired_end
+    env_error, human_error, remove_rt, randomize, paired_end, proviral
 ):
     """
     The simulate command simulates HIV drug resistance testing data
@@ -193,9 +199,10 @@ def run(
             pcr_error, env_error, human_error, remove_rt,
             randomize,
             working_dir,
-            randomize_includes_pcr_error = (not paired_end) 
+            randomize_includes_pcr_error = (not paired_end) ,
                                          # we can't currently do pcr for
                                          # paired end sequences 
+            hypermutate_seqs = proviral
         )
 
     if not diversity_only and not prevalence_only:

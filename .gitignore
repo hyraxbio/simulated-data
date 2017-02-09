@@ -3,3 +3,6 @@ build
 dist
 simulate.egg-info
 *.pyc
+*.swp
+*.swo
+*.lprof

@@ -1,6 +1,8 @@
 __all__ = [
     'diversity', 
     'evolveagene', 
+    'revolver',
+    'hypermutation',
     'parser', 
     'prevalence',
     'run_simulation', 
@@ -11,6 +13,8 @@ __all__ = [
 
 import diversity
 import evolveagene
+import revolver
+import hypermutation
 import parser
 import prevalence
 import run_simulation

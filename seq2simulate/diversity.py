@@ -8,17 +8,20 @@ import Bio
 
 import evolveagene
 import sierra_ws as sierra
+from hypermutation import hypermutate
 
 output_filename = 'evolveagene_checked.fasta'
 
 hiv_pol_dnds = 0.23
 hiv_pol_substitution_rate = 0.00072
-tree_type = evolveagene.RANDOM
-selection_type = evolveagene.CONSTANT
+hiv_pol_lambda = 0.001 #probability of indel at locus (~codon) in branch
+hiv_pol_ti_td = 0.1 #ratio of insertions to deletions
 num_taxa = 10
 min_taxa_to_keep = 4
 max_tries = 3
 
+# proviral hypermutations per hundred bp
+hypermutation_rate = 3
 
 def drms_unchanged(id, drms1, drms2):
     """
@@ -36,7 +39,7 @@ def drms_unchanged(id, drms1, drms2):
     return sorted(drms1) == sorted(drms2)
 
 
-def simulate(sequence, working_dir):
+def simulate(sequence, working_dir, hypermutate_seqs=False):
     """
     Produce a simulated set of sequences that contain no added or removed
     DRMs with respect to the original sequence.
@@ -67,21 +70,11 @@ def simulate(sequence, working_dir):
                     * random.uniform(0.6, 1.0)
             )
 
-            evolve_file = evolveagene.run(
-                seq, tree_type, selection_type, num_taxa, 
-                branch_length, hiv_pol_dnds, working_dir
-            )
+            evolve_file = evolveagene.run( seq, num_taxa, branch_length,
+                hiv_pol_dnds, hiv_pol_lambda, hiv_pol_ti_td,
+                working_dir)
 
-            # evolveagene OOMs aggressively, which is a pain
-            tries = 10
-            while not os.path.isfile(evolve_file) and tries > 0:
-                # doze a bit so the threads get out of sync
-                time.sleep(random.randint(1, 5))
-                evolve_file = evolveagene.run(
-                    seq, tree_type, selection_type, num_taxa, 
-                    branch_length, hiv_pol_dnds, working_dir
-                )
-                tries -= 1
+            evolved_sequences = [s for s in Bio.SeqIO.parse(evolve_file, 'fasta')]
 
             drms = []
             if name == 'resistant':
@@ -92,7 +85,7 @@ def simulate(sequence, working_dir):
 
             try:
                 allowed_sequences = [
-                    s for s in Bio.SeqIO.parse(evolve_file, 'fasta') \
+                    s for s in evolved_sequences \
                         if drms_unchanged(seq.id, drms, 
                             sierra.get_drms(s))
                 ]
@@ -104,6 +97,15 @@ def simulate(sequence, working_dir):
                 print "Kept a total of", len(allowed_sequences), "evolved " \
                     "sequences."
                 
+                if hypermutate:
+                    print('\n-------------------------------------------------------')
+                    print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
+                    print('-------------------------------------------------------\n')
+                    hypermutation_rates = [int(hypermutation_rate * len(str(s.seq)) // 100) for s in allowed_sequences]
+                    hyper_evolved_sequences = hypermutate.mutate_sequences([str(s.seq) for s in allowed_sequences], hypermutation_rates)
+                    for i, hseq in enumerate(hyper_evolved_sequences):
+                        allowed_sequences[i].seq = Bio.Seq.Seq(hseq, alphabet=Bio.Alphabet.SingleLetterAlphabet())
+
                 full_filename = os.path.join(
                     working_dir, 
                     seq.id + "_" + name + "_" + output_filename
