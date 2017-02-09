@@ -22,7 +22,7 @@ def get_working_dir():
 
 @click.option(
     '--folder', 
-    help='Path to the input folder of separate sequence files.', 
+    help='Path to the input folder of separate sequence files. Or the top level directory of a number of platforms', 
     type=click.Path(exists=True, readable=True, resolve_path=True)
 )
 
@@ -74,11 +74,16 @@ def run(folder, platform, mid_file, print_settings):
         samples = seq2simulate.package.roche(
             folder, mid_file
         )
+    elif platform is None:
+        for p in os.listdir(folder):
+            run(os.path.join(folder, p), p, mid_file)
     else:
         raise ValueError('Invalid platform ' + platform + '.')
 
     if print_settings:
         seq2simulate.settings.write_settings(folder, settings, samples)
+    elif platform == 'roche':
+        seq2simulate.settings.write_settings(folder, {}, samples)
 
 if __name__ == '__main__':
     run(auto_envvar_prefix='SIMULATE')
