@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+
+# Write a unit test for exatype, to enumerate the scores for all
+# pairs of mutations.
+
+import sys
+import time
+from threading import Thread
+
+from seq2simulate import sierra_ws as sierra, hiv_drms
+
+mutation_prefix = "residueSets := [][]string{"
+mutation_suffix = "}\n"
+
+call_prefix = "scores := []map[string]int{"
+call_suffix = "}\n"
+
+def get_calls(count, i, j, calls):
+    try:
+        calls[count] = sierra.get_calls_from_drms([i, j])
+    except:
+        calls[count] = None
+
+num_threads = num_threads        
+
+threads = [None] * num_threads
+i_list = [None] * num_threads
+j_list = [None] * num_threads
+calls = [None] * num_threads
+with open(sys.argv[1], 'w') as mutation_file, \
+     open(sys.argv[2], 'w') as call_file:
+
+    mutation_file.write(mutation_prefix)
+    call_file.write(call_prefix)
+    
+    count = 0
+    for big_count, i in enumerate(hiv_drms.drms):
+        for j in hiv_drms.drms:
+            if i.locus != j.locus:
+                continue
+
+            i_list[count % num_threads] = i
+            j_list[count % num_threads] = j
+            threads[count % num_threads] = Thread(
+                target=get_calls, 
+                args=(count % num_threads, i, j, calls))
+            threads[count % num_threads].start()
+            count += 1
+            if count % num_threads == 0:
+                for t in range(len(threads)):
+                    threads[t].join()
+                for t in range(len(i_list)):
+                    if calls[t] is not None:
+                        # the first case
+                        if big_count == 0 and count == num_threads and t == 0:
+                            mutation_file.write("{\"%s\", \"%s\"}" % (
+                                i_list[t].locus_str(), 
+                                j_list[t].locus_str()))
+                            call_file.write(str(calls[t]).replace("\'", "\""))
+                        else:
+                            mutation_file.write(",\n{\"%s\", \"%s\"}" % (
+                                i_list[t].locus_str(), 
+                                j_list[t].locus_str()))
+                            call_file.write(",\n" + str(calls[t]).replace("\'", "\""))
+    mutation_file.write(mutation_suffix)
+    call_file.write(call_suffix)
+
+
+            

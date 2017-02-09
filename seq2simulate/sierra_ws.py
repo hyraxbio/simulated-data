@@ -98,10 +98,23 @@ def call_sierra_with_sequence(sequence):
         response = client.sequence_analysis(sequences, query)
         return response
 
-
-def get_calls(sequence):
+def parse_calls(response):
     """
     Use HIVdb to find drug calls from DRMs
+    """
+    calls = {}
+    for gene in response["drugResistance"]:
+        for score in gene["drugScores"]:
+            drug_name = score["drug"]["displayAbbr"]
+            drug_score = score["score"]
+            calls[drug_name.encode("ascii")] = drug_score
+
+    return calls
+
+
+def get_calls_from_sequence(sequence):
+    """
+    Use HIVdb to find drug calls from a sequence
 
     Args:
         sequence: a Biopython sequence object.
@@ -112,17 +125,32 @@ def get_calls(sequence):
 
     response = call_sierra_with_sequence(sequence)
     #json.dump(response, sys.stdout, indent=2)
-    calls = {}
     if len(response) == 0 or "drugResistance" not in response[0]:
         raise ValueError("Not HIV DNA.")
-    for gene in response[0]["drugResistance"]:
-        for score in gene["drugScores"]:
-            drug_name = score["drug"]["displayAbbr"]
-            drug_score = score["score"]
-            calls[drug_name.encode("ascii")] = drug_score
+    
+    return parse_calls(response[0])
 
-    return calls
+def get_calls_from_drms(drms):
+    """
+    Use HIVdb to find drug calls from DRMs
 
+    Args:
+        sequence: a Biopython sequence object.
+
+    Returns:
+        A dictionary of {"drug_name": score}
+    """
+
+    request_drms = [
+        drm.locus_names[d.locus] + ":" \
+        + d.relative_str()[1:].replace("i", "ins").replace("d", "del")
+         for d in drms
+    ]
+    response = call_sierra_with_drms(request_drms)
+    if len(response) == 0 or "drugResistance" not in response:
+        raise ValueError("Not HIV DRMs.")
+    
+    return parse_calls(response)
 
 def get_drms(sequence):
    

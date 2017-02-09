@@ -75,10 +75,10 @@ setup(
     version='1.11.0',
     packages=['seq2simulate', 'seq2simulate/revolver', 'seq2simulate/hypermutation'],
     scripts=[
+        'bin/all-scores',
         'bin/simulate', 
         'bin/package-simulation', 
         'bin/sierra',
-        'bin/sierra-drms',
         'bin/merge-samples'
     ],
     package_data={'seq2simulate': [
