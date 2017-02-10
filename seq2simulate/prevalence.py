@@ -120,7 +120,6 @@ def drm_in_interval(drm, interval):
         True or False
 
     """
-
     start, end = interval
     return drm.nucleotide_pos >= start and drm.nucleotide_pos <= end
 

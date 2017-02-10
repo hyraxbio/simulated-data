@@ -110,12 +110,20 @@ def merge_sam_files(filenames, out_filename):
         for header in sq:
             out_handle.write(header)
 
-        for filename in filenames:
-            with open(filename, 'r') as in_handle:
-                for line in in_handle:
-                    # ignore header lines from the other files
-                    if line[0] != '@':
-                        out_handle.write(line)
+        handles = [open(f, 'r') for f in filenames]
+        while True:
+            all_eof = True
+            for handle in handles:
+                line = handle.readline()
+                if line is not None and line != "":
+                    while line[0] == '@':
+                        line = handle.readline()
+                    all_eof = False
+                    out_handle.write(line)
+            if all_eof:
+                break
+        for handle in handles:
+            handle.close()
 
 def split_into_two_sams(sam_filename):
     sam_1_filename = sam_filename + ".1.sam"
