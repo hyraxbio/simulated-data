@@ -76,20 +76,6 @@ class LoggingPool(Pool):
         return Pool.apply_async(self, LogExceptions(func), 
             args, kwds, callback)
 
-def run_diversity_thread(evolved_queue, sequence, working_dir, hypermutate_seqs):
-
-    """
-    Calculates diversity for a single sequence
-
-    Args:
-        evolved_data: The list of calculated diversity data.
-        sequence: The sequence to simulate.
-        working_dir: Put temp files here.
-    """
-    
-    files = diversity.simulate(sequence, working_dir, hypermutate_seqs = hypermutate_seqs)
-    files["sequence"] = sequence
-    evolved_queue.put(files)
 
 def run_diversity(
     raw_susceptible, raw_resistant,
@@ -136,12 +122,7 @@ def run_diversity(
                                     pcr_error=randomize_includes_pcr_error)
 
     
-    threads = []
-    evolved_queue = multiprocessing.Manager().Queue()
-
-    multiprocessing.log_to_stderr()
-    p = LoggingPool(len(sequences))
-
+    evolved_data = []
     for sequence in sequences:
 
         # each patient has been infected for a number of years with the
@@ -157,16 +138,9 @@ def run_diversity(
         if remove_rt:
             sequence.remove_rt = True
 
-        p.apply_async(run_diversity_thread, [
-            evolved_queue, sequence, working_dir, hypermutate_seqs
-        ])
-    
-    p.close()
-    p.join()
-
-    evolved_data = []
-    while not evolved_queue.empty():
-        evolved_data.append(evolved_queue.get())
+        files = diversity.simulate(sequence, working_dir, hypermutate_seqs=hypermutate_seqs)
+        files["sequence"] = sequence
+        evolved_data.append(files) 
 
     with open(os.path.join(working_dir, evolved_filename), 'wb') as handle:
         pickle.dump(evolved_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
