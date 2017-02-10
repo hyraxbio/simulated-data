@@ -21,11 +21,11 @@ ion_profile_dir = os.path.join(package_dir, 'profiles/ion')
 pacbio_ccs_profile = os.path.join(package_dir, 'profiles/model_qc_ccs')
 pacbio_clr_profile = os.path.join(package_dir, 'profiles/model_qc_clr')
 
-illumina = Platform(20000, 250, 0.01)
+illumina = Platform(2000, 250, 0.01)
 roche = Platform(2000, 320, 0.03, profile=roche_profile_dir)
-ion = Platform(5000, 320, 0.03, profile=ion_profile_dir)
-pacbio_ccs = Platform(10000, 250, 0.02, profile=pacbio_ccs_profile)
-pacbio_clr = Platform(10000, 250, 0.10, profile=pacbio_clr_profile)
+ion = Platform(2000, 320, 0.03, profile=ion_profile_dir)
+pacbio_ccs = Platform(2000, 250, 0.02, profile=pacbio_ccs_profile)
+pacbio_clr = Platform(2000, 250, 0.10, profile=pacbio_clr_profile)
 
 platforms = {
     'roche': roche,
