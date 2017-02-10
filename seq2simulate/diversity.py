@@ -9,6 +9,7 @@ import Bio
 import evolveagene
 import sierra_ws as sierra
 from hypermutation import hypermutate
+import hiv_drms
 
 output_filename = 'evolveagene_checked.fasta'
 
@@ -87,7 +88,7 @@ def simulate(sequence, working_dir, hypermutate_seqs=False):
                 allowed_sequences = [
                     s for s in evolved_sequences \
                         if drms_unchanged(seq.id, drms, 
-                            sierra.get_drms(s))
+                            sierra.get_drms(s, known_drms=hiv_drms))
                 ]
             except:
                 allowed_sequences = []
