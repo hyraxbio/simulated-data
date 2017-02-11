@@ -19,7 +19,7 @@ fixed_calls_below_100_prevalence = { drm.Drm('M184V', drm.RT) : {'D4T': [50,'R']
 # calls for all NRTIs and NNRTIs unless we see K65R
 low_coverage_drugs = ['ABC', 'DDI', 'FTC', '3TC', 'D4T', 
                       'TDF', 'AZT', 'EFV', 'ETR', 'NVP', 'RPV']
-call_if_resistant = ['TDF', 'DDI']
+call_if_resistant = ['TDF', 'DDI', 'D4T']
 
 
 def header(platform, paired_end=False):
