@@ -15,7 +15,7 @@ output_filename = 'evolveagene_checked.fasta'
 
 hiv_pol_dnds = 0.23
 hiv_pol_substitution_rate = 0.00072
-hiv_pol_lambda = 0.0001 #probability of indel at locus (~codon) in branch
+hiv_pol_lambda = 0.00001 #probability of indel at locus (~codon) in branch
 hiv_pol_ti_td = 0.1 #ratio of insertions to deletions
 num_taxa = 10
 min_taxa_to_keep = 4
