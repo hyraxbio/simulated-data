@@ -570,7 +570,7 @@ def blockers(fq_filename, sam_filename, drm_dict,
 
             # we need all currently blocking drms to unblock
             if current_blockers[position]:
-                blocker.blocking_drms = current_blockers[position][-1].blocking_drms
+                blocker.blocking_drms = list(current_blockers[position][-1].blocking_drms)
             blocker.blocking_drms.append(blocking_drm)
             current_blockers[position].append(blocker)
 
