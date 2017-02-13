@@ -65,12 +65,13 @@ def simulate(sequence, working_dir, num_taxa=10, evolve_seqs=True, hypermutate_s
     filenames = {}
 
     for name, seq in sequences:
+
+        allowed_sequences = [seq]*num_taxa
         if evolve_seqs:
-            allowed_sequences = _simulate_evolution(name, seq, sequence, working_dir, hypermutate_seqs=False)
-        else:
-            allowed_sequences = [seq]*num_taxa
+            allowed_sequences = _simulate_evolution(name, seq, sequence, working_dir, num_taxa)
         if hypermutate_seqs:
             allowed_sequences = _simulate_hypermutation(allowed_sequences)
+
         full_filename = os.path.join(
             working_dir, 
             seq.id + "_" + name + "_" + output_filename
@@ -81,7 +82,7 @@ def simulate(sequence, working_dir, num_taxa=10, evolve_seqs=True, hypermutate_s
 
     return filenames
 
-def _simulate_evolution(name, seq, sequence, working_dir):
+def _simulate_evolution(name, seq, sequence, working_dir, num_taxa):
 
     try_idx = 0
     while True:
