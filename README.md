@@ -8,7 +8,7 @@ Turns a set of susceptible and a set of resistant HIV pol sequences into simulat
 
 Example input can be found in the ```data``` folder.
 
-Uses the EvolveAGene4 evolution simulator, the ART sequence simulator and the sierra HIV drug resistance database.
+Uses the ART sequence simulator and the sierra HIV drug resistance database.
 
 
 ## Install
@@ -26,9 +26,8 @@ sudo python setup.py install
 virtualenv env
 env/bin/pip install .
 ```
-The install script may suggest a number of external software packages which must be in your build system for seq2simulate to work.  These include EvolveAGene4 and art_454/art_illumina.
+The install script may suggest a number of external software packages which must be in your build system for seq2simulate to work.  These include art_454/art_illumina.
 
-* EvolveAGene4: https://popmodels.cancercontrol.cancer.gov/gsr/packages/evolveagene/
 * ART: http://www.niehs.nih.gov/research/resources/software/biostatistics/art/
 
 Java is also required, and can be installed via a package manager or from [Oracle](http://www.oracle.com).
@@ -44,6 +43,11 @@ Create an Illumina simulation from all sequences, with randomized errors, at all
 
 ```
 simulate --susceptible data/SusceptibleSeqs_all.fasta --resistant data/ResistantSeqs_all.fasta --out temp_out --platform illumina --paired-end --randomize
+```
+Create a Roche/454 simulation from Seq6 at 1% prevalence with APOBEC proviral hypermutation:
+
+```
+simulate --prevalence 1 --susceptible data/split/Seq6_Sus --resistant data/split/Seq6_Res --out temp_roche --platform roche --proviral
 ```
 
 
@@ -98,6 +102,9 @@ simulate --susceptible data/SusceptibleSeqs_all.fasta --resistant data/Resistant
 
   --paired-end                    Paired-end sequencing.  Only valid with
                                   illumina data.
+
+  --proviral                      After evolving sequences, apply APOBEC
+                                  hypermutation to mimic proviral DNA.
 
   --help                          Show this message and exit.
 ```
