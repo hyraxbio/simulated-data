@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# Write a unit test for exatype, to enumerate the scores for all
-# pairs of mutations.
+# Write two lines of a unit test for exatype, to enumerate the scores for all
+# pairs of mutations from the sierra web service.
 
 import sys
 import time
@@ -10,58 +10,67 @@ from threading import Thread
 from seq2simulate import sierra_ws as sierra, hiv_drms
 
 mutation_prefix = "residueSets := [][]string{"
-mutation_suffix = "}\n"
+mutation_suffix = "\n}\n"
 
 call_prefix = "scores := []map[string]int{"
-call_suffix = "}\n"
+call_suffix = "\n}\n"
 
-def get_calls(count, i, j, calls):
+def get_calls(printed_count, row, column, calls):
     try:
-        calls[count] = sierra.get_calls_from_drms([i, j])
+        calls[printed_count] = sierra.get_calls_from_drms([i, j])
     except:
-        calls[count] = None
+        calls[printed_count] = None
 
-num_threads = num_threads        
+NUM_THREADS = 50        
 
-threads = [None] * num_threads
-i_list = [None] * num_threads
-j_list = [None] * num_threads
-calls = [None] * num_threads
+threads = [None] * NUM_THREADS
+row_list = [None] * NUM_THREADS
+column_list = [None] * NUM_THREADS
+calls = [None] * NUM_THREADS
+
 with open(sys.argv[1], 'w') as mutation_file, \
      open(sys.argv[2], 'w') as call_file:
 
     mutation_file.write(mutation_prefix)
     call_file.write(call_prefix)
     
-    count = 0
-    for big_count, i in enumerate(hiv_drms.drms):
-        for j in hiv_drms.drms:
-            if i.locus != j.locus:
+    printed_count = 0
+    for row_count, row in enumerate(hiv_drms.drms):
+        for column in hiv_drms.drms:
+            if row.locus != column.locus:
                 continue
 
-            i_list[count % num_threads] = i
-            j_list[count % num_threads] = j
-            threads[count % num_threads] = Thread(
+            thread_pos = printed_count % NUM_THREADS
+
+            row_list[thread_pos] = row
+            column_list[thread_pos] = column
+
+            threads[thread_pos] = Thread(
                 target=get_calls, 
-                args=(count % num_threads, i, j, calls))
-            threads[count % num_threads].start()
-            count += 1
-            if count % num_threads == 0:
+                args=(thread_pos, row, column, calls))
+
+            threads[thread_pos].start()
+            printed_count += 1
+
+            # we've started all the threads, now let's join them
+            if thread_pos == NUM_THREADS - 1:
                 for t in range(len(threads)):
                     threads[t].join()
-                for t in range(len(i_list)):
+
+                for t in range(len(row_list)):
                     if calls[t] is not None:
-                        # the first case
-                        if big_count == 0 and count == num_threads and t == 0:
-                            mutation_file.write("{\"%s\", \"%s\"}" % (
-                                i_list[t].locus_str(), 
-                                j_list[t].locus_str()))
-                            call_file.write(str(calls[t]).replace("\'", "\""))
-                        else:
-                            mutation_file.write(",\n{\"%s\", \"%s\"}" % (
-                                i_list[t].locus_str(), 
-                                j_list[t].locus_str()))
-                            call_file.write(",\n" + str(calls[t]).replace("\'", "\""))
+                        first_line = (row_count == 0) \
+                            and (printed_count == NUM_THREADS) \
+                            and (t == 0)
+                        if not first_line:
+                            mutation_file.write(",\n")
+                            call_file.write(",\n")
+
+                        mutation_file.write("{\"%s\", \"%s\"}" % (
+                            row_list[t].locus_str(), 
+                            column_list[t].locus_str())
+                        )
+                        call_file.write(str(calls[t]).replace("\'", "\""))
     mutation_file.write(mutation_suffix)
     call_file.write(call_suffix)
 
