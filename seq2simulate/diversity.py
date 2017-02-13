@@ -97,7 +97,7 @@ def simulate(sequence, working_dir, hypermutate_seqs=False):
                 print "Kept a total of", len(allowed_sequences), "evolved " \
                     "sequences."
                 
-                if hypermutate:
+                if hypermutate_seqs:
                     print('\n-------------------------------------------------------')
                     print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
                     print('-------------------------------------------------------\n')

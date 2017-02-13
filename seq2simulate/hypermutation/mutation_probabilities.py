@@ -9,6 +9,9 @@ class MotifProbabilities(object):
 
     def __init__(self):
         for motif, value in self.motifs.iteritems():
+            if value == 0.0:
+                value = 1e-18
+                self.motifs[motif] = value
             setattr(self, motif, value)
 
     def __str__(self):
