@@ -1,5 +1,6 @@
 import csv
 import os
+import pickle
 
 import drm
 import seq2simulate
@@ -32,4 +33,7 @@ for token in 'id':
         drm.Drm(placeholder + str(i) + token) for i in range(start, end)])))
 
 drms = results
+
+for drm in drms:
+    print str(drm)
 
