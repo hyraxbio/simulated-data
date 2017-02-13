@@ -9,12 +9,13 @@ import Bio
 import evolveagene
 import sierra_ws as sierra
 from hypermutation import hypermutate
+import hiv_drms
 
 output_filename = 'evolveagene_checked.fasta'
 
 hiv_pol_dnds = 0.23
 hiv_pol_substitution_rate = 0.00072
-hiv_pol_lambda = 0.001 #probability of indel at locus (~codon) in branch
+hiv_pol_lambda = 0.00001 #probability of indel at locus (~codon) in branch
 hiv_pol_ti_td = 0.1 #ratio of insertions to deletions
 num_taxa = 10
 min_taxa_to_keep = 4
@@ -87,7 +88,7 @@ def simulate(sequence, working_dir, hypermutate_seqs=False):
                 allowed_sequences = [
                     s for s in evolved_sequences \
                         if drms_unchanged(seq.id, drms, 
-                            sierra.get_drms(s))
+                            sierra.get_drms(s, known_drms=hiv_drms))
                 ]
             except:
                 allowed_sequences = []
@@ -97,7 +98,7 @@ def simulate(sequence, working_dir, hypermutate_seqs=False):
                 print "Kept a total of", len(allowed_sequences), "evolved " \
                     "sequences."
                 
-                if hypermutate:
+                if hypermutate_seqs:
                     print('\n-------------------------------------------------------')
                     print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
                     print('-------------------------------------------------------\n')

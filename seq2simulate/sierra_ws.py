@@ -17,7 +17,7 @@ mutation_dict = {
     'IN' : drm.IN
 }
 
-def parse_drms(response):
+def parse_drms(response, known_drms=[]):
     """
     Parse a sierra generated json list of mutations.
 
@@ -32,12 +32,14 @@ def parse_drms(response):
         gene_name = gene["gene"]["name"]
         for score in gene["drugScores"]:
             for partial_score in score["partialScores"]:
-                if partial_score["score"] != 0:
-                    for mutation in partial_score["mutations"]:
-                        mut_text = mutation["text"]
-                        mut_text = mut_text.replace("Insertion", "i")
-                        mut_text = mut_text.replace("Deletion", "d")
-                        mut = drm.Drm(mut_text, mutation_dict[gene_name])
+                for mutation in partial_score["mutations"]:
+                    mut_text = mutation["text"]
+                    mut_text = mut_text.replace("Insertion", "i")
+                    mut_text = mut_text.replace("Deletion", "d")
+                    mut = drm.Drm(mut_text, mutation_dict[gene_name])
+                    # if the mutation scores, or we know it's one
+                    # of the drms that scores in combination
+                    if partial_score["score"] != 0 or (mut in known_drms):
                         if mut not in drms:
                             drms.append(mut)
     return drms                        
@@ -124,7 +126,7 @@ def get_calls(sequence):
     return calls
 
 
-def get_drms(sequence):
+def get_drms(sequence, known_drms=[]):
    
     """
     Use HIVdb to find which DRMs are present in a sequence 
@@ -138,4 +140,4 @@ def get_drms(sequence):
     response = call_sierra_with_sequence(sequence)
     if len(response) == 0 or "drugResistance" not in response[0]:
         raise ValueError("Not HIV DNA.")
-    return parse_drms(response[0])
+    return parse_drms(response[0], known_drms=known_drms)
