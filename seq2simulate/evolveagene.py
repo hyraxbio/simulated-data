@@ -39,7 +39,7 @@ def run(
         codon_freq='F1x4',
         log=False,
         scale_q=True,
-        strip_deletions=False,
+        strip_deletions=True,
         verbose=True)  
 
 

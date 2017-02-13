@@ -8,6 +8,7 @@ import Bio
 
 import evolveagene
 import sierra_ws as sierra
+from hypermutation import hypermutate
 
 output_filename = 'evolveagene_checked.fasta'
 
@@ -19,6 +20,8 @@ num_taxa = 10
 min_taxa_to_keep = 4
 max_tries = 3
 
+# proviral hypermutations per hundred bp
+hypermutation_rate = 3
 
 def drms_unchanged(id, drms1, drms2):
     """
@@ -36,7 +39,7 @@ def drms_unchanged(id, drms1, drms2):
     return sorted(drms1) == sorted(drms2)
 
 
-def simulate(sequence, working_dir):
+def simulate(sequence, working_dir, hypermutate_seqs=False):
     """
     Produce a simulated set of sequences that contain no added or removed
     DRMs with respect to the original sequence.
@@ -71,6 +74,8 @@ def simulate(sequence, working_dir):
                 hiv_pol_dnds, hiv_pol_lambda, hiv_pol_ti_td,
                 working_dir)
 
+            evolved_sequences = [s for s in Bio.SeqIO.parse(evolve_file, 'fasta')]
+
             drms = []
             if name == 'resistant':
                 drms = sequence.drms
@@ -80,7 +85,7 @@ def simulate(sequence, working_dir):
 
             try:
                 allowed_sequences = [
-                    s for s in Bio.SeqIO.parse(evolve_file, 'fasta') \
+                    s for s in evolved_sequences \
                         if drms_unchanged(seq.id, drms, 
                             sierra.get_drms(s))
                 ]
@@ -92,6 +97,15 @@ def simulate(sequence, working_dir):
                 print "Kept a total of", len(allowed_sequences), "evolved " \
                     "sequences."
                 
+                if hypermutate_seqs:
+                    print('\n-------------------------------------------------------')
+                    print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
+                    print('-------------------------------------------------------\n')
+                    hypermutation_rates = [int(hypermutation_rate * len(str(s.seq)) // 100) for s in allowed_sequences]
+                    hyper_evolved_sequences = hypermutate.mutate_sequences([str(s.seq) for s in allowed_sequences], hypermutation_rates)
+                    for i, hseq in enumerate(hyper_evolved_sequences):
+                        allowed_sequences[i].seq = Bio.Seq.Seq(hseq, alphabet=Bio.Alphabet.SingleLetterAlphabet())
+
                 full_filename = os.path.join(
                     working_dir, 
                     seq.id + "_" + name + "_" + output_filename
