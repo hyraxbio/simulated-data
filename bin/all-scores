@@ -3,6 +3,8 @@
 # Write two lines of a unit test for exatype, to enumerate the scores for all
 # pairs of mutations from the sierra web service.
 
+# Syntax: all-scores mutation_file.txt call_file.txt
+
 import sys
 import time
 from threading import Thread
