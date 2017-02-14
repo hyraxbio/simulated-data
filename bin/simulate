@@ -219,4 +219,4 @@ def run(
     print 'Unescaped working directory:', working_dir
 
 if __name__ == '__main__':
-    run(auto_envvar_prefix='SIMULATE')
+    run()

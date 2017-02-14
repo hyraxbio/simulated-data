@@ -39,7 +39,7 @@ def drms_unchanged(id, drms1, drms2):
     return sorted(drms1) == sorted(drms2)
 
 
-def simulate(sequence, working_dir, num_taxa=10, evolve_seqs=True, hypermutate_seqs=False):
+def simulate(sequence, working_dir, num_taxa=10, hypermutate_seqs=False):
     """
     Produce a simulated set of sequences that contain no added or removed DRMs
     with respect to the original sequence. Also, optionally hypermutate evolved
@@ -49,7 +49,6 @@ def simulate(sequence, working_dir, num_taxa=10, evolve_seqs=True, hypermutate_s
         sequence: The sequence to simulate.
         working_dir: Where the simulated sequence files go.
         num_taxa: The number of taxa to evolve.
-        evolve_seqs: Perform evolution on the sequence.
         hypermutate_seqs: Perform hypermutation on the sequence.
 
     Returns:
@@ -65,10 +64,7 @@ def simulate(sequence, working_dir, num_taxa=10, evolve_seqs=True, hypermutate_s
     filenames = {}
 
     for name, seq in sequences:
-
-        allowed_sequences = [seq]*num_taxa
-        if evolve_seqs:
-            allowed_sequences = _simulate_evolution(name, seq, sequence, working_dir, num_taxa)
+        allowed_sequences = _simulate_evolution(name, seq, sequence, working_dir, num_taxa)
         if hypermutate_seqs:
             allowed_sequences = _simulate_hypermutation(allowed_sequences)
 
