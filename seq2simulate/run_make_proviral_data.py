@@ -1,6 +1,7 @@
 from Bio import SeqIO, Seq, Alphabet
 import os
 import random
+import json
 
 from hypermutation import hypermutate
 import platform as plat
@@ -9,12 +10,26 @@ import art
 # proviral hypermutations per hundred bp
 hypermutation_rate = 3
 
+def get_diffs(seq0, seq1):
+    assert len(seq0) == len(seq1)
+    return [i for i in range(len(seq0)) if seq0[i] != seq1[i]]
+
 def hypermutate_sequences(sequences, working_dir):
     print('\n-------------------------------------------------------')
     print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
     print('-------------------------------------------------------\n')
+    string_seqs = [str(s.seq) for s in sequences]
     hypermutation_rates = [int(hypermutation_rate * len(str(s.seq)) // 100) for s in sequences]
-    hyper_evolved_sequences = hypermutate.mutate_sequences([str(s.seq) for s in sequences], hypermutation_rates)
+    hyper_evolved_sequences = hypermutate.mutate_sequences(string_seqs, hypermutation_rates)
+
+    seq_diffs = {i:get_diffs(string_seqs[i], hyper_evolved_sequences[i]) for i in range(len(string_seqs))}
+    full_filename = os.path.join(
+        working_dir, 
+        "hyperdata.muts",
+    )
+    with open(full_filename, 'w') as f:
+        json.dump(seq_diffs, f)
+
     for i, hseq in enumerate(hyper_evolved_sequences):
         sequences[i].seq = Seq.Seq(hseq, alphabet=Alphabet.SingleLetterAlphabet())
     full_filename = os.path.join(
@@ -36,6 +51,8 @@ def parse_fastq(filename):
 
 
 def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral_fraction):
+    print('Using temporary working directory: {}'.format(working_dir))
+
     bio_sequences = [s for s in SeqIO.parse(sequences, 'fasta')]
     hypermutated_sequence_file = hypermutate_sequences(bio_sequences, working_dir)
 
