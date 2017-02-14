@@ -11,10 +11,23 @@ import art
 hypermutation_rate = 3
 
 def get_diffs(seq0, seq1):
+    """
+    Simply return a list of different indices between two strings.
+    """
     assert len(seq0) == len(seq1)
     return [i for i in range(len(seq0)) if seq0[i] != seq1[i]]
 
 def hypermutate_sequences(sequences, working_dir):
+    """
+    Hypermutates a set of sequence strings.
+
+    Args:
+        sequences: list of DNA strings
+        working_dir: temporary directory for storing output files 
+
+    Returns:
+        FASTA filename of hypermutated sequences
+    """
     print('\n-------------------------------------------------------')
     print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
     print('-------------------------------------------------------\n')
@@ -40,6 +53,15 @@ def hypermutate_sequences(sequences, working_dir):
     return full_filename
 
 def parse_fastq(filename):
+    """
+    Parse a FASTQ file.
+    
+    Args:
+        filename: path to FASTQ file.
+    
+    Returns:
+        A reshaped list representation of the FASTQ file. Each read is a list of four lines.
+    """
     try:
         with open(filename, 'r') as f:
             fq = f.read()
@@ -51,6 +73,23 @@ def parse_fastq(filename):
 
 
 def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral_fraction):
+    """
+    Perform hypermutation on a set of sequences and generate an NGS dataset for
+    non-hypermutated and hypermutated sequences, then sample these two FASTQ files
+    to create a new FASTQ file consisting of a fraction of hypermutate and
+    non-hypermutated data.
+
+    Args:
+        sequences: path to FASTA sequence file
+        working_dir: temporary directory for storing output files 
+        out_dir: directory in which to store result
+        platform: platform (e.g. roche)
+        paired_end: produce paired_end data
+        proviral_fraction: fraction of proviral data in final dataset
+
+    Returns:
+        True 
+    """
     print('Using temporary working directory: {}'.format(working_dir))
 
     bio_sequences = [s for s in SeqIO.parse(sequences, 'fasta')]
@@ -87,3 +126,4 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
         f.write(mixed_fastq) 
 
     print 'Output saved in:', out_dir
+    return True
