@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+
+"""
+This script is primarily for generating only hypermutated NGS data sets from a
+FASTA sequence file for testing.
+"""
+
 from seq2simulate import run_make_proviral_data
 
 import click
@@ -63,6 +69,22 @@ def run(
     sequences, out, platform, working_dir, paired_end, proviral_fraction,
 ):
     """
+    Perform hypermutation on a set of sequences and generate an NGS dataset for
+    non-hypermutated and hypermutated sequences, then sample these two FASTQ files
+    to create a new FASTQ file consisting of a fraction of hypermutate and
+    non-hypermutated data.
+
+    Args:
+        sequences: path to FASTA sequence file
+        out: directory in which to store result
+        platform: platform (e.g. roche)
+        working_dir: temporary directory for storing output files 
+        paired_end: produce paired_end data
+        proviral_fraction: fraction of proviral data in final dataset
+
+    Returns:
+        True 
+    
     """
     if paired_end and platform != "illumina":
         raise ValueError(
@@ -85,6 +107,8 @@ def run(
         raise ValueError('proviral_fractions must be in range 0-1')
 
     run_make_proviral_data.run_proviral(sequences, working_dir, out, platform, paired_end, proviral_fraction)
+
+    return True
 
 if __name__ == '__main__':
     run()
