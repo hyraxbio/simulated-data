@@ -23,9 +23,26 @@ def hypermutate_sequences(sequences, working_dir):
     SeqIO.write(sequences, full_filename, 'fasta')
     return full_filename
 
-def run_proviral(sequences, working_dir, out_dir, platform, paired_end):
-    sequences = [s for s in SeqIO.parse(sequences, 'fasta')]
-    hypermutated_sequence_file = hypermutate_sequences(sequences, working_dir)
+def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral_fraction):
+    bio_sequences = [s for s in SeqIO.parse(sequences, 'fasta')]
+    hypermutated_sequence_file = hypermutate_sequences(bio_sequences, working_dir)
+
+    bio_sequences = [s for s in SeqIO.parse(sequences, 'fasta')]
+    hyper_sequences = [s for s in SeqIO.parse(hypermutated_sequence_file, 'fasta')]
+    # inject fraction of proviral sequences
+    reduced_proviral_fraction = int(10*proviral_fraction) // 1
+
+    bio_sequences *= 10-reduced_proviral_fraction
+    hyper_sequences *= reduced_proviral_fraction
+    total_sequences = bio_sequences + hyper_sequences
+
+    full_filename = os.path.join(
+        working_dir, 
+        "mixed_hyperdata.fasta",
+    )
+    SeqIO.write(total_sequences, full_filename, 'fasta')
+
+    print(len(total_sequences))
     platf = getattr(plat, platform)
-    fastq_file, sam_file = art.simulate(hypermutated_sequence_file, platf, platf.coverage, paired_end, out_dir)
+    fastq_file, sam_file = art.simulate(full_filename, platf, platf.coverage, paired_end, out_dir)
     print 'Output saved in:', out_dir

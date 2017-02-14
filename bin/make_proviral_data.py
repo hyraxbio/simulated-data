@@ -51,8 +51,14 @@ def get_working_dir():
     type=click.Path(resolve_path=True)
 )
 
+@click.option(
+    '--proviral-fraction', 
+    help='Fraction of final population to be hypermutated.', 
+    default=0.1,
+)
+
 def run(
-    sequences, out, platform, working_dir, paired_end,
+    sequences, out, platform, working_dir, paired_end, proviral_fraction,
 ):
     """
     """
@@ -73,7 +79,10 @@ def run(
         if not os.path.isdir(out):
             os.makedirs(out)
 
-    run_make_proviral_data.run_proviral(sequences, working_dir, out, platform, paired_end)
+    if not 0 <= proviral_fraction <= 1:
+        raise ValueError('proviral_fractions must be in range 0-1')
+
+    run_make_proviral_data.run_proviral(sequences, working_dir, out, platform, paired_end, proviral_fraction)
 
 if __name__ == '__main__':
     run()
