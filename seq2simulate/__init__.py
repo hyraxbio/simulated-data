@@ -12,15 +12,15 @@ __all__ = [
     'sierra_wrapper'
 ]
 
-#import diversity
-#import evolveagene
-#import revolver
+import diversity
+import evolveagene
+import revolver
 import hypermutation
-#import parser
-#import prevalence
+import parser
+import prevalence
 import run_make_proviral_data
-#import run_simulation
-#import sequence
-#import sequencing_error
-#import sierra_ws
+import run_simulation
+import sequence
+import sequencing_error
+import sierra_ws
 
