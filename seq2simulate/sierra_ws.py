@@ -17,6 +17,16 @@ mutation_dict = {
     'IN' : drm.IN
 }
 
+def get_version():
+    """
+    Get the current version of HIVdb
+    """
+    client = SierraClient(endpoint)
+    data = client.execute(
+        gql('query { viewer { currentVersion { text } } }')
+    )
+    return data['viewer']['currentVersion']['text']
+
 def parse_drms(response, known_drms=[]):
     """
     Parse a sierra generated json list of mutations.
