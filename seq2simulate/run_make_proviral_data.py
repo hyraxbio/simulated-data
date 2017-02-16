@@ -79,7 +79,6 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
 
     platf = getattr(plat, platform)
 
-    f = art.simulate(sequences, platf, platf.coverage, paired_end, out_dir)
     fastq_file0, sam_file0 = art.simulate(sequences, platf, platf.coverage, paired_end, out_dir)
     fastq_file1, sam_file1 = art.simulate(hypermutated_sequence_file, platf, platf.coverage, paired_end, out_dir)
 
@@ -103,7 +102,6 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
     print('Sampling {0} proviral reads out of {1} total reads (r={2:.3f}).'.format(n_proviral_reads, n_reads, n_proviral_reads/float(n_reads)))
 
     if paired_end:
-    
         mixed_fastq_f, mixed_fastq_r = [], []
         while len(mixed_fastq_f) < n_proviral_reads:
             i_f = random.randint(0, len(fq1a) - 1)
@@ -121,11 +119,11 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
     
         full_filename_f = os.path.join(
             out_dir, 
-            "mixed_hyperdata1.fastq",
+            "mixed_hyperdata1.fq",
         )
         full_filename_r = os.path.join(
             out_dir, 
-            "mixed_hyperdata2.fastq",
+            "mixed_hyperdata2.fq",
         )
         with open(full_filename_f, 'w') as f:
             f.write(mixed_fastq_f) 
@@ -145,7 +143,7 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
 
         full_filename = os.path.join(
             out_dir, 
-            "mixed_hyperdata.fastq",
+            "mixed_hyperdata.fq",
         )
         with open(full_filename, 'w') as f:
             f.write(mixed_fastq) 
