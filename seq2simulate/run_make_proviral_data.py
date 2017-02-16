@@ -2,6 +2,7 @@ from Bio import SeqIO, Seq, Alphabet
 import os
 import random
 import json
+from glob import glob
 
 from hypermutation import hypermutate
 import platform as plat
@@ -153,7 +154,9 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
         )
         with open(full_filename, 'w') as f:
             f.write(mixed_fastq) 
-    
+
+    for tempfile in glob(working_dir+'/*'):
+        os.unlink(tempfile)
 
     print 'Output saved in:', out_dir
     return True
