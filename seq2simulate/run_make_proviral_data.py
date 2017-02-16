@@ -6,6 +6,7 @@ import json
 from hypermutation import hypermutate
 import platform as plat
 import art
+from custom_generators import parse_fastq
 
 # proviral hypermutations per hundred bp
 hypermutation_rate = 3
@@ -52,25 +53,6 @@ def hypermutate_sequences(sequences, working_dir):
     SeqIO.write(sequences, full_filename, 'fasta')
     return full_filename
 
-def parse_fastq(filename):
-    """
-    Parse a FASTQ file.
-    
-    Args:
-        filename: path to FASTQ file.
-    
-    Returns:
-        A reshaped list representation of the FASTQ file. Each read is a list of four lines.
-    """
-    try:
-        with open(filename, 'r') as f:
-            fq = f.read()
-        fq = fq.split('\n')
-        fq = ['\n'.join(fq[i*4:i*4+4]) for i in range(len(fq)/4)]
-        return fq
-    except IOError:
-        print('File not found.')
-
 
 def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral_fraction):
     """
@@ -100,8 +82,10 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
     fastq_file0, sam_file0 = art.simulate(sequences, platf, platf.coverage, paired_end, out_dir)
     fastq_file1, sam_file1 = art.simulate(hypermutated_sequence_file, platf, platf.coverage, paired_end, out_dir)
 
-    fq0 = parse_fastq(fastq_file0) 
-    fq1 = parse_fastq(fastq_file1) 
+    with open(fastq_file0, 'r') as f:
+        fq0 = [i for i in parse_fastq(f)]
+    with open(fastq_file1, 'r') as f:
+        fq1 = [i for i in parse_fastq(f)]
 
     n_reads = min(len(fq0), len(fq1))
     n_proviral_reads = int(proviral_fraction * n_reads)
@@ -116,7 +100,7 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
         i = random.randint(0, len(fq0) - 1)
         mixed_fastq.append(fq0.pop(i))
    
-    mixed_fastq = '\n'.join(mixed_fastq)
+    mixed_fastq = ''.join([j for i in mixed_fastq for j in i])
 
     full_filename = os.path.join(
         out_dir, 
