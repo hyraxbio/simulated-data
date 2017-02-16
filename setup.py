@@ -79,7 +79,8 @@ setup(
         'bin/simulate', 
         'bin/package-simulation', 
         'bin/sierra',
-        'bin/merge-samples'
+        'bin/merge-samples',
+        'bin/make-proviral-data',
     ],
     package_data={'seq2simulate': [
         'all_drms.tsv',
