@@ -7,6 +7,7 @@ from hypermutation import hypermutate
 import platform as plat
 import art
 from custom_generators import parse_fastq
+from sample import Sample
 
 # proviral hypermutations per hundred bp
 hypermutation_rate = 3
@@ -18,13 +19,12 @@ def get_diffs(seq0, seq1):
     assert len(seq0) == len(seq1)
     return [i for i in range(len(seq0)) if seq0[i] != seq1[i]]
 
-def hypermutate_sequences(sequences, working_dir):
+def hypermutate_sequences(sequences):
     """
     Hypermutates a set of sequence strings.
 
     Args:
         sequences: list of DNA strings
-        working_dir: temporary directory for storing output files 
 
     Returns:
         FASTA filename of hypermutated sequences
@@ -37,21 +37,11 @@ def hypermutate_sequences(sequences, working_dir):
     hyper_evolved_sequences = hypermutate.mutate_sequences(string_seqs, hypermutation_rates)
 
     seq_diffs = {i:get_diffs(string_seqs[i], hyper_evolved_sequences[i]) for i in range(len(string_seqs))}
-    full_filename = os.path.join(
-        working_dir, 
-        "hyperdata.muts",
-    )
-    with open(full_filename, 'w') as f:
-        json.dump(seq_diffs, f)
 
     for i, hseq in enumerate(hyper_evolved_sequences):
         sequences[i].seq = Seq.Seq(hseq, alphabet=Alphabet.SingleLetterAlphabet())
-    full_filename = os.path.join(
-        working_dir, 
-        "hyperdata.fasta",
-    )
-    SeqIO.write(sequences, full_filename, 'fasta')
-    return full_filename
+
+    return sequences, seq_diffs
 
 
 def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral_fraction):
@@ -75,12 +65,27 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
     print('Using temporary working directory: {}'.format(working_dir))
 
     bio_sequences = [s for s in SeqIO.parse(sequences, 'fasta')]
-    hypermutated_sequence_file = hypermutate_sequences(bio_sequences, working_dir)
+    hypermutated_sequences, hypermutated_diffs = hypermutate_sequences(bio_sequences)
+
+    # write sequences to FASTA
+    hypermutated_sequence_file = os.path.join(
+        working_dir, 
+        "hyperdata.fasta",
+    )
+    SeqIO.write(hypermutated_sequences, hypermutated_sequence_file, 'fasta')
+
+    # write JSON of hypermutations
+    hypermutated_diffs_filename = os.path.join(
+        out_dir, 
+        "hyperdata.muts",
+    )
+    with open(hypermutated_diffs_filename, 'w') as f:
+        json.dump(hypermutated_diffs, f)
 
     platf = getattr(plat, platform)
 
-    fastq_file0, sam_file0 = art.simulate(sequences, platf, platf.coverage, paired_end, out_dir)
-    fastq_file1, sam_file1 = art.simulate(hypermutated_sequence_file, platf, platf.coverage, paired_end, out_dir)
+    fastq_file0, sam_file0 = art.simulate(sequences, platf, platf.coverage, paired_end, working_dir)
+    fastq_file1, sam_file1 = art.simulate(hypermutated_sequence_file, platf, platf.coverage, paired_end, working_dir)
 
     if paired_end:
         fastq_file0a, fastq_file0b = fastq_file0
@@ -141,12 +146,14 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
    
         mixed_fastq = ''.join([j for i in mixed_fastq for j in i])
 
+        short_filename = "mixed_hyperdata.fq"
         full_filename = os.path.join(
             out_dir, 
-            "mixed_hyperdata.fq",
+            short_filename,
         )
         with open(full_filename, 'w') as f:
             f.write(mixed_fastq) 
+    
 
     print 'Output saved in:', out_dir
     return True
