@@ -148,8 +148,7 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
             i = random.randint(0, len(fq1) - 1)
             proviral_read = list(fq1.pop(i))
             read_id = proviral_read[0][1:].strip('\n')
-            sam_read = _parse_sam_line(read_id, fs1)
-            n_hypermutations = len([i for i in hypermutated_diffs[sam_read['seq_id']] if sam_read['read_start'] <= i <= sam_read['read_end']])
+            n_hypermutations = _get_n_hypermutations(hypermutated_diffs, read_id, fs1)
             proviral_read[0] = proviral_read[0][:-1] + '\t{}\n'.format(n_hypermutations)
             mixed_fastq.append(proviral_read)
         while len(mixed_fastq) < n_reads:
@@ -176,14 +175,21 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
     print 'Output saved in:', out_dir
     return True
 
-def _parse_sam_line(read_id, samfile):
-    seq_id = samfile[read_id][1] 
-    read_start = int(samfile[read_id][2])
-    read_end = read_start+len(samfile[read_id][8])-1
+def _parse_sam_line(read_id, sam_file):
+    """
+    """
+    seq_id = sam_file[read_id][1] 
+    read_start = int(sam_file[read_id][2])
+    read_end = read_start+len(sam_file[read_id][8])-1
     return {'seq_id':seq_id, 'read_start': read_start, 'read_end':read_end}
      
 
-def get_n_hypermutations(seq, pos, indices):
+def _get_n_hypermutations(hypermutations, read_id, sam_file):
     """
-    For a given sequence, starting position and 
+    For a given read, return number of hypermutations.
     """
+    sam_read = _parse_sam_line(read_id, sam_file)
+    return len([i for i in hypermutations[sam_read['seq_id']] if sam_read['read_start'] <= i <= sam_read['read_end']])
+    
+
+
