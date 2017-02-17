@@ -110,15 +110,13 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
     if paired_end:
         mixed_fastq_f, mixed_fastq_r = [], []
         while len(mixed_fastq_f) < n_proviral_reads:
-            i_f = random.randint(0, len(fq1a) - 1)
-            i_r = random.randint(0, len(fq1b) - 1)
-            mixed_fastq_f.append(fq1a.pop(i_f))
-            mixed_fastq_r.append(fq1b.pop(i_r))
+            i = random.randint(0, len(fq1a) - 1)
+            mixed_fastq_f.append(fq1a.pop(i))
+            mixed_fastq_r.append(fq1b.pop(i))
         while len(mixed_fastq_f) < n_reads:
-            i_f = random.randint(0, len(fq0a) - 1)
-            i_r = random.randint(0, len(fq0b) - 1)
-            mixed_fastq_f.append(fq0a.pop(i_f))
-            mixed_fastq_r.append(fq0b.pop(i_r))
+            i = random.randint(0, len(fq0a) - 1)
+            mixed_fastq_f.append(fq0a.pop(i))
+            mixed_fastq_r.append(fq0b.pop(i))
        
         mixed_fastq_f = ''.join([j for i in mixed_fastq_f for j in i])
         mixed_fastq_r = ''.join([j for i in mixed_fastq_r for j in i])
