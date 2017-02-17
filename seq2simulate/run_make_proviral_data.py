@@ -149,8 +149,8 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
             read_id_r = proviral_read_r[0][1:].strip('\n')
             read_id = read_id_f[:-2]
             n_hypermutations_f, n_hypermutations_r = _get_n_hypermutations(hypermutated_diffs, read_id, fs1, paired_end=paired_end)
-            proviral_read_f[0] = proviral_read_f[0][:-1] + '\t{}\n'.format(n_hypermutations_f)
-            proviral_read_r[0] = proviral_read_r[0][:-1] + '\t{}\n'.format(n_hypermutations_r)
+            proviral_read_f[0] = proviral_read_f[0][:-1] + '_{}\n'.format(n_hypermutations_f)
+            proviral_read_r[0] = proviral_read_r[0][:-1] + '_{}\n'.format(n_hypermutations_r)
             mixed_fastq_f.append(proviral_read_f)
             mixed_fastq_r.append(proviral_read_r)
 
@@ -159,8 +159,8 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
 
             proviral_read_f = list(fq0a.pop(i))
             proviral_read_r = list(fq0b.pop(i))
-            proviral_read_f[0] = proviral_read_f[0][:-1] + '\t{}\n'.format(0)
-            proviral_read_r[0] = proviral_read_r[0][:-1] + '\t{}\n'.format(0)
+            proviral_read_f[0] = proviral_read_f[0][:-1] + '_{}\n'.format(0)
+            proviral_read_r[0] = proviral_read_r[0][:-1] + '_{}\n'.format(0)
             mixed_fastq_f.append(proviral_read_f)
             mixed_fastq_r.append(proviral_read_r)
        
@@ -187,12 +187,12 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
             proviral_read = list(fq1.pop(i))
             read_id = proviral_read[0][1:].strip('\n')
             n_hypermutations = _get_n_hypermutations(hypermutated_diffs, read_id, fs1, paired_end=paired_end)
-            proviral_read[0] = proviral_read[0][:-1] + '\t{}\n'.format(n_hypermutations)
+            proviral_read[0] = proviral_read[0][:-1] + '_{}\n'.format(n_hypermutations)
             mixed_fastq.append(proviral_read)
         while len(mixed_fastq) < n_reads:
             i = random.randint(0, len(fq0) - 1)
             viral_read = list(fq0.pop(i))
-            viral_read[0] = viral_read[0][:-1] + '\t{}\n'.format(0)
+            viral_read[0] = viral_read[0][:-1] + '_{}\n'.format(0)
             mixed_fastq.append(viral_read)
    
         mixed_fastq = ''.join([j for i in mixed_fastq for j in i])
