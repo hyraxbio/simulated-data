@@ -215,6 +215,7 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
 
 def _parse_sam_line(read_id, sam_file, paired_end=False):
     """
+    Parse a single SAM file line (or pair of lines for paired-end data).
     """
     if paired_end:
         seq_id = sam_file[read_id][0][1] 
@@ -239,6 +240,12 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
 def _get_n_hypermutations(hypermutations, read_id, sam_file, paired_end=False):
     """
     For a given read, return number of hypermutations.
+
+    Args:
+        hypermutations: dictionary with sequence ids as keys and lists of hypermutations indices as values
+        read_id: SAM file id string of the read
+        sam_file: SAM file in list form of custum_generators.parse_sam
+        paired_end: is this paired-end data 
     """
     sam_read = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
     if paired_end:
