@@ -7,15 +7,15 @@ from glob import glob
 from hypermutation import hypermutate
 import platform as plat
 import art
-from custom_generators import parse_fastq
+from custom_generators import parse_fastq, parse_sam
 from sample import Sample
 
 # proviral hypermutations per hundred bp
 hypermutation_rate = 3
 
-def get_diffs(seq0, seq1):
+def get_diffs1(seq0, seq1):
     """
-    Simply return a list of different indices between two strings.
+    Simply return a list of 1-based different indices between two strings.
     """
     assert len(seq0) == len(seq1)
     return [i for i in range(len(seq0)) if seq0[i] != seq1[i]]
@@ -34,10 +34,13 @@ def hypermutate_sequences(sequences):
     print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
     print('-------------------------------------------------------\n')
     string_seqs = [str(s.seq) for s in sequences]
-    hypermutation_rates = [int(hypermutation_rate * len(str(s.seq)) // 100) for s in sequences]
+    string_seqs_ids = [str(s.id) for s in sequences]
+    if len(set(string_seqs_ids)) != len(string_seqs_ids):
+        raise ValueError('FASTA sequences must have unique IDs')
+    hypermutation_rates = [int(hypermutation_rate * len(s) // 100) for s in string_seqs]
     hyper_evolved_sequences = hypermutate.mutate_sequences(string_seqs, hypermutation_rates)
 
-    seq_diffs = {i:get_diffs(string_seqs[i], hyper_evolved_sequences[i]) for i in range(len(string_seqs))}
+    seq_diffs = {string_seqs_ids[i]: get_diffs1(string_seqs[i], hyper_evolved_sequences[i]) for i in range(len(string_seqs))}
 
     for i, hseq in enumerate(hyper_evolved_sequences):
         sequences[i].seq = Seq.Seq(hseq, alphabet=Alphabet.SingleLetterAlphabet())
@@ -91,19 +94,24 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
     if paired_end:
         fastq_file0a, fastq_file0b = fastq_file0
         fastq_file1a, fastq_file1b = fastq_file1
-        open_files = []
+        open_fq_files = []
         for fq in [fastq_file0a, fastq_file0b, fastq_file1a, fastq_file1b]:
             with open(fq, 'r') as f:
-                open_files.append([i for i in parse_fastq(f)])
-        fq0a, fq0b, fq1a, fq1b = open_files
+                open_fq_files.append([i for i in parse_fastq(f)])
+        fq0a, fq0b, fq1a, fq1b = open_fq_files
     else:
-        open_files = []
+        open_fq_files = []
         for fq in [fastq_file0, fastq_file1]:
             with open(fq, 'r') as f:
-                open_files.append([i for i in parse_fastq(f)])
-        fq0, fq1 = open_files
+                open_fq_files.append([i for i in parse_fastq(f)])
+        fq0, fq1 = open_fq_files
+        open_sam_files = []
+        for fs in [sam_file0, sam_file1]:
+            with open(fs, 'r') as f:
+                open_sam_files.append({i[0]:i[1:] for i in parse_sam(f)})
+        fs0, fs1 = open_sam_files
 
-    n_reads = min([len(i) for i in open_files])
+    n_reads = min([len(i) for i in open_fq_files])
     n_proviral_reads = int(proviral_fraction * n_reads)
     print('Sampling {0} proviral reads out of {1} total reads (r={2:.3f}).'.format(n_proviral_reads, n_reads, n_proviral_reads/float(n_reads)))
 
@@ -138,10 +146,17 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
         mixed_fastq = []
         while len(mixed_fastq) < n_proviral_reads:
             i = random.randint(0, len(fq1) - 1)
-            mixed_fastq.append(fq1.pop(i))
+            proviral_read = list(fq1.pop(i))
+            read_id = proviral_read[0][1:].strip('\n')
+            sam_read = _parse_sam_line(read_id, fs1)
+            n_hypermutations = len([i for i in hypermutated_diffs[sam_read['seq_id']] if sam_read['read_start'] <= i <= sam_read['read_end']])
+            proviral_read[0] = proviral_read[0][:-1] + '\t{}\n'.format(n_hypermutations)
+            mixed_fastq.append(proviral_read)
         while len(mixed_fastq) < n_reads:
             i = random.randint(0, len(fq0) - 1)
-            mixed_fastq.append(fq0.pop(i))
+            viral_read = list(fq0.pop(i))
+            viral_read[0] = viral_read[0][:-1] + '\t{}\n'.format(0)
+            mixed_fastq.append(viral_read)
    
         mixed_fastq = ''.join([j for i in mixed_fastq for j in i])
 
@@ -153,10 +168,22 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
         with open(full_filename, 'w') as f:
             f.write(mixed_fastq) 
 
-    for tempfile in glob(working_dir+'/*.fq'):
-        os.unlink(tempfile)
-    for tempfile in glob(working_dir+'/*.sam'):
-        os.unlink(tempfile)
+    #for tempfile in glob(working_dir+'/*.fq'):
+    #    os.unlink(tempfile)
+    #for tempfile in glob(working_dir+'/*.sam'):
+    #    os.unlink(tempfile)
 
     print 'Output saved in:', out_dir
     return True
+
+def _parse_sam_line(read_id, samfile):
+    seq_id = samfile[read_id][1] 
+    read_start = int(samfile[read_id][2])
+    read_end = read_start+len(samfile[read_id][8])-1
+    return {'seq_id':seq_id, 'read_start': read_start, 'read_end':read_end}
+     
+
+def get_n_hypermutations(seq, pos, indices):
+    """
+    For a given sequence, starting position and 
+    """
