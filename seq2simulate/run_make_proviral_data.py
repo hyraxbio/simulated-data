@@ -8,7 +8,6 @@ from hypermutation import hypermutate
 import platform as plat
 import art
 from custom_generators import parse_fastq, parse_sam
-from sample import Sample
 
 # proviral hypermutations per hundred bp
 hypermutation_rate = 3
