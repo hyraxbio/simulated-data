@@ -44,6 +44,7 @@ def simulate(sequence, working_dir, num_taxa=10,
              include_deletions=False,
              include_insertions=False,
              include_frameshifts=False,
+             include_stop_codons=False,
             ):
     """
     Produce a simulated set of sequences that contain no added or removed DRMs
@@ -75,9 +76,11 @@ def simulate(sequence, working_dir, num_taxa=10,
         if include_deletions:
             allowed_sequences = _simulate_deletions(allowed_sequences, freq=0.4)
         if include_insertions:
-            allowed_sequences = _simulate_insertions(allowed_sequences, freq=0.1)
+            allowed_sequences = _simulate_insertions(allowed_sequences, freq=0.2)
         if include_frameshifts:
             allowed_sequences = _simulate_frameshifts(allowed_sequences, freq=0.3)
+        if include_stop_codons:
+            allowed_sequences = _simulate_stop_codons(allowed_sequences, freq=0.5)
 
         full_filename = os.path.join(
             working_dir, 
@@ -256,4 +259,44 @@ def _simulate_frameshifts(sequences, freq=0.1, strip_deletions=True):
     for i, sseq in enumerate(sequences):
         sequences[i].seq = Bio.Seq.Seq(string_seqs[i], alphabet=Bio.Alphabet.SingleLetterAlphabet())
     return sequences
+
+def _simulate_stop_codons(sequences, freq=0.5):
+    """
+    Args:
+        sequences: list of DNA strings
+        freq: probability of mutation
+
+    Returns:
+        list of sequences
+
+    """
+    print('\n-------------------------------------------------------')
+    print('Making stop codons in evolved sequences (probability = {}).'.format(freq))
+    print('-------------------------------------------------------\n')
+
+    stop_codons = ['TAG', 'TAA', 'TGA']
+    string_seqs = [str(s.seq) for s in sequences]
+    for i, seq in enumerate(string_seqs):
+        if random.uniform(0, 1) <= freq:
+            codon_inds = [k*3 for k in range(len(seq)//3)]
+            putative_codons = []
+            for ind in codon_inds:
+                codon = seq[ind:ind+3]
+                stop_codon, score = _closest_match(codon, stop_codons)
+                if score == 2:
+                    putative_codons.append([ind, stop_codon]) 
+            if len(putative_codons) > 0:
+                codon_replacement = random.choice(putative_codons)
+                string_seqs[i] = seq[0:codon_replacement[0]] + codon_replacement[1] + seq[codon_replacement[0]+3:]
+    for i, sseq in enumerate(sequences):
+        sequences[i].seq = Bio.Seq.Seq(string_seqs[i], alphabet=Bio.Alphabet.SingleLetterAlphabet())
+    return sequences
+
+def _closest_match(s1, s2):
+    scores = [_sim_score(s1, i) for i in s2]
+    return s2[scores.index(max(scores))], max(scores)
+
+def _sim_score(s1, s2):
+    return sum([i==j for i,j in zip(s1, s2)])
+
 
