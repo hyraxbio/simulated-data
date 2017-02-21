@@ -39,7 +39,11 @@ def drms_unchanged(id, drms1, drms2):
     return sorted(drms1) == sorted(drms2)
 
 
-def simulate(sequence, working_dir, num_taxa=10, hypermutate_seqs=False, include_deletions=False):
+def simulate(sequence, working_dir, num_taxa=10, 
+             hypermutate_seqs=False, 
+             include_deletions=False,
+             include_insertions=False,
+            ):
     """
     Produce a simulated set of sequences that contain no added or removed DRMs
     with respect to the original sequence. Also, optionally hypermutate evolved
@@ -67,12 +71,10 @@ def simulate(sequence, working_dir, num_taxa=10, hypermutate_seqs=False, include
         allowed_sequences = _simulate_evolution(name, seq, sequence, working_dir, num_taxa)
         if hypermutate_seqs:
             allowed_sequences = _simulate_hypermutation(allowed_sequences)
-        olds = [len(i.seq) for i in allowed_sequences]
         if include_deletions:
             allowed_sequences = _simulate_deletions(allowed_sequences, freq=0.4)
-        news = [len(i.seq) for i in allowed_sequences]
-        diffs = [i!=j for i,j in zip(olds, news)]
-        print('freq:', float(sum(diffs))/len(diffs))
+        if include_insertions:
+            allowed_sequences = _simulate_insertions(allowed_sequences, freq=0.1)
 
         full_filename = os.path.join(
             working_dir, 
@@ -146,7 +148,7 @@ def _simulate_hypermutation(sequences):
         sequences[i].seq = Bio.Seq.Seq(hseq, alphabet=Bio.Alphabet.SingleLetterAlphabet())
     return sequences
 
-def _simulate_deletions(sequences, freq=0.4, strip_deletions=True):
+def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=100, min_length=15):
     """
     Args:
         sequences: list of DNA strings
@@ -191,8 +193,36 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True):
     string_seqs = [str(s.seq) for s in sequences]
     for i, seq in enumerate(string_seqs):
         if random.uniform(0, 1) <= freq:
-            del_ranges = sorted([random.randrange(0, len(seq)), random.randrange(0, len(seq))])
-            string_seqs[i] = seq[0:del_ranges[0]] + DEL_SIGN*(del_ranges[1]-del_ranges[0]) + seq[del_ranges[0]:del_ranges[1]]
+            del_start = random.randrange(0, len(seq)-min_length)
+            del_length = random.randint(0, min(max_length, len(seq)-del_start))
+            string_seqs[i] = seq[0:del_start] + DEL_SIGN*del_length + seq[del_start+del_length:]
+    for i, sseq in enumerate(sequences):
+        sequences[i].seq = Bio.Seq.Seq(string_seqs[i], alphabet=Bio.Alphabet.SingleLetterAlphabet())
+    return sequences
+
+def _simulate_insertions(sequences, freq=0.1, max_length=100, min_length=15):
+    """
+    Args:
+        sequences: list of DNA strings
+        freq: probability of insertion
+        max_length: of random insertion 
+        min_length: of random insertion
+
+    Returns:
+        list of sequences
+
+
+    """
+    print('\n---------------------------------------------------------')
+    print('Making insertions in evolved sequences (probability = {}).'.format(freq))
+    print('---------------------------------------------------------\n')
+
+    string_seqs = [str(s.seq) for s in sequences]
+    for i, seq in enumerate(string_seqs):
+        if random.uniform(0, 1) <= freq:
+            ins_start = random.randrange(0, len(seq)-min_length)
+            ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
+            string_seqs[i] = seq[0:ins_start] + ''.join([random.choice('ATGC') for insertion in range(ins_length)]) + seq[ins_start:]
     for i, sseq in enumerate(sequences):
         sequences[i].seq = Bio.Seq.Seq(string_seqs[i], alphabet=Bio.Alphabet.SingleLetterAlphabet())
     return sequences

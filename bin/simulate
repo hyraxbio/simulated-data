@@ -118,7 +118,7 @@ def get_working_dir():
 
 @click.option(
     '--proviral',
-    help='After evolving sequences, hypermutates and includes deletions to mimic proviral DNA.',
+    help='After evolving sequences, hypermutates and includes deletions and insertions to mimic proviral DNA.',
     is_flag=True
 )
 
@@ -204,6 +204,7 @@ def run(
                                          # paired end sequences 
             hypermutate_seqs = proviral,
             include_deletions = proviral,
+            include_insertions = proviral,
         )
 
     if not diversity_only and not prevalence_only:
