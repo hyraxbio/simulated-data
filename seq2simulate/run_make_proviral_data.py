@@ -28,7 +28,8 @@ def hypermutate_sequences(sequences, hypermutation_rate=3):
         sequences: list of DNA strings
 
     Returns:
-        FASTA filename of hypermutated sequences
+        list of sequences
+        dict of sequence differences
     """
     print('\n-------------------------------------------------------')
     print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
@@ -67,12 +68,14 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
 
     Returns:
         True 
+
+
     """
     print('Using temporary working directory: {}'.format(working_dir))
 
     bio_sequences = [s for s in SeqIO.parse(sequences, 'fasta')]
     hypermutated_sequences, hypermutated_diffs = hypermutate_sequences(bio_sequences, hypermutation_rate=hypermutation_rate)
-
+    
     # write sequences to FASTA
     hypermutated_sequence_file = os.path.join(
         working_dir, 
