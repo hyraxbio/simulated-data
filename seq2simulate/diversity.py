@@ -43,6 +43,7 @@ def simulate(sequence, working_dir, num_taxa=10,
              hypermutate_seqs=False, 
              include_deletions=False,
              include_insertions=False,
+             include_frameshifts=False,
             ):
     """
     Produce a simulated set of sequences that contain no added or removed DRMs
@@ -75,6 +76,8 @@ def simulate(sequence, working_dir, num_taxa=10,
             allowed_sequences = _simulate_deletions(allowed_sequences, freq=0.4)
         if include_insertions:
             allowed_sequences = _simulate_insertions(allowed_sequences, freq=0.1)
+        if include_frameshifts:
+            allowed_sequences = _simulate_frameshifts(allowed_sequences, freq=0.3)
 
         full_filename = os.path.join(
             working_dir, 
@@ -226,3 +229,31 @@ def _simulate_insertions(sequences, freq=0.1, max_length=100, min_length=15):
     for i, sseq in enumerate(sequences):
         sequences[i].seq = Bio.Seq.Seq(string_seqs[i], alphabet=Bio.Alphabet.SingleLetterAlphabet())
     return sequences
+
+def _simulate_frameshifts(sequences, freq=0.1, strip_deletions=True):
+    """
+    Args:
+        sequences: list of DNA strings
+        freq: probability of deletion
+
+    Returns:
+        list of sequences
+
+    """
+    print('\n-------------------------------------------------------')
+    print('Making frameshifts in evolved sequences (probability = {}).'.format(freq))
+    print('-------------------------------------------------------\n')
+
+    DEL_SIGN = '-'
+    if strip_deletions:
+        DEL_SIGN = ''
+
+    string_seqs = [str(s.seq) for s in sequences]
+    for i, seq in enumerate(string_seqs):
+        if random.uniform(0, 1) <= freq:
+            del_start = random.randrange(0, len(seq))
+            string_seqs[i] = seq[0:del_start] + DEL_SIGN + seq[del_start+1:]
+    for i, sseq in enumerate(sequences):
+        sequences[i].seq = Bio.Seq.Seq(string_seqs[i], alphabet=Bio.Alphabet.SingleLetterAlphabet())
+    return sequences
+
