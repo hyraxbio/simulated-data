@@ -9,6 +9,17 @@ from hypermutation import hypermutate
 import platform as plat
 import art
 from custom_generators import parse_fastq, parse_sam
+import diversity
+
+MUTATIONS = {
+    'null': 0,
+    'hypermutation': 1,
+    'longdel': 2,
+    'insertion': 3,
+    'frameshift': 4,
+    'stopcodon': 5,
+    'inversion': 6,
+}
 
 # proviral hypermutations per hundred bp
 # hypermutation_rate = 3
@@ -31,15 +42,11 @@ def hypermutate_sequences(sequences, hypermutation_rate=3):
         list of sequences
         dict of sequence differences
     """
-    print('\n-------------------------------------------------------')
-    print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
-    print('-------------------------------------------------------\n')
     string_seqs = [str(s.seq) for s in sequences]
     string_seqs_ids = [str(s.id) for s in sequences]
     if len(set(string_seqs_ids)) != len(string_seqs_ids):
         raise ValueError('FASTA sequences must have unique IDs')
-    hypermutation_rates = [int(hypermutation_rate * len(s) // 100) for s in string_seqs]
-    hyper_evolved_sequences = hypermutate.mutate_sequences(string_seqs, hypermutation_rates)
+    hyper_evolved_sequences = diversity._simulate_hypermutation(string_seqs, hypermutation_rate=hypermutation_rate)
 
     seq_diffs = {string_seqs_ids[i]: get_diffs1(string_seqs[i], hyper_evolved_sequences[i]) for i in range(len(string_seqs))}
 
@@ -49,7 +56,7 @@ def hypermutate_sequences(sequences, hypermutation_rate=3):
     return sequences, seq_diffs
 
 
-def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral_fraction, unclean_working=False, hypermutation_rate=3):
+def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, proviral_fraction, unclean_working=False, hypermutation_rate=3):
     """
     Perform hypermutation on a set of sequences and generate an NGS dataset for
     non-hypermutated and hypermutated sequences, then sample these two FASTQ files
@@ -57,7 +64,7 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
     non-hypermutated data.
 
     Args:
-        sequences: path to FASTA sequence file
+        sequences_path: path to FASTA sequence file
         working_dir: temporary directory for storing output files 
         out_dir: directory in which to store result
         platform: platform (e.g. roche)
@@ -73,27 +80,32 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
     """
     print('Using temporary working directory: {}'.format(working_dir))
 
-    bio_sequences = [s for s in SeqIO.parse(sequences, 'fasta')]
-    hypermutated_sequences, hypermutated_diffs = hypermutate_sequences(bio_sequences, hypermutation_rate=hypermutation_rate)
+    sequences = [s for s in SeqIO.parse(sequences_path, 'fasta')]
+    # hypermutated_sequences, hypermutated_diffs = hypermutate_sequences(bio_sequences, hypermutation_rate=hypermutation_rate)
+    sequences_strings = diversity._convert_seqs_to_strs(sequences)
+    sequences_strings = diversity._simulate_hypermutation(sequences_strings, hypermutation_rate=hypermutation_rate)
+    diversity._update_seq_reads_from_strs(sequences, sequences_strings)
     
+   
     # write sequences to FASTA
     hypermutated_sequence_file = os.path.join(
         working_dir, 
         "hyperdata.fasta",
     )
-    SeqIO.write(hypermutated_sequences, hypermutated_sequence_file, 'fasta')
+    SeqIO.write(sequences, hypermutated_sequence_file, 'fasta')
 
-    # write JSON of hypermutations
-    hypermutated_diffs_filename = os.path.join(
-        out_dir, 
-        "hyperdata.muts",
-    )
-    with open(hypermutated_diffs_filename, 'w') as f:
-        json.dump(hypermutated_diffs, f)
+    # # write JSON of hypermutations
+    # hypermutated_diffs_filename = os.path.join(
+    #     out_dir, 
+    #     "hyperdata.muts",
+    # )
+    # with open(hypermutated_diffs_filename, 'w') as f:
+    #     json.dump(hypermutated_diffs, f)
+
 
     platf = getattr(plat, platform)
 
-    fastq_file0, sam_file0 = art.simulate(sequences, platf, platf.coverage, paired_end, working_dir)
+    fastq_file0, sam_file0 = art.simulate(sequences_path, platf, platf.coverage, paired_end, working_dir)
     fastq_file1, sam_file1 = art.simulate(hypermutated_sequence_file, platf, platf.coverage, paired_end, working_dir)
 
 
@@ -157,9 +169,11 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
             read_id = read_id_f[:-2]
             sam_read = _parse_sam_line(read_id, fs1, paired_end=paired_end)
             sam_reads[read_id] = sam_read
-            n_hypermutations_f, n_hypermutations_r = _get_n_hypermutations(sam_read, hypermutated_diffs, paired_end=paired_end)
-            proviral_read_f[0] = proviral_read_f[0][:-1] + '_{}\n'.format(n_hypermutations_f)
-            proviral_read_r[0] = proviral_read_r[0][:-1] + '_{}\n'.format(n_hypermutations_r)
+            #n_hypermutations_f, n_hypermutations_r = _get_n_hypermutations(sam_read, hypermutated_diffs, paired_end=paired_end)
+            #proviral_read_f[0] = proviral_read_f[0][:-1] + '_{}\n'.format(n_hypermutations_f)
+            #proviral_read_r[0] = proviral_read_r[0][:-1] + '_{}\n'.format(n_hypermutations_r)
+            proviral_read_f[0] = proviral_read_f[0][:-1] + '_{}\n'.format(MUTATIONS['hypermutation'])
+            proviral_read_r[0] = proviral_read_r[0][:-1] + '_{}\n'.format(MUTATIONS['hypermutation'])
             mixed_fastq_f.append(proviral_read_f)
             mixed_fastq_r.append(proviral_read_r)
 
@@ -168,8 +182,8 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
 
             proviral_read_f = list(fq0a.pop(i))
             proviral_read_r = list(fq0b.pop(i))
-            proviral_read_f[0] = proviral_read_f[0][:-1] + '_{}\n'.format(0)
-            proviral_read_r[0] = proviral_read_r[0][:-1] + '_{}\n'.format(0)
+            proviral_read_f[0] = proviral_read_f[0][:-1] + '_{}\n'.format(MUTATIONS['null'])
+            proviral_read_r[0] = proviral_read_r[0][:-1] + '_{}\n'.format(MUTATIONS['null'])
             mixed_fastq_f.append(proviral_read_f)
             mixed_fastq_r.append(proviral_read_r)
        
@@ -198,13 +212,14 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
             read_id = proviral_read[0][1:].strip('\n')
             sam_read = _parse_sam_line(read_id, fs1, paired_end=paired_end)
             sam_reads[read_id] = sam_read
-            n_hypermutations = _get_n_hypermutations(sam_read, hypermutated_diffs, paired_end=paired_end)
-            proviral_read[0] = proviral_read[0][:-1] + '_{}\n'.format(n_hypermutations)
+            # n_hypermutations = _get_n_hypermutations(sam_read, hypermutated_diffs, paired_end=paired_end)
+            # proviral_read[0] = proviral_read[0][:-1] + '_{}\n'.format(n_hypermutations)
+            proviral_read[0] = proviral_read[0][:-1] + '_{}\n'.format(MUTATIONS['hypermutation'])
             mixed_fastq.append(proviral_read)
         while len(mixed_fastq) < n_reads:
             i = random.randint(0, len(fq0) - 1)
             viral_read = list(fq0.pop(i))
-            viral_read[0] = viral_read[0][:-1] + '_{}\n'.format(0)
+            viral_read[0] = viral_read[0][:-1] + '_{}\n'.format(MUTATIONS['null'])
             mixed_fastq.append(viral_read)
    
         mixed_fastq = ''.join([j for i in mixed_fastq for j in i])
@@ -224,7 +239,6 @@ def run_proviral(sequences, working_dir, out_dir, platform, paired_end, proviral
             working_dir, 
             sam_filename,
         )
-        print('here')
         with open(full_filename, 'wb') as f:
             pickle.dump(sam_reads, f)            
     else:

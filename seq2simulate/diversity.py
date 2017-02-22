@@ -21,7 +21,7 @@ min_taxa_to_keep = 4
 max_tries = 3
 
 # proviral hypermutations per hundred bp
-hypermutation_rate = 3
+# hypermutation_rate = 3
 
 def drms_unchanged(id, drms1, drms2):
     """
@@ -74,7 +74,7 @@ def simulate(sequence, working_dir, num_taxa=10,
         allowed_sequences = _simulate_evolution(name, seq, sequence, working_dir, num_taxa)
         allowed_sequences_strings = _convert_seqs_to_strs(allowed_sequences)
         if hypermutate_seqs:
-            allowed_sequences_strings = _simulate_hypermutation(allowed_sequences_strings)
+            allowed_sequences_strings = _simulate_hypermutation(allowed_sequences_strings, hypermutation_rate=3)
         if include_deletions:
             allowed_sequences_strings = _simulate_deletions(allowed_sequences_strings, freq=0.4)
         if include_insertions:
@@ -148,7 +148,7 @@ def _simulate_evolution(name, seq, sequence, working_dir, num_taxa):
     return allowed_sequences
 
 
-def _simulate_hypermutation(sequences):
+def _simulate_hypermutation(sequences, hypermutation_rate=3):
 
     print('\n-------------------------------------------------------')
     print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
