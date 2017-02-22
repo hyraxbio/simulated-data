@@ -88,6 +88,7 @@ def run_diversity(
     include_insertions = False,
     include_frameshifts = False,
     include_stop_codons = False,
+    include_inversions = False,
 ):
     """
     Simulate diversity from sets of susceptible and resistant sequences.
@@ -148,6 +149,7 @@ def run_diversity(
                                    include_insertions=include_insertions,
                                    include_frameshifts=include_frameshifts,
                                    include_stop_codons=include_stop_codons,
+                                   include_inversions=include_inversions,
                                   )
         files["sequence"] = sequence
         evolved_data.append(files) 

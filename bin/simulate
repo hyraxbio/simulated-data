@@ -207,6 +207,7 @@ def run(
             include_insertions = proviral,
             include_frameshifts = proviral,
             include_stop_codons = proviral,
+            include_inversions = proviral,
         )
 
     if not diversity_only and not prevalence_only:

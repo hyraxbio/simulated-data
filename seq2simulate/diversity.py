@@ -45,6 +45,7 @@ def simulate(sequence, working_dir, num_taxa=10,
              include_insertions=False,
              include_frameshifts=False,
              include_stop_codons=False,
+             include_inversions=False,
             ):
     """
     Produce a simulated set of sequences that contain no added or removed DRMs
@@ -81,6 +82,8 @@ def simulate(sequence, working_dir, num_taxa=10,
             allowed_sequences = _simulate_frameshifts(allowed_sequences, freq=0.3)
         if include_stop_codons:
             allowed_sequences = _simulate_stop_codons(allowed_sequences, freq=0.5)
+        if include_inversions:
+            allowed_sequences = _simulate_inversions(allowed_sequences, freq=1.0)
 
         full_filename = os.path.join(
             working_dir, 
@@ -299,4 +302,30 @@ def _closest_match(s1, s2):
 def _sim_score(s1, s2):
     return sum([i==j for i,j in zip(s1, s2)])
 
+def _simulate_inversions(sequences, freq=0.1, max_length=100, min_length=5):
+    """
+    Args:
+        sequences: list of DNA strings
+        freq: probability of insertion
+        max_length: of random insertion 
+        min_length: of random insertion
+
+    Returns:
+        list of sequences
+
+
+    """
+    print('\n---------------------------------------------------------')
+    print('Making inversions in evolved sequences (probability = {}).'.format(freq))
+    print('---------------------------------------------------------\n')
+
+    string_seqs = [str(s.seq) for s in sequences]
+    for i, seq in enumerate(string_seqs):
+        if random.uniform(0, 1) <= freq:
+            ins_start = random.randrange(0, len(seq)-min_length)
+            ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
+            string_seqs[i] = seq[0:ins_start] + seq[ins_start:ins_start + ins_length][::-1] + seq[ins_start + ins_length:]
+    for i, sseq in enumerate(sequences):
+        sequences[i].seq = Bio.Seq.Seq(string_seqs[i], alphabet=Bio.Alphabet.SingleLetterAlphabet())
+    return sequences
 
