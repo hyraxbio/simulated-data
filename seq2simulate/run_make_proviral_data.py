@@ -31,30 +31,6 @@ def get_diffs1(seq0, seq1):
     assert len(seq0) == len(seq1)
     return [i for i in range(len(seq0)) if seq0[i] != seq1[i]]
 
-def hypermutate_sequences(sequences, hypermutation_rate=3):
-    """
-    Hypermutates a set of sequence strings.
-
-    Args:
-        sequences: list of DNA strings
-
-    Returns:
-        list of sequences
-        dict of sequence differences
-    """
-    string_seqs = [str(s.seq) for s in sequences]
-    string_seqs_ids = [str(s.id) for s in sequences]
-    if len(set(string_seqs_ids)) != len(string_seqs_ids):
-        raise ValueError('FASTA sequences must have unique IDs')
-    hyper_evolved_sequences = diversity._simulate_hypermutation(string_seqs, hypermutation_rate=hypermutation_rate)
-
-    seq_diffs = {string_seqs_ids[i]: get_diffs1(string_seqs[i], hyper_evolved_sequences[i]) for i in range(len(string_seqs))}
-
-    for i, hseq in enumerate(hyper_evolved_sequences):
-        sequences[i].seq = Seq.Seq(hseq, alphabet=Alphabet.SingleLetterAlphabet())
-
-    return sequences, seq_diffs
-
 
 def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, proviral_fraction, unclean_working=False, hypermutation_rate=3):
     """
@@ -81,7 +57,6 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
     print('Using temporary working directory: {}'.format(working_dir))
 
     sequences = [s for s in SeqIO.parse(sequences_path, 'fasta')]
-    # hypermutated_sequences, hypermutated_diffs = hypermutate_sequences(bio_sequences, hypermutation_rate=hypermutation_rate)
 
     data_files = {'null': sequences_path}
 
@@ -114,23 +89,6 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
     sequences_strings = diversity._simulate_inversions(sequences_strings, freq=1)
     diversity._update_seq_reads_from_strs(sequences, sequences_strings)
     data_files['inversion'] = (_write_to_FASTA(sequences, working_dir, '6_inv_data.fasta'))
-
-    
-   
-    # # write sequences to FASTA
-    # hypermutated_sequence_file = os.path.join(
-    #     working_dir, 
-    #     "hyperdata.fasta",
-    # )
-    # SeqIO.write(sequences, hypermutated_sequence_file, 'fasta')
-
-    # # write JSON of hypermutations
-    # hypermutated_diffs_filename = os.path.join(
-    #     out_dir, 
-    #     "hyperdata.muts",
-    # )
-    # with open(hypermutated_diffs_filename, 'w') as f:
-    #     json.dump(hypermutated_diffs, f)
 
 
     platf = getattr(plat, platform)
@@ -250,6 +208,16 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
 
 def sample_fastq(n_reads, mutation_code=0, fastq1=None, fastq2=None):
 
+    """
+    Returns a random sample of a list form of a FASTQ file (output of
+    custom_generators.parse_fastq())
+
+    Args:
+        n_reads: number of reads to sample
+        mutation_code: see MUTATIONS, this code gets appended to the read ID 
+        fastq1/2: open FASTQ file objects (paired-end data has forward and
+        reverse files)
+    """
     paired_end = False
     if fastq1 is None and fastq2 is None:
         raise TypeError('At least one of fastq1 and fastq2 must not be None.')
@@ -266,7 +234,6 @@ def sample_fastq(n_reads, mutation_code=0, fastq1=None, fastq2=None):
     if paired_end:
         fastq_sample2 = []
 
-    #sam_reads = {}
     while len(fastq_sample1) < n_reads:
         i = random.randint(0, len(fastq1) - 1)
         proviral_read1 = list(fastq1.pop(i))
@@ -279,11 +246,6 @@ def sample_fastq(n_reads, mutation_code=0, fastq1=None, fastq2=None):
             proviral_read2[0] = proviral_read2[0][:-1] + '_{}\n'.format(mutation_code)
             fastq_sample2.append(''.join(proviral_read2))
 
-        #sam_read = _parse_sam_line(read_id, fs1, paired_end=paired_end)
-        #sam_reads[read_id] = sam_read
-        # n_hypermutations = _get_n_hypermutations(sam_read, hypermutated_diffs, paired_end=paired_end)
-        # proviral_read[0] = proviral_read[0][:-1] + '_{}\n'.format(n_hypermutations)
-
     if paired_end:    
         return fastq_sample1, fastq_sample2
     else:
@@ -292,6 +254,11 @@ def sample_fastq(n_reads, mutation_code=0, fastq1=None, fastq2=None):
 def _parse_sam_line(read_id, sam_file, paired_end=False):
     """
     Parse a single SAM file line (or pair of lines for paired-end data).
+
+    Args:
+        read_id: id string of FASTQ read
+        sam_file: output of custom_generators.parse_sam() 
+        paired_end: is this SAM file for paired-end data
     """
     if paired_end:
         seq_id = sam_file[read_id][0][1] 
@@ -313,27 +280,18 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
     return result
      
 
-def _get_n_hypermutations(sam_read, hypermutations, paired_end=False):
+def _write_to_FASTA(sequences, working_dir, filename):
     """
-    For a given read, return number of hypermutations.
+    write sequences to FASTA
 
     Args:
-        sam_read: output of _parse_sam_line 
-        hypermutations: dictionary with sequence ids as keys and lists of hypermutations indices as values
-        paired_end: is this paired-end data 
-    """
-    #sam_read = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
-    if paired_end:
-        result_f = len([i for i in hypermutations[sam_read['seq_id']] if sam_read['read_start_f'] <= i <= sam_read['read_end_f']])
-        result_r = len([i for i in hypermutations[sam_read['seq_id']] if sam_read['read_start_r'] <= i <= sam_read['read_end_r']])
-        result = [result_f, result_r]
-    else:
-        result = len([i for i in hypermutations[sam_read['seq_id']] if sam_read['read_start'] <= i <= sam_read['read_end']])
-    return result
+        sequences: list of BioPython sequence reads
+        working_dir: directory for file
+        filename: name of file
     
-
-def _write_to_FASTA(sequences, working_dir, filename):
-    # write sequences to FASTA
+    Returns:
+        full path to file
+    """
     sequence_file = os.path.join(
         working_dir, 
         filename,
@@ -342,6 +300,17 @@ def _write_to_FASTA(sequences, working_dir, filename):
     return sequence_file
 
 def _write_to_file(obj, path, filename):
+    """
+    write object to file
+
+    Args:
+        obj: Python object
+        working_dir: directory for file
+        filename: name of file
+    
+    Returns:
+        full path to file
+    """
     full_filename = os.path.join(
         path, 
         filename,
