@@ -240,6 +240,12 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
             os.unlink(tempfile)
 
     print 'Output saved in:', out_dir
+    print('FASTQ mutation codes:')
+    for i in range(len(MUTATIONS)):
+        for mut, cod in MUTATIONS.iteritems():
+            if cod == i:
+                print('{}: {}'.format(cod, mut))
+
     return True
 
 def sample_fastq(n_reads, mutation_code=0, fastq1=None, fastq2=None):
