@@ -203,88 +203,22 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
         else:
             raise ValueError('Too many FASTQ files loaded.')
 
-    print('Continue from here...')
-    assert False
-
-    # if paired_end:
-    #     """
-    #     viral    fwd: fq0a, rev: fq0b
-    #     proviral fwd: fq1a, rev: fq1b
-    #     """
-    #     mixed_fastq_f, mixed_fastq_r = [], []
-    #     sam_reads = {}
-    #     while len(mixed_fastq_f) < n_proviral_reads:
-    #         i = random.randint(0, len(fq1a) - 1)
-
-    #         proviral_read_f = list(fq1a.pop(i))
-    #         proviral_read_r = list(fq1b.pop(i))
-    #         read_id_f = proviral_read_f[0][1:].strip('\n')
-    #         read_id_r = proviral_read_r[0][1:].strip('\n')
-    #         read_id = read_id_f[:-2]
-    #         sam_read = _parse_sam_line(read_id, fs1, paired_end=paired_end)
-    #         sam_reads[read_id] = sam_read
-    #         #n_hypermutations_f, n_hypermutations_r = _get_n_hypermutations(sam_read, hypermutated_diffs, paired_end=paired_end)
-    #         #proviral_read_f[0] = proviral_read_f[0][:-1] + '_{}\n'.format(n_hypermutations_f)
-    #         #proviral_read_r[0] = proviral_read_r[0][:-1] + '_{}\n'.format(n_hypermutations_r)
-    #         proviral_read_f[0] = proviral_read_f[0][:-1] + '_{}\n'.format(MUTATIONS['hypermutation'])
-    #         proviral_read_r[0] = proviral_read_r[0][:-1] + '_{}\n'.format(MUTATIONS['hypermutation'])
-    #         mixed_fastq_f.append(proviral_read_f)
-    #         mixed_fastq_r.append(proviral_read_r)
-
-    #     while len(mixed_fastq_f) < n_reads:
-    #         i = random.randint(0, len(fq0a) - 1)
-
-    #         proviral_read_f = list(fq0a.pop(i))
-    #         proviral_read_r = list(fq0b.pop(i))
-    #         proviral_read_f[0] = proviral_read_f[0][:-1] + '_{}\n'.format(MUTATIONS['null'])
-    #         proviral_read_r[0] = proviral_read_r[0][:-1] + '_{}\n'.format(MUTATIONS['null'])
-    #         mixed_fastq_f.append(proviral_read_f)
-    #         mixed_fastq_r.append(proviral_read_r)
-    #    
-    #     mixed_fastq_f = ''.join([j for i in mixed_fastq_f for j in i])
-    #     mixed_fastq_r = ''.join([j for i in mixed_fastq_r for j in i])
-    # 
-    #     full_filename_f = os.path.join(
-    #         out_dir, 
-    #         "mixed_hyperdata1.fq",
-    #     )
-    #     full_filename_r = os.path.join(
-    #         out_dir, 
-    #         "mixed_hyperdata2.fq",
-    #     )
-    #     with open(full_filename_f, 'w') as f:
-    #         f.write(mixed_fastq_f) 
-    #     with open(full_filename_r, 'w') as f:
-    #         f.write(mixed_fastq_r) 
-
-    # else:
-    #     # mixed_fastq = []
-    #     # #sam_reads = {}
-    #     # while len(mixed_fastq) < n_proviral_reads:
-    #     #     i = random.randint(0, len(fq1) - 1)
-    #     #     proviral_read = list(fq1.pop(i))
-    #     #     read_id = proviral_read[0][1:].strip('\n')
-    #     #     #sam_read = _parse_sam_line(read_id, fs1, paired_end=paired_end)
-    #     #     #sam_reads[read_id] = sam_read
-    #     #     # n_hypermutations = _get_n_hypermutations(sam_read, hypermutated_diffs, paired_end=paired_end)
-    #     #     # proviral_read[0] = proviral_read[0][:-1] + '_{}\n'.format(n_hypermutations)
-    #     #     proviral_read[0] = proviral_read[0][:-1] + '_{}\n'.format(MUTATIONS['hypermutation'])
-    #     #     mixed_fastq.append(proviral_read)
-    #     # while len(mixed_fastq) < n_reads:
-    #     #     i = random.randint(0, len(fq0) - 1)
-    #     #     viral_read = list(fq0.pop(i))
-    #     #     viral_read[0] = viral_read[0][:-1] + '_{}\n'.format(MUTATIONS['null'])
-    #     #     mixed_fastq.append(viral_read)
-   
-    #     # mixed_fastq = ''.join([j for i in mixed_fastq for j in i])
-    #          
-    #     short_filename = "mixed_hyperdata.fq"
-    #     full_filename = os.path.join(
-    #         out_dir, 
-    #         short_filename,
-    #     )
-    #     with open(full_filename, 'w') as f:
-    #         f.write(mixed_fastq) 
+    outfiles = []
+    if paired_end:
+        mixed_f, mixed_r = [], []
+        for fastq_sample in fastq_samples.values(): 
+            mixed_f.append(''.join(fastq_sample[0]))
+            mixed_r.append(''.join(fastq_sample[1]))
+        mixed_f = ''.join(mixed_f)
+        mixed_r = ''.join(mixed_r)
+        outfiles.append(_write_to_file(mixed_f, out_dir, 'mixed_hyperdata1.fq')) 
+        outfiles.append(_write_to_file(mixed_r, out_dir, 'mixed_hyperdata2.fq'))
+    else:
+        mixed_f = []
+        for fastq_sample in fastq_samples.values(): 
+            mixed_f.append(''.join(fastq_sample))
+        mixed_f = ''.join(mixed_f)
+        outfiles.append(_write_to_file(mixed_f, out_dir, 'mixed_hyperdata1.fq')) 
 
     if unclean_working:
         pass
@@ -332,12 +266,12 @@ def sample_fastq(n_reads, mutation_code=0, fastq1=None, fastq2=None):
         proviral_read1 = list(fastq1.pop(i))
         read_id1 = proviral_read1[0][1:].strip('\n')
         proviral_read1[0] = proviral_read1[0][:-1] + '_{}\n'.format(mutation_code)
-        fastq_sample1.append(proviral_read1)
+        fastq_sample1.append(''.join(proviral_read1))
         if paired_end:
             proviral_read2 = list(fastq2.pop(i))
             read_id2 = proviral_read2[0][1:].strip('\n')
             proviral_read2[0] = proviral_read2[0][:-1] + '_{}\n'.format(mutation_code)
-            fastq_sample2.append(proviral_read2)
+            fastq_sample2.append(''.join(proviral_read2))
 
         #sam_read = _parse_sam_line(read_id, fs1, paired_end=paired_end)
         #sam_reads[read_id] = sam_read
@@ -400,3 +334,12 @@ def _write_to_FASTA(sequences, working_dir, filename):
     )
     SeqIO.write(sequences, sequence_file, 'fasta')
     return sequence_file
+
+def _write_to_file(obj, path, filename):
+    full_filename = os.path.join(
+        path, 
+        filename,
+    )
+    with open(full_filename, 'w') as f:
+        f.write(obj)
+    return full_filename
