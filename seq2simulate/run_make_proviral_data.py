@@ -59,36 +59,49 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
     sequences = [s for s in SeqIO.parse(sequences_path, 'fasta')]
 
     data_files = {'null': sequences_path}
+    diff_files = {}
 
-    sequences_strings = diversity._convert_seqs_to_strs(sequences)
-    sequences_strings = diversity._simulate_hypermutation(sequences_strings, hypermutation_rate=hypermutation_rate)
+    sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
+    sequences_strings, seq_diffs = diversity._simulate_hypermutation(sequences_strings, hypermutation_rate=hypermutation_rate)
+    seq_diffs = dict(zip(sequence_ids, seq_diffs))
     diversity._update_seq_reads_from_strs(sequences, sequences_strings)
     data_files['hypermutation'] = (_write_to_FASTA(sequences, working_dir, '1_hm_data.fasta'))
+    diff_files['hypermutation'] = (_write_to_file(seq_diffs, working_dir, '1_hm_diffs.data'))
 
-    sequences_strings = diversity._convert_seqs_to_strs(sequences)
-    sequences_strings = diversity._simulate_deletions(sequences_strings, freq=1)
+    sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
+    sequences_strings, seq_diffs = diversity._simulate_deletions(sequences_strings, freq=1)
+    seq_diffs = dict(zip(sequence_ids, seq_diffs))
     diversity._update_seq_reads_from_strs(sequences, sequences_strings)
     data_files['longdel'] = (_write_to_FASTA(sequences, working_dir, '2_del_data.fasta'))
+    diff_files['longdel'] = (_write_to_file(seq_diffs, working_dir, '2_del_diffs.data'))
 
-    sequences_strings = diversity._convert_seqs_to_strs(sequences)
-    sequences_strings = diversity._simulate_insertions(sequences_strings, freq=1)
+    sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
+    sequences_strings, seq_diffs = diversity._simulate_insertions(sequences_strings, freq=1)
+    seq_diffs = dict(zip(sequence_ids, seq_diffs))
     diversity._update_seq_reads_from_strs(sequences, sequences_strings)
     data_files['insertion'] = (_write_to_FASTA(sequences, working_dir, '3_ins_data.fasta'))
+    diff_files['insertion'] = (_write_to_file(seq_diffs, working_dir, '3_ins_diffs.data'))
 
-    sequences_strings = diversity._convert_seqs_to_strs(sequences)
-    sequences_strings = diversity._simulate_frameshifts(sequences_strings, freq=1)
+    sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
+    sequences_strings, seq_diffs = diversity._simulate_frameshifts(sequences_strings, freq=1)
+    seq_diffs = dict(zip(sequence_ids, seq_diffs))
     diversity._update_seq_reads_from_strs(sequences, sequences_strings)
     data_files['frameshift'] = (_write_to_FASTA(sequences, working_dir, '4_fs_data.fasta'))
+    diff_files['frameshift'] = (_write_to_file(seq_diffs, working_dir, '4_fs_diffs.data'))
 
-    sequences_strings = diversity._convert_seqs_to_strs(sequences)
-    sequences_strings = diversity._simulate_stop_codons(sequences_strings, freq=1)
+    sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
+    sequences_strings, seq_diffs = diversity._simulate_stop_codons(sequences_strings, freq=1)
+    seq_diffs = dict(zip(sequence_ids, seq_diffs))
     diversity._update_seq_reads_from_strs(sequences, sequences_strings)
     data_files['stopcodon'] = (_write_to_FASTA(sequences, working_dir, '5_sc_data.fasta'))
+    diff_files['stopcodon'] = (_write_to_file(seq_diffs, working_dir, '5_sc_diffs.data'))
 
-    sequences_strings = diversity._convert_seqs_to_strs(sequences)
-    sequences_strings = diversity._simulate_inversions(sequences_strings, freq=1)
+    sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
+    sequences_strings, seq_diffs = diversity._simulate_inversions(sequences_strings, freq=1)
+    seq_diffs = dict(zip(sequence_ids, seq_diffs))
     diversity._update_seq_reads_from_strs(sequences, sequences_strings)
     data_files['inversion'] = (_write_to_FASTA(sequences, working_dir, '6_inv_data.fasta'))
+    diff_files['inversion'] = (_write_to_file(seq_diffs, working_dir, '5_inv_diffs.data'))
 
 
     platf = getattr(plat, platform)
@@ -119,6 +132,11 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
                 else:
                     sam_reads[read_id] = [sam_read[1:]]
             open_sam_files[mutation_type] = sam_reads
+
+    open_diff_files = {'null': {i.id: [] for i in sequences}}
+    for mutation_type, fd in diff_files.iteritems():
+        with open(fd, 'r') as f:
+            open_diff_files[mutation_type] = pickle.load(f)
 
     n_reads = min([len(j) for i in open_fq_files.values() for j in i])
     n_proviral_reads = int(proviral_fraction * n_reads)
@@ -152,7 +170,11 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
                                                         fastq1=fastq_files[0], 
                                                         fastq2=None
                                                        )
-            _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=open_sam_files[mutation_type], paired_end=False)
+            _decorate_fastq_headers(fastq_sample, 
+                                    mutation_type, 
+                                    sam_file=open_sam_files[mutation_type], 
+                                    diff_file=open_diff_files[mutation_type], 
+                                    paired_end=False)
             fastq_samples[mutation_type] = fastq_sample
         elif len(fastq_files) == 2:
             fastq_sample1, fastq_sample2 = sample_fastq(n_mutated_reads[mutation_type], 
@@ -210,14 +232,18 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
 
     return True
 
-def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, paired_end=False):
+def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_file=None, paired_end=False):
     for i_read, read in enumerate(fastq_sample):
-        if sam_file is not None:
+        if sam_file is not None and diff_file is not None:
             read_id = read[0][1:].strip('\n')
             if paired_end:
                 read_id, read_direction = read_id[:-2], read_id[-1]
             sam_line = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
-            print(sam_line)
+
+            """continue here by getting the read coverage from sam_line and
+            checking if it covers the diffs in diff_file"""
+        assert False
+            
         read[0] = read[0][:-1] + '_{}\n'.format(MUTATIONS[mutation_type])
         fastq_sample[i_read] = ''.join(read)
 
@@ -330,7 +356,10 @@ def _write_to_file(obj, path, filename):
         filename,
     )
     with open(full_filename, 'w') as f:
-        f.write(obj)
+        if isinstance(obj, str):
+            f.write(obj)
+        else:
+            pickle.dump(obj, f)
     return full_filename
 
 

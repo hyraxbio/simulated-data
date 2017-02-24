@@ -72,7 +72,7 @@ def simulate(sequence, working_dir, num_taxa=10,
 
     for name, seq in sequences:
         allowed_sequences = _simulate_evolution(name, seq, sequence, working_dir, num_taxa)
-        allowed_sequences_strings = _convert_seqs_to_strs(allowed_sequences)
+        allowed_sequences_strings, _ = _convert_seqs_to_strs(allowed_sequences)
         if hypermutate_seqs:
             allowed_sequences_strings = _simulate_hypermutation(allowed_sequences_strings, hypermutation_rate=3)
         if include_deletions:
@@ -155,7 +155,9 @@ def _simulate_hypermutation(sequences, hypermutation_rate=3):
     print('-------------------------------------------------------\n')
     hypermutation_rates = [int(hypermutation_rate * len(s) // 100) for s in sequences]
     hyper_evolved_sequences = hypermutate.mutate_sequences(sequences, hypermutation_rates)
-    return sequences
+    seq_diffs = [get_diffs1(sequences[i], hyper_evolved_sequences[i]) for i in range(len(sequences))]
+
+    return sequences, seq_diffs
 
 def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=100, min_length=15):
     """
@@ -199,12 +201,16 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=10
     if strip_deletions:
         DEL_SIGN = ''
 
+    seq_diffs = []
     for i, seq in enumerate(sequences):
         if random.uniform(0, 1) <= freq:
             del_start = random.randrange(0, len(seq)-min_length)
             del_length = random.randint(0, min(max_length, len(seq)-del_start))
             sequences[i] = seq[0:del_start] + DEL_SIGN*del_length + seq[del_start+del_length:]
-    return sequences
+            seq_diffs.append([del_start, del_start+del_length])
+        else:
+            seq_diffs.append([])
+    return sequences, seq_diffs
 
 def _simulate_insertions(sequences, freq=0.1, max_length=100, min_length=15):
     """
@@ -223,12 +229,16 @@ def _simulate_insertions(sequences, freq=0.1, max_length=100, min_length=15):
     print('Making insertions in evolved sequences (probability = {}).'.format(freq))
     print('---------------------------------------------------------\n')
 
+    seq_diffs = []
     for i, seq in enumerate(sequences):
         if random.uniform(0, 1) <= freq:
             ins_start = random.randrange(0, len(seq)-min_length)
             ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
             sequences[i] = seq[0:ins_start] + ''.join([random.choice('ATGC') for insertion in range(ins_length)]) + seq[ins_start:]
-    return sequences
+            seq_diffs.append([ins_start, ins_start+ins_length])
+        else:
+            seq_diffs.append([])
+    return sequences, seq_diffs
 
 def _simulate_frameshifts(sequences, freq=0.1, strip_deletions=True):
     """
@@ -248,11 +258,15 @@ def _simulate_frameshifts(sequences, freq=0.1, strip_deletions=True):
     if strip_deletions:
         DEL_SIGN = ''
 
+    seq_diffs = []
     for i, seq in enumerate(sequences):
         if random.uniform(0, 1) <= freq:
             del_start = random.randrange(0, len(seq))
             sequences[i] = seq[0:del_start] + DEL_SIGN + seq[del_start+1:]
-    return sequences
+            seq_diffs.append([del_start])
+        else:
+            seq_diffs.append([])
+    return sequences, seq_diffs
 
 def _simulate_stop_codons(sequences, freq=0.5):
     """
@@ -269,6 +283,7 @@ def _simulate_stop_codons(sequences, freq=0.5):
     print('-------------------------------------------------------\n')
 
     stop_codons = ['TAG', 'TAA', 'TGA']
+    seq_diffs = []
     for i, seq in enumerate(sequences):
         if random.uniform(0, 1) <= freq:
             codon_inds = [k*3 for k in range(len(seq)//3)]
@@ -281,7 +296,10 @@ def _simulate_stop_codons(sequences, freq=0.5):
             if len(putative_codons) > 0:
                 codon_replacement = random.choice(putative_codons)
                 sequences[i] = seq[0:codon_replacement[0]] + codon_replacement[1] + seq[codon_replacement[0]+3:]
-    return sequences
+            seq_diffs.append([codon_replacement[0]])
+        else:
+            seq_diffs.append([])
+    return sequences, seq_diffs
 
 def _closest_match(s1, s2):
     scores = [_sim_score(s1, i) for i in s2]
@@ -307,16 +325,27 @@ def _simulate_inversions(sequences, freq=0.1, max_length=100, min_length=5):
     print('Making inversions in evolved sequences (probability = {}).'.format(freq))
     print('---------------------------------------------------------\n')
 
+    seq_diffs = []
     for i, seq in enumerate(sequences):
         if random.uniform(0, 1) <= freq:
             ins_start = random.randrange(0, len(seq)-min_length)
             ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
             sequences[i] = seq[0:ins_start] + seq[ins_start:ins_start + ins_length][::-1] + seq[ins_start + ins_length:]
-    return sequences
+            seq_diffs.append([ins_start, ins_start + ins_length])
+        else:
+            seq_diffs.append([])
+    return sequences, seq_diffs
 
 def _convert_seqs_to_strs(sequences):
-    return [str(s.seq) for s in sequences]
+    return [str(s.seq) for s in sequences], [s.id for s in sequences]
 
 def _update_seq_reads_from_strs(sequences, string_seqs):
     for i, sseq in enumerate(sequences):
         sequences[i].seq = Bio.Seq.Seq(string_seqs[i], alphabet=Bio.Alphabet.SingleLetterAlphabet())
+
+def get_diffs1(seq0, seq1):
+    """
+    Simply return a list of 1-based different indices between two strings.
+    """
+    assert len(seq0) == len(seq1)
+    return [i for i in range(len(seq0)) if seq0[i] != seq1[i]]
