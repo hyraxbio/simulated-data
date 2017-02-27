@@ -181,8 +181,16 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
                                                         fastq1=fastq_files[0], 
                                                         fastq2=fastq_files[1]
                                                        )
-            _decorate_fastq_headers(fastq_sample1, mutation_type, sam_file=open_sam_files[mutation_type], paired_end=True)
-            _decorate_fastq_headers(fastq_sample2, mutation_type, sam_file=open_sam_files[mutation_type], paired_end=True)
+            _decorate_fastq_headers(fastq_sample1, 
+                                    mutation_type, 
+                                    sam_file=open_sam_files[mutation_type], 
+                                    diff_file=open_diff_files[mutation_type], 
+                                    paired_end=True)
+            _decorate_fastq_headers(fastq_sample2, 
+                                    mutation_type, 
+                                    sam_file=open_sam_files[mutation_type], 
+                                    diff_file=open_diff_files[mutation_type], 
+                                    paired_end=True)
             fastq_samples[mutation_type] = [fastq_sample1, fastq_sample2]
         else:
             raise ValueError('Too many FASTQ files loaded.')
@@ -242,7 +250,15 @@ def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_fil
             read_id = read[0][1:].strip('\n')
             if paired_end:
                 read_id, read_direction = read_id[:-2], read_id[-1]
-            sam_line = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
+                sam_line_f, sam_line_r = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
+                if read_direction == '1':
+                    sam_line = sam_line_f
+                elif read_direction == '2':
+                    sam_line = sam_line_r
+                else:
+                    raise ValueError('Paired-end FASTQ read headers must have directionality expressed as .../1 or .../2')
+            else:
+                sam_line = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
             seq_diffs = diff_file[sam_line['seq_id']]
 
             if mutation_type == 'hypermutation':
@@ -334,15 +350,24 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
         seq_id_2 = sam_file[read_id][1][1] 
         if seq_id_1 != seq_id_2:
             raise ValueError('read_id does not reference paired reads from same sequence: {} {}'.format(seq_id_1, seq_id_2))
+        if int(sam_file[read_id][0][7]) < 0 and int(sam_file[read_id][1][7]) > 0:
+            sam_file[read_id] = sam_file[read_id][::-1]
+        elif int(sam_file[read_id][0][7]) > 0 and int(sam_file[read_id][1][7]) > 0 or int(sam_file[read_id][0][7]) < 0 and int(sam_file[read_id][1][7]) < 0:
+            raise ValueError('Both paired-end FASTQ reads are in the same direction.')
+        
         read_start_f = int(sam_file[read_id][0][2])
         read_start_r = int(sam_file[read_id][1][2])
         seq_ind = 9
         read_end_f = read_start_f+len(sam_file[read_id][0][seq_ind])-1
         read_end_r = read_start_r+len(sam_file[read_id][1][seq_ind])-1
-        result = {'seq_id':seq_id_1, 
-                  'read_start_f': read_start_f, 'read_end_f':read_end_f,
-                  'read_start_r': read_start_r, 'read_end_r':read_end_r,
-                 }
+
+        if read_start_f >= read_end_r:
+            raise ValueError('Malformed FASTQ. Paired-end read directions incorrectly specified.')
+
+        result = [
+                  {'seq_id':seq_id_1, 'read_start': read_start_f, 'read_end':read_end_f},
+                  {'seq_id':seq_id_1, 'read_start': read_start_r, 'read_end':read_end_r},
+                 ] 
     else:
         seq_id = sam_file[read_id][0][1] 
         read_start = int(sam_file[read_id][0][2])
@@ -394,23 +419,4 @@ def _write_to_file(obj, path, filename):
             pickle.dump(obj, f)
     return full_filename
 
-
-def _get_n_hypermutations(hypermutations, read_id, sam_file, paired_end=False):
-    """
-    For a given read, return number of hypermutations.
-
-    Args:
-        hypermutations: dictionary with sequence ids as keys and lists of hypermutations indices as values
-        read_id: SAM file id string of the read
-        sam_file: SAM file in list form of custum_generators.parse_sam
-        paired_end: is this paired-end data 
-    """
-    sam_read = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
-    if paired_end:
-        result_f = len([i for i in hypermutations[sam_read['seq_id']] if sam_read['read_start_f'] <= i <= sam_read['read_end_f']])
-        result_r = len([i for i in hypermutations[sam_read['seq_id']] if sam_read['read_start_r'] <= i <= sam_read['read_end_r']])
-        result = [result_f, result_r]
-    else:
-        result = len([i for i in hypermutations[sam_read['seq_id']] if sam_read['read_start'] <= i <= sam_read['read_end']])
-    return result
  
