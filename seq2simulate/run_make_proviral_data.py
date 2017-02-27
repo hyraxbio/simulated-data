@@ -224,6 +224,10 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
         #     pickle.dump(sam_reads, f)            
     else:
 
+        for tempfile in glob(working_dir+'/*.fasta'):
+            os.unlink(tempfile)
+        for tempfile in glob(working_dir+'/*.data'):
+            os.unlink(tempfile)
         for tempfile in glob(working_dir+'/*.fq'):
             os.unlink(tempfile)
         for tempfile in glob(working_dir+'/*.sam'):
