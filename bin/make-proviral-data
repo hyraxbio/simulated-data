@@ -7,10 +7,10 @@ This script is primarily for generating only hypermutated NGS data sets from a F
 e.g. 
 
 Roche:
-make-proviral-data --out _tests/output --sequences data/split/Seq7_Sus --platform roche --hypermutation-rate 3 --working-dir ./_tests/output/working
+make-proviral-data --out _tests/output --sequences data/split/Seq7_Sus --platform roche --hypermutation-rate 3
 
 Illumina paired-end:
-make-proviral-data --out _tests/output --sequences data/split/Seq7_Sus --platform illumina --paired-end --hypermutation-rate 3 --working-dir ./_tests/output/working
+make-proviral-data --out _tests/output --sequences data/split/Seq7_Sus --platform illumina --paired-end --hypermutation-rate 3
 
 """
 
