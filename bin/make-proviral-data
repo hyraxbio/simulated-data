@@ -2,8 +2,16 @@
 
 
 """
-This script is primarily for generating only hypermutated NGS data sets from a
-FASTA sequence file for testing.
+This script is primarily for generating only hypermutated NGS data sets from a FASTA sequence file for testing.
+
+e.g. 
+
+Roche:
+make-proviral-data --out _tests/output --sequences data/split/Seq7_Sus --platform roche --hypermutation-rate 3 --working-dir ./_tests/output/working
+
+Illumina paired-end:
+make-proviral-data --out _tests/output --sequences data/split/Seq7_Sus --platform illumina --paired-end --hypermutation-rate 3 --working-dir ./_tests/output/working
+
 """
 
 from seq2simulate import run_make_proviral_data
@@ -81,16 +89,17 @@ def run(
     sequences, out, platform, working_dir, paired_end, proviral_fraction, unclean_working, hypermutation_rate
 ):
     """
-    Perform hypermutation on a set of sequences and generate an NGS dataset for
-    non-hypermutated and hypermutated sequences, then sample these two FASTQ files
-    to create a new FASTQ file consisting of a fraction of hypermutate and
-    non-hypermutated data.
+    Perform proviral mutations (including hypermutations, deletions,
+    insertions, frameshifts, inserting stop-codons, and inversions) on a set of
+    sequences and generate an NGS dataset for viral and proviral sequences, then
+    sample these two FASTQ files to create a new FASTQ file consisting of a
+    fraction of reads produced from each proviral (and viral) dataset.
 
     Args:
-        sequences: path to FASTA sequence file
-        out: directory in which to store result
-        platform: platform (e.g. roche)
+        sequences_path: path to FASTA sequence file
         working_dir: temporary directory for storing output files 
+        out_dir: directory in which to store result
+        platform: platform (e.g. roche)
         paired_end: produce paired_end data
         proviral_fraction: fraction of proviral data in final dataset
         unclean_working: do not delete working directory files upon completion
