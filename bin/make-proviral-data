@@ -12,6 +12,31 @@ make-proviral-data --out _tests/output --sequences data/split/Seq7_Sus --platfor
 Illumina paired-end:
 make-proviral-data --out _tests/output --sequences data/split/Seq7_Sus --platform illumina --paired-end --hypermutation-rate 3
 
+NOTE:
+    Bruner (2016) proviral defects:
+        2%  - intact
+        5%  - packaging signal and major splice donor site deletion (15-97 bp)
+        20% - deletion within 5' half of genome (15-6000 bp) 
+        35% - deletion within 3' half of genome (15-6000 bp)
+        20% - very large internal deletion (6000-8000 bp)
+        7%  - hypermutated
+        8%  - hypermutated and deleted
+        3%  - insertions and inversions
+
+    Assuming that large deletions and packaging signal/major splice donor site
+    deletions don't apply to individual gene sequences:
+
+        10%  - intact
+        35%  - hypermutated
+        40%  - hypermutated and deleted
+        15%  - insertions and inversions
+
+    Refs:        
+        Bruner, K. M., Murray, A. J., Pollack, R. A., Soliman, M. G., Laskey, S.
+        B., Capoferri, A. A., … Siliciano, R. F. (2016). Defective proviruses rapidly
+        accumulate during acute HIV-1 infection. Nature Medicine, 22(August),
+        doi:10.1038/nm.4156. https://doi.org/10.1038/nm.4156
+
 """
 
 from seq2simulate import run_make_proviral_data

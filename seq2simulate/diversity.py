@@ -164,33 +164,13 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=12
     Args:
         sequences: list of DNA strings
         freq: probability of deletion
+        strip_deletions: do not include '-' characters for deleted residues
+        max_length: maximum length of deletion
+        min_length: minimum length of deletion
+        no_frameshifts: do not introduce frameshifts
 
     Returns:
         list of sequences
-
-    Bruner (2016) proviral defects:
-        2%  - intact
-        5%  - packaging signal and major splice donor site deletion (15-97 bp)
-        20% - deletion within 5' half of genome (15-6000 bp) 
-        35% - deletion within 3' half of genome (15-6000 bp)
-        20% - very large internal deletion (6000-8000 bp)
-        7%  - hypermutated
-        8%  - hypermutated and deleted
-        3%  - insertions and inversions
-
-    Assuming that large deletions and packaging signal/major splice donor site
-    deletions don't apply to individual gene sequences:
-
-        10%  - intact
-        35%  - hypermutated
-        40%  - hypermutated and deleted
-        15%  - insertions and inversions
-
-    Refs:        
-        Bruner, K. M., Murray, A. J., Pollack, R. A., Soliman, M. G., Laskey, S.
-        B., Capoferri, A. A., … Siliciano, R. F. (2016). Defective proviruses rapidly
-        accumulate during acute HIV-1 infection. Nature Medicine, 22(August),
-        doi:10.1038/nm.4156. https://doi.org/10.1038/nm.4156
 
     """
     print('\n-------------------------------------------------------')
@@ -223,6 +203,7 @@ def _simulate_insertions(sequences, freq=0.1, max_length=100, min_length=15, no_
         freq: probability of insertion
         max_length: of random insertion 
         min_length: of random insertion
+        no_frameshifts: do not introduce frameshifts
 
     Returns:
         list of sequences
