@@ -24,6 +24,7 @@ class Sequence(object):
             self.motif_probabilities = mutation_probabilities.KijakProbabilities()
         else:
             self.motif_probabilities = motif_probabilities
+        self.index_all_motifs()
 
     def _get_motif_indices(self, motif):
         """
@@ -74,6 +75,8 @@ class Sequence(object):
             remaining_probabilities = {i: self.motif_probabilities.motifs[i] / remaining_probabilities_sum for i in self.sequence_motif_dict}
         except AttributeError:
             remaining_probabilities = {}
+        except ZeroDivisionError:
+            remaining_probabilities = {}
         return remaining_probabilities
             
 
@@ -90,31 +93,27 @@ class Sequence(object):
             n: int
         """
 
-        if self.sequence_motif_dict is None:
-            self.index_all_motifs()
         if n > self._num_motifs:
             n = self._num_motifs
             #raise ValueError('n must be less than or equal to _num_motifs ({})'.format(self._num_motifs))
             
         mutations = 0
         while mutations < n:
-            self.sequence = self._mutate(self.sequence)
-            self.index_all_motifs()
+            self._mutate()
             mutations += 1
 
-    def _mutate(self, sequence): 
+    def _mutate(self): 
         """
         Perform a single random mutation at the leftmost G residue in a motif
         with probabilities defined by Sequence.motif_probabilites.
         """
-        if self.sequence_motif_dict is None:
-            self.index_all_motifs()
         motif_index = [i > random.uniform(0, 1) for i in sorted(self._motif_probs_cum)].index(True)
         current_prob = sorted(self._motif_probs_cum)[motif_index]
         current_motif = self._motif_probs_cum[current_prob]
         current_index = random.choice(self.sequence_motif_dict[current_motif])
         mutation_index = current_index + current_motif.index('G')
-        return sequence[:mutation_index] + 'A' + sequence[1 + mutation_index:]
+        self.sequence = self.sequence[:mutation_index] + 'A' + self.sequence[1 + mutation_index:]
+        self.index_all_motifs()
 
 
     def _get_cumulative_p(self, p):
@@ -142,6 +141,9 @@ def mutate_sequences(sequences, n):
     seqs = [Sequence(s) for s in sequences]
     if isinstance(n, int):
         n = [n]*len(seqs)
+    else:
+        assert len(n) == len(seqs)
+
     for seq, ni in zip(seqs, n):
         seq.mutate_sequence(ni)
     return [seq.sequence for seq in seqs]

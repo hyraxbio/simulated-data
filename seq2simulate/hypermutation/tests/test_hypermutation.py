@@ -46,14 +46,15 @@ class HypermutTester(unittest.TestCase):
     def test__motif_probs(self):
         self.seq.index_all_motifs()
         expected_motifs = ['CGGC', 'TGGT', 'GA']
-        expected_probs = [0.0, 0.3890518084067808, 0.6109481915932192]
+        expected_probs = [1e-18, 0.3890518084067808, 0.6109481915932192]
         for i, j in zip(expected_motifs, expected_probs):
             self.assertTrue(numpy.isclose(self.seq._motif_probs[i], j))
 
 
     def test__mutate(self):
         oldseq = self.seq.sequence
-        newseq = self.seq._mutate(oldseq)
+        self.seq._mutate()
+        newseq = self.seq.sequence
         self.assertNotEqual(oldseq, newseq)
         diffs = [i for i in xrange(len(oldseq)) if oldseq[i] != newseq[i]]
         self.assertEqual(len(diffs), 1)
