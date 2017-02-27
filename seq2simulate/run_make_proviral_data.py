@@ -67,7 +67,7 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
 
     n_reads = min([len(j) for i in open_fq_files.values() for j in i])
     n_proviral_reads = int(proviral_fraction * n_reads)
-    n_reads_frac = int(1/7.0 * n_reads)
+    n_reads_frac = int(1.0/len(MUTATIONS) * n_reads)
     n_mutated_reads = {
         'null': n_reads_frac,
         'hypermutation': n_reads_frac,
