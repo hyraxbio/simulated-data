@@ -4,6 +4,7 @@ import random
 import json
 from glob import glob
 import pickle
+import uuid
 
 from hypermutation import hypermutate
 import platform as plat
@@ -32,7 +33,7 @@ def get_diffs1(seq0, seq1):
     return [i for i in range(len(seq0)) if seq0[i] != seq1[i]]
 
 
-def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, proviral_fraction, unclean_working=False, hypermutation_rate=3):
+def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unclean_working=False, hypermutation_rate=3):
     """
 
     Perform proviral mutations (including hypermutations, deletions,
@@ -47,7 +48,6 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
         out_dir: directory in which to store result
         platform: platform (e.g. roche)
         paired_end: produce paired_end data
-        proviral_fraction: fraction of proviral data in final dataset
         unclean_working: do not delete working directory files upon completion
         hypermutation_rate: rate of hypermutation per 100 bp
 
@@ -68,7 +68,6 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
     open_fq_files, open_sam_files, open_diff_files = _open_all_data_files(sequences, fastq_files, sam_files, diff_files)
 
     n_reads = min([len(j) for i in open_fq_files.values() for j in i])
-    n_proviral_reads = int(proviral_fraction * n_reads)
     n_reads_frac = int(1.0/len(MUTATIONS) * n_reads)
     n_mutated_reads = {
         'null': n_reads_frac,
@@ -125,6 +124,7 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
             raise ValueError('Too many FASTQ files loaded.')
 
     outfiles = []
+    output_filestring = str(uuid.uuid4())
     if paired_end:
         mixed_f, mixed_r = [], []
         for fastq_sample in fastq_samples.values(): 
@@ -132,14 +132,14 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
             mixed_r.append(''.join(fastq_sample[1]))
         mixed_f = ''.join(mixed_f)
         mixed_r = ''.join(mixed_r)
-        outfiles.append(_write_to_file(mixed_f, out_dir, 'mixed_hyperdata1.fq')) 
-        outfiles.append(_write_to_file(mixed_r, out_dir, 'mixed_hyperdata2.fq'))
+        outfiles.append(_write_to_file(mixed_f, out_dir, output_filestring+'_1.fq')) 
+        outfiles.append(_write_to_file(mixed_r, out_dir, output_filestring+'_2.fq'))
     else:
         mixed_f = []
         for fastq_sample in fastq_samples.values(): 
             mixed_f.append(''.join(fastq_sample))
         mixed_f = ''.join(mixed_f)
-        outfiles.append(_write_to_file(mixed_f, out_dir, 'mixed_hyperdata1.fq')) 
+        outfiles.append(_write_to_file(mixed_f, out_dir, output_filestring+'_1.fq')) 
 
     if not unclean_working:
         for tempfile in glob(working_dir+'/*.fasta'):
@@ -153,7 +153,10 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
         for tempfile in glob(working_dir+'/*.pkl'):
             os.unlink(tempfile)
 
-    print 'Output saved in:', out_dir
+    print 'Output saved in:'
+    for outfile in outfiles:
+        print(outfile)
+
     print('FASTQ mutation codes:')
     for i in range(len(MUTATIONS)):
         for mut, cod in MUTATIONS.iteritems():

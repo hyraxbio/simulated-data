@@ -99,19 +99,13 @@ def get_working_dir():
 )
 
 @click.option(
-    '--proviral-fraction', 
-    help='Fraction of final population to be hypermutated.', 
-    default=0.1,
-)
-
-@click.option(
     '--hypermutation-rate',
     help='Rate of hypermutation per 100 bp',
     default=3,
 )
 
 def run(
-    sequences, out, platform, working_dir, paired_end, proviral_fraction, unclean_working, hypermutation_rate
+    sequences, out, platform, working_dir, paired_end, unclean_working, hypermutation_rate
 ):
     """
     Perform proviral mutations (including hypermutations, deletions,
@@ -126,7 +120,6 @@ def run(
         out_dir: directory in which to store result
         platform: platform (e.g. roche)
         paired_end: produce paired_end data
-        proviral_fraction: fraction of proviral data in final dataset
         unclean_working: do not delete working directory files upon completion
         hypermutation_rate: rate of hypermutation per 100 bp
 
@@ -151,10 +144,7 @@ def run(
         if not os.path.isdir(out):
             os.makedirs(out)
 
-    if not 0 <= proviral_fraction <= 1:
-        raise ValueError('proviral_fractions must be in range 0-1')
-
-    run_make_proviral_data.run_proviral(sequences, working_dir, out, platform, paired_end, proviral_fraction, unclean_working=unclean_working, hypermutation_rate=hypermutation_rate)
+    run_make_proviral_data.run_proviral(sequences, working_dir, out, platform, paired_end, unclean_working=unclean_working, hypermutation_rate=hypermutation_rate)
 
     return True
 
