@@ -233,18 +233,50 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
     return True
 
 def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_file=None, paired_end=False):
+
+    critical_num_hypermutations = 6
+
     for i_read, read in enumerate(fastq_sample):
+        id_suffix = '_{}\n'.format(MUTATIONS['null'])
         if sam_file is not None and diff_file is not None:
             read_id = read[0][1:].strip('\n')
             if paired_end:
                 read_id, read_direction = read_id[:-2], read_id[-1]
             sam_line = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
+            seq_diffs = diff_file[sam_line['seq_id']]
+
+            if mutation_type == 'hypermutation':
+                covered_mutations = [i for i in seq_diffs if i >= sam_line['read_start'] and i <= sam_line['read_end']]
+                if len(covered_mutations) >= critical_num_hypermutations:
+                    id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
+            elif mutation_type == 'longdel':
+                if sam_line['read_start'] <= seq_diffs[0] and sam_line['read_end'] > seq_diffs[1]:
+                    id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
+            elif mutation_type == 'insertion':
+                if seq_diffs[0] <= sam_line['read_start'] <= seq_diffs[1] \
+                    or seq_diffs[0] <= sam_line['read_end'] <= seq_diffs[1] \
+                    or sam_line['read_start'] <= seq_diffs[0] and sam_line['read_end'] >= seq_diffs[1] \
+                    or sam_line['read_start'] >= seq_diffs[0] and sam_line['read_end'] <= seq_diffs[1]:
+                    id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
+            elif mutation_type == 'frameshift':
+                if sam_line['read_start'] < seq_diffs[0] and sam_line['read_end'] > seq_diffs[0] \
+                    or sam_line['read_start'] >= seq_diffs[0] and sam_line['read_end'] > seq_diffs[0]:
+                    id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
+            elif mutation_type == 'stopcodon':
+                if sam_line['read_start'] <= seq_diffs[0] and sam_line['read_end'] >= seq_diffs[0]:
+                    id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
+            elif mutation_type == 'inversion':
+                if seq_diffs[0] <= sam_line['read_start'] <= seq_diffs[1] \
+                    or seq_diffs[0] <= sam_line['read_end'] <= seq_diffs[1] \
+                    or sam_line['read_start'] <= seq_diffs[0] and sam_line['read_end'] >= seq_diffs[1] \
+                    or sam_line['read_start'] >= seq_diffs[0] and sam_line['read_end'] <= seq_diffs[1]:
+                    id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
+                
 
             """continue here by getting the read coverage from sam_line and
             checking if it covers the diffs in diff_file"""
-        assert False
-            
-        read[0] = read[0][:-1] + '_{}\n'.format(MUTATIONS[mutation_type])
+        read[0] = read[0][:-1] + id_suffix
+
         fastq_sample[i_read] = ''.join(read)
 
 def sample_fastq(n_reads, fastq1=None, fastq2=None):
