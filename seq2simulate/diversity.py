@@ -159,7 +159,7 @@ def _simulate_hypermutation(sequences, hypermutation_rate=3):
 
     return sequences, seq_diffs
 
-def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=100, min_length=15):
+def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=120, min_length=15, no_frameshifts=True):
     """
     Args:
         sequences: list of DNA strings
@@ -204,15 +204,19 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=10
     seq_diffs = []
     for i, seq in enumerate(sequences):
         if random.uniform(0, 1) <= freq:
-            del_start = random.randrange(0, len(seq)-min_length)
-            del_length = random.randint(0, min(max_length, len(seq)-del_start))
+            if no_frameshifts: 
+                del_start = random.randrange(0, (len(seq)-min_length)//3)*3
+                del_length = random.randint(0, min(max_length, len(seq)-del_start)//3)*3
+            else:
+                del_start = random.randrange(0, len(seq)-min_length)
+                del_length = random.randint(0, min(max_length, len(seq)-del_start))
             sequences[i] = seq[0:del_start] + DEL_SIGN*del_length + seq[del_start+del_length:]
             seq_diffs.append([del_start, del_start+del_length])
         else:
             seq_diffs.append([])
     return sequences, seq_diffs
 
-def _simulate_insertions(sequences, freq=0.1, max_length=100, min_length=15):
+def _simulate_insertions(sequences, freq=0.1, max_length=100, min_length=15, no_frameshifts=True):
     """
     Args:
         sequences: list of DNA strings
@@ -232,8 +236,12 @@ def _simulate_insertions(sequences, freq=0.1, max_length=100, min_length=15):
     seq_diffs = []
     for i, seq in enumerate(sequences):
         if random.uniform(0, 1) <= freq:
-            ins_start = random.randrange(0, len(seq)-min_length)
-            ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
+            if no_frameshifts:
+                ins_start = random.randrange(0, (len(seq)-min_length)//3)*3
+                ins_length = random.randint(0, min(max_length, len(seq)-ins_start)//3)*3
+            else:
+                ins_start = random.randrange(0, len(seq)-min_length)
+                ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
             sequences[i] = seq[0:ins_start] + ''.join([random.choice('ATGC') for insertion in range(ins_length)]) + seq[ins_start:]
             seq_diffs.append([ins_start, ins_start+ins_length])
         else:

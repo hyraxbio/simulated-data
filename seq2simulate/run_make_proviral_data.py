@@ -172,6 +172,7 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
     data_files = {}
     diff_files = {}
 
+    # hypermutation
     sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
     sequences_strings, seq_diffs = diversity._simulate_hypermutation(sequences_strings, hypermutation_rate=hypermutation_rate)
     seq_diffs = dict(zip(sequence_ids, seq_diffs))
@@ -179,20 +180,23 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
     data_files['hypermutation'] = (_write_to_FASTA(sequences, working_dir, '1_hm_data.fasta'))
     diff_files['hypermutation'] = (_write_to_file(seq_diffs, working_dir, '1_hm_diffs.data'))
 
+    # long deletion
     sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
-    sequences_strings, seq_diffs = diversity._simulate_deletions(sequences_strings, freq=1)
+    sequences_strings, seq_diffs = diversity._simulate_deletions(sequences_strings, freq=1, no_frameshifts=True)
     seq_diffs = dict(zip(sequence_ids, seq_diffs))
     diversity._update_seq_reads_from_strs(sequences, sequences_strings)
     data_files['longdel'] = (_write_to_FASTA(sequences, working_dir, '2_del_data.fasta'))
     diff_files['longdel'] = (_write_to_file(seq_diffs, working_dir, '2_del_diffs.data'))
 
+    # insertion
     sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
-    sequences_strings, seq_diffs = diversity._simulate_insertions(sequences_strings, freq=1)
+    sequences_strings, seq_diffs = diversity._simulate_insertions(sequences_strings, freq=1, no_frameshifts=True)
     seq_diffs = dict(zip(sequence_ids, seq_diffs))
     diversity._update_seq_reads_from_strs(sequences, sequences_strings)
     data_files['insertion'] = (_write_to_FASTA(sequences, working_dir, '3_ins_data.fasta'))
     diff_files['insertion'] = (_write_to_file(seq_diffs, working_dir, '3_ins_diffs.data'))
 
+    # frameshift
     sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
     sequences_strings, seq_diffs = diversity._simulate_frameshifts(sequences_strings, freq=1)
     seq_diffs = dict(zip(sequence_ids, seq_diffs))
@@ -200,6 +204,7 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
     data_files['frameshift'] = (_write_to_FASTA(sequences, working_dir, '4_fs_data.fasta'))
     diff_files['frameshift'] = (_write_to_file(seq_diffs, working_dir, '4_fs_diffs.data'))
 
+    # stop codon
     sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
     sequences_strings, seq_diffs = diversity._simulate_stop_codons(sequences_strings, freq=1)
     seq_diffs = dict(zip(sequence_ids, seq_diffs))
@@ -207,6 +212,7 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
     data_files['stopcodon'] = (_write_to_FASTA(sequences, working_dir, '5_sc_data.fasta'))
     diff_files['stopcodon'] = (_write_to_file(seq_diffs, working_dir, '5_sc_diffs.data'))
 
+    # inversion
     sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences)
     sequences_strings, seq_diffs = diversity._simulate_inversions(sequences_strings, freq=1)
     seq_diffs = dict(zip(sequence_ids, seq_diffs))
