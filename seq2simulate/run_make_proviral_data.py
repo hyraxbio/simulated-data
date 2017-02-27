@@ -288,9 +288,6 @@ def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_fil
                     or sam_line['read_start'] >= seq_diffs[0] and sam_line['read_end'] <= seq_diffs[1]:
                     id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
                 
-
-            """continue here by getting the read coverage from sam_line and
-            checking if it covers the diffs in diff_file"""
         read[0] = read[0][:-1] + id_suffix
 
         fastq_sample[i_read] = ''.join(read)
