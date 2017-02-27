@@ -34,10 +34,12 @@ def get_diffs1(seq0, seq1):
 
 def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, proviral_fraction, unclean_working=False, hypermutation_rate=3):
     """
-    Perform hypermutation on a set of sequences and generate an NGS dataset for
-    non-hypermutated and hypermutated sequences, then sample these two FASTQ files
-    to create a new FASTQ file consisting of a fraction of hypermutate and
-    non-hypermutated data.
+
+    Perform proviral mutations (including hypermutations, deletions,
+    insertions, frameshifts, inserting stop-codons, and inversions) on a set of
+    sequences and generate an NGS dataset for viral and proviral sequences, then
+    sample these two FASTQ files to create a new FASTQ file consisting of a
+    fraction of reads produced from each proviral (and viral) dataset.
 
     Args:
         sequences_path: path to FASTA sequence file
@@ -162,6 +164,11 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
 
 def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
 
+    """
+    Performs mutations of various kinds on template sequence(s) and saves both
+    the mutated sequences and a JSON of the mutation locations to file. Returns
+    these files in two dictionaries.
+    """
     data_files = {}
     diff_files = {}
 
@@ -209,6 +216,7 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
 
     return data_files, diff_files
 
+
 def _make_art_files(data_files, platform, working_dir, paired_end=False):
     platf = getattr(plat, platform)
 
@@ -219,6 +227,7 @@ def _make_art_files(data_files, platform, working_dir, paired_end=False):
             fastq_file = [fastq_file]
         fastq_files[mutation_type], sam_files[mutation_type] = [i for i in fastq_file], sam_file
     return fastq_files, sam_files
+
 
 def _open_all_data_files(sequences, fastq_files, sam_files, diff_files):
     open_fq_files = {}
@@ -247,8 +256,13 @@ def _open_all_data_files(sequences, fastq_files, sam_files, diff_files):
             open_diff_files[mutation_type] = pickle.load(f)
     return open_fq_files, open_sam_files, open_diff_files
 
+
 def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_file=None, paired_end=False):
 
+    """
+    Decorate FASTQ headers with a suffix code indicating whether or not this
+    read covers a known mutation (see MUTATIONS for mutation codes).
+    """
     for i_read, read in enumerate(fastq_sample):
         id_suffix = None
         if mutation_type != 'null':
@@ -417,7 +431,7 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
 
 def _write_to_FASTA(sequences, working_dir, filename):
     """
-    write sequences to FASTA
+    Write sequences to FASTA.
 
     Args:
         sequences: list of BioPython sequence reads
@@ -436,7 +450,7 @@ def _write_to_FASTA(sequences, working_dir, filename):
 
 def _write_to_file(obj, path, filename):
     """
-    write object to file
+    Write object to file. If not str, pickle.
 
     Args:
         obj: Python object
