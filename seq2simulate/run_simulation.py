@@ -84,6 +84,11 @@ def run_diversity(
     working_dir,
     randomize_includes_pcr_error = False,
     hypermutate_seqs = False,
+    include_deletions = False,
+    include_insertions = False,
+    include_frameshifts = False,
+    include_stop_codons = False,
+    include_inversions = False,
 ):
     """
     Simulate diversity from sets of susceptible and resistant sequences.
@@ -138,7 +143,14 @@ def run_diversity(
         if remove_rt:
             sequence.remove_rt = True
 
-        files = diversity.simulate(sequence, working_dir, hypermutate_seqs=hypermutate_seqs)
+        files = diversity.simulate(sequence, working_dir, 
+                                   hypermutate_seqs=hypermutate_seqs, 
+                                   include_deletions=include_deletions,
+                                   include_insertions=include_insertions,
+                                   include_frameshifts=include_frameshifts,
+                                   include_stop_codons=include_stop_codons,
+                                   include_inversions=include_inversions,
+                                  )
         files["sequence"] = sequence
         evolved_data.append(files) 
 
