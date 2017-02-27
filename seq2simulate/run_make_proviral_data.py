@@ -139,18 +139,7 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, pro
         mixed_f = ''.join(mixed_f)
         outfiles.append(_write_to_file(mixed_f, out_dir, 'mixed_hyperdata1.fq')) 
 
-    if unclean_working:
-        pass
-        # # this is saved primarily for functional testing
-        # sam_filename = "sam_reads.pkl"
-        # full_filename = os.path.join(
-        #     working_dir, 
-        #     sam_filename,
-        # )
-        # with open(full_filename, 'wb') as f:
-        #     pickle.dump(sam_reads, f)            
-    else:
-
+    if not unclean_working:
         for tempfile in glob(working_dir+'/*.fasta'):
             os.unlink(tempfile)
         for tempfile in glob(working_dir+'/*.data'):
