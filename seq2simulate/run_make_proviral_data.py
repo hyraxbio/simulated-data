@@ -105,17 +105,16 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unc
                                     paired_end=False)
             fastq_samples[mutation_type] = fastq_sample
         elif len(fastq_files) == 2:
-            fastq_sample_pair = sample_fastq(n_mutated_reads[mutation_type], 
+            fastq_sample_pairs = sample_fastq(n_mutated_reads[mutation_type], 
                                  fastq1=fastq_files[0], 
                                  fastq2=fastq_files[1]
                                 )
-            for fastq_sample in fastq_sample_pair:
-                _decorate_fastq_headers(fastq_sample, 
-                                        mutation_type, 
-                                        sam_file=open_sam_files[mutation_type], 
-                                        diff_file=open_diff_files[mutation_type], 
-                                        paired_end=True)
-            fastq_samples[mutation_type] = fastq_sample_pair
+            _decorate_fastq_headers(fastq_sample_pairs, 
+                                    mutation_type, 
+                                    sam_file=open_sam_files[mutation_type], 
+                                    diff_file=open_diff_files[mutation_type], 
+                                    paired_end=True)
+            fastq_samples[mutation_type] = fastq_sample_pairs
         else:
             raise ValueError('Too many FASTQ files loaded.')
 
@@ -237,30 +236,49 @@ def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_fil
     Decorate FASTQ headers with a suffix code indicating whether or not this
     read covers a known mutation (see MUTATIONS for mutation codes).
     """
-    for i_read, read in enumerate(fastq_sample):
-        id_suffix = None
-        if mutation_type != 'null':
-            if sam_file is not None and diff_file is not None:
-                read_id = read[0][1:].strip('\n')
-                if paired_end:
-                    read_id, read_direction = read_id[:-2], read_id[-1]
+    if paired_end:
+        for i_read in range(len(fastq_sample[0])):
+            reads = [fastq_sample[0][i_read], fastq_sample[1][i_read]]
+            id_suffixes = [None, None]
+            if mutation_type != 'null':
+                if sam_file is not None and diff_file is not None:
+                    read_id = reads[0][0][1:].strip('\n')
+                    read_id, read_number = read_id[:-2], read_id[-1]
+                    read_seq1, read_seq2 = reads[0][1].strip('\n'), reads[1][1].strip('\n')
                     sam_line_f, sam_line_r = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
-                    if read_direction == '1':
-                        sam_line = sam_line_f
-                    elif read_direction == '2':
-                        sam_line = sam_line_r
-                    else:
-                        raise ValueError('Paired-end FASTQ read headers must have directionality expressed as .../1 or .../2')
-                else:
-                    sam_line = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
-                seq_diffs = diff_file[sam_line['seq_id']]
-                id_suffix = _get_id_suffix(mutation_type, sam_line, seq_diffs)
-        if id_suffix is None:
-            id_suffix = '_{}\n'.format(MUTATIONS['null'])
-            
-        read[0] = read[0][:-1] + id_suffix
+                    seq_similarities = [diversity._sim_score(sam_line_f['seq'], read_seq) for read_seq in [read_seq1, read_seq2]]
+                    if seq_similarities[1] > seq_similarities[0]:
+                        sam_line_f, sam_line_r = sam_line_r, sam_line_f
+                    elif seq_similarities[1] == seq_similarities[0]:
+                        raise ValueError('Paired-end FASTQ reads could not be distinguished between.')
+                    seq_diffs = diff_file[sam_line_f['seq_id']]
+                    id_suffixes = [_get_id_suffix(mutation_type, sam_line, seq_diffs) for sam_line in [sam_line_f, sam_line_r]]
+            for i in range(len(id_suffixes)):
+                if id_suffixes[i] is None:
+                    id_suffixes[i] = '_{}\n'.format(MUTATIONS['null'])
+                
+            reads[0][0] = reads[0][0][:-1] + id_suffixes[0]
+            reads[1][0] = reads[1][0][:-1] + id_suffixes[1]
 
-        fastq_sample[i_read] = ''.join(read)
+            fastq_sample[0][i_read] = ''.join(reads[0])
+            fastq_sample[1][i_read] = ''.join(reads[1])
+    else:
+        for i_read, read in enumerate(fastq_sample):
+            id_suffix = None
+            if mutation_type != 'null':
+                if sam_file is not None and diff_file is not None:
+                    read_id = read[0][1:].strip('\n')
+
+                    sam_line = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
+
+                    seq_diffs = diff_file[sam_line['seq_id']]
+                    id_suffix = _get_id_suffix(mutation_type, sam_line, seq_diffs)
+            if id_suffix is None:
+                id_suffix = '_{}\n'.format(MUTATIONS['null'])
+                
+            read[0] = read[0][:-1] + id_suffix
+
+            fastq_sample[i_read] = ''.join(read)
 
 def _get_id_suffix(mutation_type, sam_line, seq_diffs):
 
@@ -357,7 +375,7 @@ def sample_fastq(n_reads, fastq1=None, fastq2=None):
             fastq_sample2.append(proviral_read2)
 
     if paired_end:    
-        return fastq_sample1, fastq_sample2
+        return [fastq_sample1, fastq_sample2]
     else:
         return fastq_sample1
 
@@ -383,7 +401,7 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
         
         read_start_f = int(sam_file[read_id][0][2])
         read_start_r = int(sam_file[read_id][1][2])
-        seq_ind = 9
+        seq_ind = 8
         read_end_f = read_start_f+len(sam_file[read_id][0][seq_ind])-1
         read_end_r = read_start_r+len(sam_file[read_id][1][seq_ind])-1
 
@@ -391,15 +409,15 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
             raise ValueError('Malformed FASTQ. Paired-end read directions incorrectly specified.')
 
         result = [
-                  {'seq_id':seq_id_1, 'read_start': read_start_f, 'read_end':read_end_f},
-                  {'seq_id':seq_id_1, 'read_start': read_start_r, 'read_end':read_end_r},
+                  {'seq_id':seq_id_1, 'read_start': read_start_f, 'read_end':read_end_f, 'seq':sam_file[read_id][0][seq_ind]},
+                  {'seq_id':seq_id_1, 'read_start': read_start_r, 'read_end':read_end_r, 'seq':sam_file[read_id][1][seq_ind]},
                  ] 
     else:
         seq_id = sam_file[read_id][0][1] 
         read_start = int(sam_file[read_id][0][2])
-        seq_ind = 8
+        seq_ind = 7
         read_end = read_start+len(sam_file[read_id][0][seq_ind])-1
-        result = {'seq_id':seq_id, 'read_start': read_start, 'read_end':read_end}
+        result = {'seq_id':seq_id, 'read_start': read_start, 'read_end':read_end, 'seq':sam_file[read_id][0][seq_ind]}
     return result
      
 
