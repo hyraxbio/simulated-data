@@ -268,25 +268,24 @@ def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_fil
 
 def _get_id_suffix(mutation_type, sam_line, seq_diffs):
 
-    critical_num_hypermutations = 6
+    mutation_funcs = {'hypermutation': _is_hypermutated,
+                      'longdel': _is_longdel,
+                      'insertion': _is_insertion,
+                      'frameshift': _is_frameshift,
+                      'stopcodon': _is_stopcodon,
+                      'inversion': _is_inversion,
+                     }
 
     id_suffix = None
-    if mutation_type == 'hypermutation' and _is_hypermutated(sam_line, seq_diffs, critical_num_hypermutations):
-        id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
-    elif mutation_type == 'longdel' and _is_longdel(sam_line, seq_diffs):
-        id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
-    elif mutation_type == 'insertion' and _is_insertion(sam_line, seq_diffs):
-        id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
-    elif mutation_type == 'frameshift' and _is_frameshift(sam_line, seq_diffs):
-        id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
-    elif mutation_type == 'stopcodon' and _is_stopcodon(sam_line, seq_diffs):
-        id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
-    elif mutation_type == 'inversion' and _is_inversion(sam_line, seq_diffs):
-        id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
+    for mutation, is_mutated in mutation_funcs.iteritems():
+        if mutation_type == mutation and is_mutated(sam_line, seq_diffs):
+            id_suffix = '_{}\n'.format(MUTATIONS[mutation_type])
+            break
 
     return id_suffix 
 
-def _is_hypermutated(sam_line, seq_diffs, critical_num_hypermutations):
+def _is_hypermutated(sam_line, seq_diffs):
+    critical_num_hypermutations = 6
     covered_mutations = [i for i in seq_diffs if i >= sam_line['read_start'] and i <= sam_line['read_end']]
     if len(covered_mutations) >= critical_num_hypermutations:
         return True
