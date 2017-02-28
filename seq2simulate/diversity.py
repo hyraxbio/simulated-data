@@ -73,18 +73,21 @@ def simulate(sequence, working_dir, num_taxa=10,
     for name, seq in sequences:
         allowed_sequences = _simulate_evolution(name, seq, sequence, working_dir, num_taxa)
         allowed_sequences_strings, _ = _convert_seqs_to_strs(allowed_sequences)
-        if hypermutate_seqs:
-            allowed_sequences_strings = _simulate_hypermutation(allowed_sequences_strings, hypermutation_rate=3)
-        if include_deletions:
-            allowed_sequences_strings = _simulate_deletions(allowed_sequences_strings, freq=0.4)
-        if include_insertions:
-            allowed_sequences_strings = _simulate_insertions(allowed_sequences_strings, freq=0.2)
-        if include_frameshifts:
-            allowed_sequences_strings = _simulate_frameshifts(allowed_sequences_strings, freq=0.3)
-        if include_stop_codons:
-            allowed_sequences_strings = _simulate_stop_codons(allowed_sequences_strings, freq=0.5)
-        if include_inversions:
-            allowed_sequences_strings = _simulate_inversions(allowed_sequences_strings, freq=0.3)
+        mutation_types  = [hypermutate_seqs, 
+                           include_deletions, 
+                           include_insertions, 
+                           include_frameshifts, 
+                           include_stop_codons, 
+                           include_inversions]
+        mutation_funcs = [_simulate_hypermutation, 
+                          _simulate_deletions, 
+                          _simulate_insertions, 
+                          _simulate_frameshifts, 
+                          _simulate_stop_codons, 
+                          _simulate_inversions]
+        for mutation_type, mutation_func in zip(mutation_types, mutation_funcs):
+            if mutation_type:
+                allowed_sequences_strings, seq_diffs = mutation_func(allowed_sequences_strings)
         _update_seq_reads_from_strs(allowed_sequences, allowed_sequences_strings)
 
         full_filename = os.path.join(
@@ -183,8 +186,13 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=12
 
     seq_diffs = []
     for i, seq in enumerate(sequences):
+        if min_length > len(seq):
+            min_length = len(seq)//4
+        if max_length > len(seq):
+            max_length = len(seq)//2
         if random.uniform(0, 1) <= freq:
             if no_frameshifts: 
+                print(len(seq), min_length)
                 del_start = random.randrange(0, (len(seq)-min_length)//3)*3
                 del_length = random.randint(0, min(max_length, len(seq)-del_start)//3)*3
             else:
@@ -196,7 +204,7 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=12
             seq_diffs.append([])
     return sequences, seq_diffs
 
-def _simulate_insertions(sequences, freq=0.1, max_length=100, min_length=15, no_frameshifts=True):
+def _simulate_insertions(sequences, freq=0.2, max_length=100, min_length=15, no_frameshifts=True):
     """
     Args:
         sequences: list of DNA strings
@@ -216,8 +224,13 @@ def _simulate_insertions(sequences, freq=0.1, max_length=100, min_length=15, no_
 
     seq_diffs = []
     for i, seq in enumerate(sequences):
+        if min_length > len(seq):
+            min_length = len(seq)//4
+        if max_length > len(seq):
+            max_length = len(seq)//2
         if random.uniform(0, 1) <= freq:
             if no_frameshifts:
+                print(len(seq), min_length)
                 ins_start = random.randrange(0, (len(seq)-min_length)//3)*3
                 ins_length = random.randint(0, min(max_length, len(seq)-ins_start)//3)*3
             else:
@@ -229,7 +242,7 @@ def _simulate_insertions(sequences, freq=0.1, max_length=100, min_length=15, no_
             seq_diffs.append([])
     return sequences, seq_diffs
 
-def _simulate_frameshifts(sequences, freq=0.1, strip_deletions=True):
+def _simulate_frameshifts(sequences, freq=0.3, strip_deletions=True):
     """
     Args:
         sequences: list of DNA strings
@@ -285,7 +298,7 @@ def _simulate_stop_codons(sequences, freq=0.5):
             if len(putative_codons) > 0:
                 codon_replacement = random.choice(putative_codons)
                 sequences[i] = seq[0:codon_replacement[0]] + codon_replacement[1] + seq[codon_replacement[0]+3:]
-            seq_diffs.append([codon_replacement[0]])
+                seq_diffs.append([codon_replacement[0]])
         else:
             seq_diffs.append([])
     return sequences, seq_diffs
@@ -297,7 +310,7 @@ def _closest_match(s1, s2):
 def _sim_score(s1, s2):
     return sum([i==j for i,j in zip(s1, s2)])
 
-def _simulate_inversions(sequences, freq=0.1, max_length=100, min_length=5):
+def _simulate_inversions(sequences, freq=0.3, max_length=100, min_length=5):
     """
     Args:
         sequences: list of DNA strings
