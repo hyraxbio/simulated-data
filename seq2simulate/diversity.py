@@ -192,7 +192,6 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=12
             max_length = len(seq)//2
         if random.uniform(0, 1) <= freq:
             if no_frameshifts: 
-                print(len(seq), min_length)
                 del_start = random.randrange(0, (len(seq)-min_length)//3)*3
                 del_length = random.randint(0, min(max_length, len(seq)-del_start)//3)*3
             else:
@@ -230,7 +229,6 @@ def _simulate_insertions(sequences, freq=0.2, max_length=100, min_length=15, no_
             max_length = len(seq)//2
         if random.uniform(0, 1) <= freq:
             if no_frameshifts:
-                print(len(seq), min_length)
                 ins_start = random.randrange(0, (len(seq)-min_length)//3)*3
                 ins_length = random.randint(0, min(max_length, len(seq)-ins_start)//3)*3
             else:

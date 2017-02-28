@@ -142,16 +142,9 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unc
         outfiles.append(_write_to_file(mixed_f, out_dir, output_filestring+'_1.fq')) 
 
     if not unclean_working:
-        for tempfile in glob(working_dir+'/*.fasta'):
-            os.unlink(tempfile)
-        for tempfile in glob(working_dir+'/*.data'):
-            os.unlink(tempfile)
-        for tempfile in glob(working_dir+'/*.fq'):
-            os.unlink(tempfile)
-        for tempfile in glob(working_dir+'/*.sam'):
-            os.unlink(tempfile)
-        for tempfile in glob(working_dir+'/*.pkl'):
-            os.unlink(tempfile)
+        for extension in ['fasta', 'data', 'fq', 'sam', 'pkl']:
+            for tempfile in glob(working_dir + '/*.' + extension):
+                os.unlink(tempfile)
 
     print 'Output saved in:'
     for outfile in outfiles:
