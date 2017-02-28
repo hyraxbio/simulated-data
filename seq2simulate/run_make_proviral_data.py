@@ -94,29 +94,17 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unc
     fastq_samples = {}
     for mutation_type, fastq_files in open_fq_files.iteritems():
         if len(fastq_files) == 1:
-            fastq_sample = sample_fastq(n_mutated_reads[mutation_type], 
-                                                        fastq1=fastq_files[0], 
-                                                        fastq2=None
-                                                       )
-            _decorate_fastq_headers(fastq_sample, 
-                                    mutation_type, 
-                                    sam_file=open_sam_files[mutation_type], 
-                                    diff_file=open_diff_files[mutation_type], 
-                                    paired_end=False)
-            fastq_samples[mutation_type] = fastq_sample
-        elif len(fastq_files) == 2:
-            fastq_sample_pairs = sample_fastq(n_mutated_reads[mutation_type], 
-                                 fastq1=fastq_files[0], 
-                                 fastq2=fastq_files[1]
-                                )
-            _decorate_fastq_headers(fastq_sample_pairs, 
-                                    mutation_type, 
-                                    sam_file=open_sam_files[mutation_type], 
-                                    diff_file=open_diff_files[mutation_type], 
-                                    paired_end=True)
-            fastq_samples[mutation_type] = fastq_sample_pairs
-        else:
-            raise ValueError('Too many FASTQ files loaded.')
+            fastq_files += [None]
+        fastq_sample = sample_fastq(n_mutated_reads[mutation_type], 
+                                                    fastq1=fastq_files[0], 
+                                                    fastq2=fastq_files[1],
+                                                   )
+        _decorate_fastq_headers(fastq_sample, 
+                                mutation_type, 
+                                sam_file=open_sam_files[mutation_type], 
+                                diff_file=open_diff_files[mutation_type], 
+                                paired_end=paired_end)
+        fastq_samples[mutation_type] = fastq_sample
 
     outfiles = []
     output_filestring = str(uuid.uuid4())
@@ -270,14 +258,16 @@ def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_fil
                     read_id = read[0][1:].strip('\n')
 
                     sam_line = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
-
                     seq_diffs = diff_file[sam_line['seq_id']]
                     id_suffix = _get_id_suffix(mutation_type, sam_line, seq_diffs)
+                    if mutation_type == 'hypermutation':
+                        print(sam_line)
+                        print(seq_diffs)
+                        print(id_suffix)
             if id_suffix is None:
                 id_suffix = '_{}\n'.format(MUTATIONS['null'])
                 
             read[0] = read[0][:-1] + id_suffix
-
             fastq_sample[i_read] = ''.join(read)
 
 def _get_id_suffix(mutation_type, sam_line, seq_diffs):
@@ -388,6 +378,7 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
         sam_file: output of custom_generators.parse_sam() 
         paired_end: is this SAM file for paired-end data
     """
+    seq_ind = 8
     if paired_end:
         seq_id_1 = sam_file[read_id][0][1] 
         seq_id_2 = sam_file[read_id][1][1] 
@@ -401,7 +392,6 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
         
         read_start_f = int(sam_file[read_id][0][2])
         read_start_r = int(sam_file[read_id][1][2])
-        seq_ind = 8
         read_end_f = read_start_f+len(sam_file[read_id][0][seq_ind])-1
         read_end_r = read_start_r+len(sam_file[read_id][1][seq_ind])-1
 
@@ -415,7 +405,6 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
     else:
         seq_id = sam_file[read_id][0][1] 
         read_start = int(sam_file[read_id][0][2])
-        seq_ind = 7
         read_end = read_start+len(sam_file[read_id][0][seq_ind])-1
         result = {'seq_id':seq_id, 'read_start': read_start, 'read_end':read_end, 'seq':sam_file[read_id][0][seq_ind]}
     return result
