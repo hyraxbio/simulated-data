@@ -105,17 +105,17 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unc
                                     paired_end=False)
             fastq_samples[mutation_type] = fastq_sample
         elif len(fastq_files) == 2:
-            fastq_sample1, fastq_sample2 = sample_fastq(n_mutated_reads[mutation_type], 
-                                                        fastq1=fastq_files[0], 
-                                                        fastq2=fastq_files[1]
-                                                       )
-            for fastq_sample in [fastq_sample1, fastq_sample2]:
+            fastq_sample_pair = sample_fastq(n_mutated_reads[mutation_type], 
+                                 fastq1=fastq_files[0], 
+                                 fastq2=fastq_files[1]
+                                )
+            for fastq_sample in fastq_sample_pair:
                 _decorate_fastq_headers(fastq_sample, 
                                         mutation_type, 
                                         sam_file=open_sam_files[mutation_type], 
                                         diff_file=open_diff_files[mutation_type], 
                                         paired_end=True)
-            fastq_samples[mutation_type] = [fastq_sample1, fastq_sample2]
+            fastq_samples[mutation_type] = fastq_sample_pair
         else:
             raise ValueError('Too many FASTQ files loaded.')
 
