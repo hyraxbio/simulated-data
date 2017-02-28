@@ -260,10 +260,6 @@ def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_fil
                     sam_line = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
                     seq_diffs = diff_file[sam_line['seq_id']]
                     id_suffix = _get_id_suffix(mutation_type, sam_line, seq_diffs)
-                    if mutation_type == 'hypermutation':
-                        print(sam_line)
-                        print(seq_diffs)
-                        print(id_suffix)
             if id_suffix is None:
                 id_suffix = '_{}\n'.format(MUTATIONS['null'])
                 
@@ -301,11 +297,9 @@ def _is_longdel(sam_line, seq_diffs):
     return False
 
 def _is_insertion(sam_line, seq_diffs):
-    if seq_diffs[0] <= sam_line['read_start'] <= seq_diffs[1] \
-        or seq_diffs[0] <= sam_line['read_end'] <= seq_diffs[1] \
-        or sam_line['read_start'] <= seq_diffs[0] and sam_line['read_end'] >= seq_diffs[1] \
-        or sam_line['read_start'] >= seq_diffs[0] and sam_line['read_end'] <= seq_diffs[1]:
-            return True
+    if seq_diffs[0] <= sam_line['read_start'] and seq_diffs[1] > sam_line['read_start'] \
+        or sam_line['read_start'] <= seq_diffs[0] <= sam_line['read_end']:
+        return True
     return False
 
 def _is_frameshift(sam_line, seq_diffs):
@@ -320,13 +314,10 @@ def _is_stopcodon(sam_line, seq_diffs):
     return False
 
 def _is_inversion(sam_line, seq_diffs):
-    if seq_diffs[0] <= sam_line['read_start'] <= seq_diffs[1] \
-        or seq_diffs[0] <= sam_line['read_end'] <= seq_diffs[1] \
-        or sam_line['read_start'] <= seq_diffs[0] and sam_line['read_end'] >= seq_diffs[1] \
-        or sam_line['read_start'] >= seq_diffs[0] and sam_line['read_end'] <= seq_diffs[1]:
+    if seq_diffs[0] <= sam_line['read_start'] and seq_diffs[1] > sam_line['read_start'] \
+        or sam_line['read_start'] <= seq_diffs[0] <= sam_line['read_end']:
         return True
     return False
-
 
 def sample_fastq(n_reads, fastq1=None, fastq2=None):
 
