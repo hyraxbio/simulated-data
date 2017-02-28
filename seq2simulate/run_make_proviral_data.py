@@ -375,9 +375,10 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
         seq_id_2 = sam_file[read_id][1][1] 
         if seq_id_1 != seq_id_2:
             raise ValueError('read_id does not reference paired reads from same sequence: {} {}'.format(seq_id_1, seq_id_2))
-        if int(sam_file[read_id][0][7]) < 0 and int(sam_file[read_id][1][7]) > 0:
+        # get the FLAG bit for directionality 
+        if (int(sam_file[read_id][0][0]) & 0x10) and not (int(sam_file[read_id][1][0]) & 0x10):
             sam_file[read_id] = sam_file[read_id][::-1]
-        elif int(sam_file[read_id][0][7]) > 0 and int(sam_file[read_id][1][7]) > 0 or int(sam_file[read_id][0][7]) < 0 and int(sam_file[read_id][1][7]) < 0:
+        elif int(sam_file[read_id][0][0]) == int(sam_file[read_id][1][0]):
             raise ValueError('Both paired-end FASTQ reads are in the same direction.')
         
         read_start_f = int(sam_file[read_id][0][2])
