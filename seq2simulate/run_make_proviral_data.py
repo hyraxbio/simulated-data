@@ -9,7 +9,7 @@ import uuid
 from hypermutation import hypermutate
 import platform as plat
 import art
-from custom_generators import parse_fastq, parse_sam
+from custom_generators import parse_fastq, parse_sam, FLAG, RNAME, POS, TLEN, SEQ
 import diversity
 
 MUTATIONS = {
@@ -206,9 +206,9 @@ def _open_all_data_files(sequences, fastq_files, sam_files, diff_files):
             for sam_read in parse_sam(f):
                 read_id = sam_read[0].strip('\n') 
                 if read_id in sam_reads:
-                    sam_reads[read_id].append(sam_read[1:])
+                    sam_reads[read_id].append(sam_read)
                 else:
-                    sam_reads[read_id] = [sam_read[1:]]
+                    sam_reads[read_id] = [sam_read]
             open_sam_files[mutation_type] = sam_reads
 
     open_diff_files = {'null': {i.id: [] for i in sequences}}
@@ -383,33 +383,33 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
     """
     seq_ind = 8
     if paired_end:
-        seq_id_1 = sam_file[read_id][0][1] 
-        seq_id_2 = sam_file[read_id][1][1] 
+        seq_id_1 = sam_file[read_id][0][RNAME] 
+        seq_id_2 = sam_file[read_id][1][RNAME] 
         if seq_id_1 != seq_id_2:
             raise ValueError('read_id does not reference paired reads from same sequence: {} {}'.format(seq_id_1, seq_id_2))
         # get the FLAG bit for directionality 
-        if (int(sam_file[read_id][0][0]) & 0x10) and not (int(sam_file[read_id][1][0]) & 0x10):
+        if (int(sam_file[read_id][0][FLAG]) & 0x10) and not (int(sam_file[read_id][1][FLAG]) & 0x10):
             sam_file[read_id] = sam_file[read_id][::-1]
-        elif int(sam_file[read_id][0][0]) == int(sam_file[read_id][1][0]):
+        elif int(sam_file[read_id][0][FLAG]) == int(sam_file[read_id][1][FLAG]):
             raise ValueError('Both paired-end FASTQ reads are in the same direction.')
         
-        read_start_f = int(sam_file[read_id][0][2])
-        read_start_r = int(sam_file[read_id][1][2])
-        read_end_f = read_start_f+len(sam_file[read_id][0][seq_ind])-1
-        read_end_r = read_start_r+len(sam_file[read_id][1][seq_ind])-1
+        read_start_f = int(sam_file[read_id][0][POS])
+        read_start_r = int(sam_file[read_id][1][POS])
+        read_end_f = read_start_f+len(sam_file[read_id][0][SEQ])-1
+        read_end_r = read_start_r+len(sam_file[read_id][1][SEQ])-1
 
         if read_start_f >= read_end_r:
             raise ValueError('Malformed FASTQ. Paired-end read directions incorrectly specified.')
 
         result = [
-                  {'seq_id':seq_id_1, 'read_start': read_start_f, 'read_end':read_end_f, 'seq':sam_file[read_id][0][seq_ind]},
-                  {'seq_id':seq_id_1, 'read_start': read_start_r, 'read_end':read_end_r, 'seq':sam_file[read_id][1][seq_ind]},
+                  {'seq_id':seq_id_1, 'read_start': read_start_f, 'read_end':read_end_f, 'seq':sam_file[read_id][0][SEQ]},
+                  {'seq_id':seq_id_1, 'read_start': read_start_r, 'read_end':read_end_r, 'seq':sam_file[read_id][1][SEQ]},
                  ] 
     else:
-        seq_id = sam_file[read_id][0][1] 
-        read_start = int(sam_file[read_id][0][2])
-        read_end = read_start+len(sam_file[read_id][0][seq_ind])-1
-        result = {'seq_id':seq_id, 'read_start': read_start, 'read_end':read_end, 'seq':sam_file[read_id][0][seq_ind]}
+        seq_id = sam_file[read_id][0][RNAME] 
+        read_start = int(sam_file[read_id][0][POS])
+        read_end = read_start+len(sam_file[read_id][0][SEQ])-1
+        result = {'seq_id':seq_id, 'read_start': read_start, 'read_end':read_end, 'seq':sam_file[read_id][0][SEQ]}
     return result
      
 
