@@ -225,6 +225,8 @@ def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_fil
     read covers a known mutation (see MUTATIONS for mutation codes).
     """
     if paired_end:
+        if len(fastq_sample) != 2:
+            raise ValueError('Paired-end data required.')
         for i_read in range(len(fastq_sample[0])):
             reads = [fastq_sample[0][i_read], fastq_sample[1][i_read]]
             id_suffixes = [None, None]
