@@ -234,7 +234,7 @@ def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_fil
             fastq_sample[1][i_read] = ''.join(reads[1])
     else:
         for i_read, read in enumerate(fastq_sample):
-            read = _decorate_reads([read], mutation_type, sam_file=sam_file, diff_file=diff_file, paired_end=paired_end)[0]
+            read = _decorate_reads([read], mutation_type, sam_file=sam_file, diff_file=diff_file, paired_end=paired_end)
             fastq_sample[i_read] = ''.join(read[0])
 
 
