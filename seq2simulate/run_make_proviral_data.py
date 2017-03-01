@@ -237,7 +237,9 @@ def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_fil
             read = _decorate_reads([read], mutation_type, sam_file=sam_file, diff_file=diff_file, paired_end=paired_end)[0]
             fastq_sample[i_read] = ''.join(read[0])
 
+
 def _decorate_reads(reads, mutation_type, sam_file=None, diff_file=None, paired_end=False):
+
     if paired_end and len(reads) != 2:
         raise ValueError('Paired-end data required.')
     elif not paired_end and len(reads) != 1:
@@ -264,8 +266,10 @@ def _decorate_reads(reads, mutation_type, sam_file=None, diff_file=None, paired_
 
     return reads
 
+
 def _correct_sam_line_directionality(sam_line_f, sam_line_r, read_seq1, read_seq2):
     seq_similarities = [diversity._sim_score(sam_line_f['seq'], read_seq) for read_seq in [read_seq1, read_seq2]]
+
     if seq_similarities[1] == seq_similarities[0]:
         raise ValueError('Paired-end FASTQ reads could not be distinguished between.')
     elif seq_similarities[1] > seq_similarities[0]:
