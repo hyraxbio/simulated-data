@@ -234,41 +234,34 @@ def _decorate_fastq_headers(fastq_sample, mutation_type, sam_file=None, diff_fil
             fastq_sample[1][i_read] = ''.join(reads[1])
     else:
         for i_read, read in enumerate(fastq_sample):
-            read = _decorate_reads(read, mutation_type, sam_file=sam_file, diff_file=diff_file, paired_end=paired_end)
-            fastq_sample[i_read] = ''.join(read)
+            read = _decorate_reads([read], mutation_type, sam_file=sam_file, diff_file=diff_file, paired_end=paired_end)[0]
+            fastq_sample[i_read] = ''.join(read[0])
 
 def _decorate_reads(reads, mutation_type, sam_file=None, diff_file=None, paired_end=False):
-    if paired_end:
-        if len(reads) != 2:
-            raise ValueError('Paired-end data required.')
-        id_suffixes = [None, None]
-        if mutation_type != 'null':
-            if sam_file is not None and diff_file is not None:
-                read_id = reads[0][0][1:].strip('\n')
+    if paired_end and len(reads) != 2:
+        raise ValueError('Paired-end data required.')
+    elif not paired_end and len(reads) != 1:
+        raise ValueError('Single read required.')
+    id_suffixes = [None]*len(reads)
+    if mutation_type != 'null':
+        if sam_file is not None and diff_file is not None:
+            read_id = reads[0][0][1:].strip('\n')
+            if paired_end:
                 read_id, read_number = read_id[:-2], read_id[-1]
                 read_seq1, read_seq2 = reads[0][1].strip('\n'), reads[1][1].strip('\n')
                 sam_line_f, sam_line_r = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
                 sam_line_f, sam_line_r = _correct_sam_line_directionality(sam_line_f, sam_line_r, read_seq1, read_seq2)
                 seq_diffs = diff_file[sam_line_f['seq_id']]
                 id_suffixes = [_get_id_suffix(mutation_type, sam_line, seq_diffs) for sam_line in [sam_line_f, sam_line_r]]
-        for i in range(len(id_suffixes)):
-            if id_suffixes[i] is None:
-                id_suffixes[i] = '_{}\n'.format(MUTATIONS['null'])
-            
-        reads[0][0] = reads[0][0][:-1] + id_suffixes[0]
-        reads[1][0] = reads[1][0][:-1] + id_suffixes[1]
-    else:
-        id_suffix = None
-        if mutation_type != 'null':
-            if sam_file is not None and diff_file is not None:
-                read_id = reads[0][1:].strip('\n')
+            else:
                 sam_line = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
                 seq_diffs = diff_file[sam_line['seq_id']]
-                id_suffix = _get_id_suffix(mutation_type, sam_line, seq_diffs)
-        if id_suffix is None:
-            id_suffix = '_{}\n'.format(MUTATIONS['null'])
-            
-        reads[0] = reads[0][:-1] + id_suffix
+                id_suffixes = [_get_id_suffix(mutation_type, sam_line, seq_diffs)]
+    for i in range(len(id_suffixes)):
+        if id_suffixes[i] is None:
+            id_suffixes[i] = '_{}\n'.format(MUTATIONS['null'])
+        reads[i][0] = reads[i][0][:-1] + id_suffixes[i]
+
     return reads
 
 def _correct_sam_line_directionality(sam_line_f, sam_line_r, read_seq1, read_seq2):
