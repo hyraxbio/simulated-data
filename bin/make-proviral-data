@@ -1,0 +1,152 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+This script is primarily for generating only hypermutated NGS data sets from a FASTA sequence file for testing.
+
+e.g. 
+
+Roche:
+make-proviral-data --out _tests/output --sequences data/split/Seq7_Sus --platform roche --hypermutation-rate 3
+
+Illumina paired-end:
+make-proviral-data --out _tests/output --sequences data/split/Seq7_Sus --platform illumina --paired-end --hypermutation-rate 3
+
+NOTE:
+    Bruner (2016) proviral defects:
+        2%  - intact
+        5%  - packaging signal and major splice donor site deletion (15-97 bp)
+        20% - deletion within 5' half of genome (15-6000 bp) 
+        35% - deletion within 3' half of genome (15-6000 bp)
+        20% - very large internal deletion (6000-8000 bp)
+        7%  - hypermutated
+        8%  - hypermutated and deleted
+        3%  - insertions and inversions
+
+    Assuming that large deletions and packaging signal/major splice donor site
+    deletions don't apply to individual gene sequences:
+
+        10%  - intact
+        35%  - hypermutated
+        40%  - hypermutated and deleted
+        15%  - insertions and inversions
+
+    Refs:        
+        Bruner, K. M., Murray, A. J., Pollack, R. A., Soliman, M. G., Laskey, S.
+        B., Capoferri, A. A., … Siliciano, R. F. (2016). Defective proviruses rapidly
+        accumulate during acute HIV-1 infection. Nature Medicine, 22(August),
+        doi:10.1038/nm.4156. https://doi.org/10.1038/nm.4156
+
+"""
+
+from seq2simulate import run_make_proviral_data
+
+import click
+import os
+import appdirs
+import uuid
+
+def get_working_dir():
+    """
+    Returns a default working directory.
+    """
+
+    return os.path.join(
+        appdirs.user_data_dir('tests', 'simulated'), 
+        str(uuid.uuid4())
+    )
+
+@click.command()
+
+@click.option(
+    '--sequences', 
+    help='Path to a FASTA file of sequence(s).', 
+    required=True,
+    type=click.Path(exists=True, readable=True, resolve_path=True)
+)
+
+@click.option(
+    '--out', 
+    help='Path to the desired output folder (will be created).',
+    type=click.Path(resolve_path=True)
+)
+
+@click.option(
+    '--platform',
+    help='Sequencing platform to simulate.',
+    required=True,
+    type=click.Choice(['illumina', 'ion', 'pacbio-clr', 'pacbio-ccs', 'roche'])
+)
+
+@click.option(
+    '--paired-end',
+    help='Paired-end sequencing.  Only valid with illumina data.',
+    is_flag=True
+)
+
+@click.option(
+    '--working-dir',
+    help='Returns a specific working directory location. ' \
+         'Defaults to a randomly generated uuid in an appropriate ' \
+         'data folder.', 
+    type=click.Path(resolve_path=True)
+)
+
+@click.option(
+    '--unclean-working',
+    help='Do not delete working files upon completion',
+    is_flag=True
+)
+
+@click.option(
+    '--hypermutation-rate',
+    help='Rate of hypermutation per 100 bp',
+    default=3,
+)
+
+def run(
+    sequences, out, platform, working_dir, paired_end, unclean_working, hypermutation_rate
+):
+    """
+    Perform proviral mutations (including hypermutations, deletions,
+    insertions, frameshifts, inserting stop-codons, and inversions) on a set of
+    sequences and generate an NGS dataset for viral and proviral sequences, then
+    sample these two FASTQ files to create a new FASTQ file consisting of a
+    fraction of reads produced from each proviral (and viral) dataset.
+
+    Args:
+        sequences_path: path to FASTA sequence file
+        working_dir: temporary directory for storing output files 
+        out_dir: directory in which to store result
+        platform: platform (e.g. roche)
+        paired_end: produce paired_end data
+        unclean_working: do not delete working directory files upon completion
+        hypermutation_rate: rate of hypermutation per 100 bp
+
+    Returns:
+        True 
+    
+    """
+    if paired_end and platform != "illumina":
+        raise ValueError(
+            'Only illumina paired-end reads can be simulated.'
+        )
+
+    if working_dir is None:
+        working_dir = get_working_dir()
+
+    if not os.path.isdir(working_dir):
+        os.makedirs(working_dir)
+
+    if out is None:
+        out = working_dir
+    else:
+        if not os.path.isdir(out):
+            os.makedirs(out)
+
+    run_make_proviral_data.run_proviral(sequences, working_dir, out, platform, paired_end, unclean_working=unclean_working, hypermutation_rate=hypermutation_rate)
+
+    return True
+
+if __name__ == '__main__':
+    run()

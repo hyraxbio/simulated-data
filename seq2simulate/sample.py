@@ -19,7 +19,7 @@ fixed_calls_below_100_prevalence = { drm.Drm('M184V', drm.RT) : {'D4T': [50,'R']
 # calls for all NRTIs and NNRTIs unless we see K65R
 low_coverage_drugs = ['ABC', 'DDI', 'FTC', '3TC', 'D4T', 
                       'TDF', 'AZT', 'EFV', 'ETR', 'NVP', 'RPV']
-call_if_resistant = ['TDF', 'DDI']
+call_if_resistant = ['TDF', 'DDI', 'D4T']
 
 
 def header(platform, paired_end=False):
@@ -224,7 +224,7 @@ class Sample:
         # If the DRM prevalence is low enough that we can test for 
         # "susceptibility"
         if prevalence.range_susceptible(platform, self.prevalence):
-            calls = self.encode_calls(sierra.get_calls(
+            calls = self.encode_calls(sierra.get_calls_from_sequence(
                 self.sequence.susceptible))
 
             prevalence_range = [
@@ -234,7 +234,7 @@ class Sample:
         # If the DRM prevalence is high enough that we can test for
         # true resistance
         else:
-            calls = self.encode_calls(sierra.get_calls(
+            calls = self.encode_calls(sierra.get_calls_from_sequence(
             self.sequence.resistant))
             
             # The resistant prevalence range runs from the platform error rate to

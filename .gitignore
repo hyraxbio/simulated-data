@@ -6,3 +6,4 @@ simulate.egg-info
 *.swp
 *.swo
 *.lprof
+.hiv_drm_cache

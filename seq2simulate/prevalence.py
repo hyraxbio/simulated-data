@@ -120,7 +120,6 @@ def drm_in_interval(drm, interval):
         True or False
 
     """
-
     start, end = interval
     return drm.nucleotide_pos >= start and drm.nucleotide_pos <= end
 
@@ -571,7 +570,7 @@ def blockers(fq_filename, sam_filename, drm_dict,
 
             # we need all currently blocking drms to unblock
             if current_blockers[position]:
-                blocker.blocking_drms = current_blockers[position][-1].blocking_drms
+                blocker.blocking_drms = list(current_blockers[position][-1].blocking_drms)
             blocker.blocking_drms.append(blocking_drm)
             current_blockers[position].append(blocker)
 
@@ -665,25 +664,41 @@ def select_sequences(
                 rt_no_coverage_start, rt_no_coverage_end))
         ]
 
+    # make a first pass at fulfilling all prevalences by running through
+    # a generator which selects reads, until selecting more reads would
+    # produce too much coverage at a position.
     drm_dict = populate_dictionary(fq_filename, sam_filename, drm_list, 
         reads_per_drm, remove_rt, paired_end)
     
+    # the same generator as above, except this time we don't actually
+    # run the generator: we're going to wrap it in two more generators.
     handles_to_close, _, out_generator = generator(fq_filename, sam_filename,
         drm_list, reads_per_drm, remove_rt, paired_end)
 
 
+    # if the first pass at running through the generator doesn't produce
+    # exactly the correct coverage at all DRM positions:
     if any([val < reads_per_drm for val in drm_dict.values()]):
+        # figure out which DRMs are "blocking" the fulfillment of other
+        # DRMs (usually the adjacent ones)
         all_blockers = blockers(fq_filename, sam_filename, drm_dict, 
             reads_per_drm, remove_rt, paired_end)
+        # remove reads that contain *only* the blockers until the blocking DRM
+        # and the unfulfilled DRM have the same coverage
         deleted_generator = delete_generator(out_generator, 
             drm_list, all_blockers)
+        # add reads that contain *both* the blocker and the unfulfilled DRM
+        # until they both have the same coverage.
         reads_to_add, add_handles = add_generator(fq_filename, sam_filename, 
             drm_list, all_blockers, remove_rt, paired_end)
         handles_to_close.extend(add_handles)
 
+        # chain the adding generator to the deletion generator
         out_generator = itertools.chain(deleted_generator, reads_to_add)
 
-    # runs all the interleaved generators
+    # run the final generator, which may or may not be a combination
+    # of an initial generator, a generator that doesn't yield certain
+    # reads, and a final generator that adds additional reads.
     if paired_end:
         with open(out_file[0], 'w') as out_handle1, \
              open(out_file[1], 'w') as out_handle2:

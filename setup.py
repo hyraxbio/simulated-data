@@ -72,14 +72,15 @@ setup(
     description='Simulated data generator for HIV drug resistance testing',
     author='Imogen Wright',
     author_email='imogen@hyraxbio.co.za',
-    version='1.11.0',
+    version='1.12.0',
     packages=['seq2simulate', 'seq2simulate/revolver', 'seq2simulate/hypermutation'],
     scripts=[
+        'bin/all-scores',
         'bin/simulate', 
         'bin/package-simulation', 
         'bin/sierra',
-        'bin/sierra-drms',
-        'bin/merge-samples'
+        'bin/merge-samples',
+        'bin/make-proviral-data',
     ],
     package_data={'seq2simulate': [
         'all_drms.tsv',
