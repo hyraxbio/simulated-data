@@ -292,11 +292,12 @@ def _simulate_stop_codons(sequences, freq=0.5):
                 codon = seq[ind:ind+3]
                 stop_codon, score = _closest_match(codon, stop_codons)
                 if score == 2:
-                    putative_codons.append([ind, stop_codon]) 
+                    putative_codons.append([ind, stop_codon, codon]) 
             if len(putative_codons) > 0:
                 codon_replacement = random.choice(putative_codons)
+                replacement_index = [ni for ni, nt in enumerate(zip(codon_replacement[1], codon_replacement[2])) if nt[0] != nt[1]][0]
                 sequences[i] = seq[0:codon_replacement[0]] + codon_replacement[1] + seq[codon_replacement[0]+3:]
-                seq_diffs.append([codon_replacement[0]])
+                seq_diffs.append([codon_replacement[0] + replacement_index])
         else:
             seq_diffs.append([])
     return sequences, seq_diffs
