@@ -304,7 +304,7 @@ def _is_hypermutated(sam_line, seq_diffs):
     return False
 
 def _is_longdel(sam_line, seq_diffs):
-    if sam_line['read_start'] <= seq_diffs[0] and sam_line['read_end'] > seq_diffs[1]:
+    if sam_line['read_start'] <= seq_diffs[0] and sam_line['read_end'] > seq_diffs[0]:
         return True
     return False
 
