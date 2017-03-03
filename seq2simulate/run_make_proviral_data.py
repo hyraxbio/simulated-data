@@ -298,15 +298,13 @@ def _get_id_suffix(mutation_type, sam_line, seq_diffs):
 
 def _is_hypermutated(sam_line, seq_diffs):
     critical_num_hypermutations = 6
-    covered_mutations = [i for i in seq_diffs if i >= sam_line['read_start'] and i <= sam_line['read_end']]
+    covered_mutations = [i for i in seq_diffs if sam_line['read_start'] <= i <= sam_line['read_end']]
     if len(covered_mutations) >= critical_num_hypermutations:
         return True
     return False
 
 def _is_longdel(sam_line, seq_diffs):
-    if sam_line['read_start'] <= seq_diffs[0] and sam_line['read_end'] > seq_diffs[0]:
-        return True
-    return False
+    return _covers_index(sam_line['read_start'], sam_line['read_end'], seq_diffs[0])
 
 def _is_insertion(sam_line, seq_diffs):
     if seq_diffs[0] <= sam_line['read_start'] and seq_diffs[1] > sam_line['read_start'] \
@@ -315,21 +313,22 @@ def _is_insertion(sam_line, seq_diffs):
     return False
 
 def _is_frameshift(sam_line, seq_diffs):
-    if sam_line['read_start'] < seq_diffs[0] and sam_line['read_end'] > seq_diffs[0] \
-        or sam_line['read_start'] >= seq_diffs[0] and sam_line['read_end'] > seq_diffs[0]:
+    if _covers_index(sam_line['read_start'], sam_line['read_end'], seq_diffs[0]) \
+        or sam_line['read_start'] >= seq_diffs[0]:
         return True
     return False
 
 def _is_stopcodon(sam_line, seq_diffs):
-    if sam_line['read_start'] <= seq_diffs[0] and sam_line['read_end'] >= seq_diffs[0]:
-        return True
-    return False
+    return _covers_index(sam_line['read_start'], sam_line['read_end'], seq_diffs[0])
 
 def _is_inversion(sam_line, seq_diffs):
     if seq_diffs[0] <= sam_line['read_start'] and seq_diffs[1] > sam_line['read_start'] \
         or sam_line['read_start'] <= seq_diffs[0] <= sam_line['read_end']:
         return True
     return False
+
+def _covers_index(read_start, read_end, index):
+    return True if read_start <= index < read_end else False
 
 def sample_fastq(n_reads, fastq1=None, fastq2=None):
 
