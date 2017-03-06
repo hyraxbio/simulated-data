@@ -33,7 +33,7 @@ def get_diffs1(seq0, seq1):
     return [i for i in range(len(seq0)) if seq0[i] != seq1[i]]
 
 
-def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unclean_working=False, hypermutation_rate=3):
+def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unclean_working=False, hypermutation_rate=3, extra_art_args=None):
     """
 
     Perform proviral mutations (including hypermutations, deletions,
@@ -63,7 +63,7 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unc
     data_files, diff_files = _make_mutation_data_files(sequences, working_dir, hypermutation_rate=hypermutation_rate)
     data_files['null'] = sequences_path
 
-    fastq_files, sam_files = _make_art_files(data_files, platform, working_dir, paired_end=paired_end)
+    fastq_files, sam_files = _make_art_files(data_files, platform, working_dir, paired_end=paired_end, extra_art_args=extra_art_args)
 
     open_fq_files, open_sam_files, open_diff_files = _open_all_data_files(sequences, fastq_files, sam_files, diff_files)
 
@@ -178,12 +178,12 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
     return data_files, diff_files
 
 
-def _make_art_files(data_files, platform, working_dir, paired_end=False):
+def _make_art_files(data_files, platform, working_dir, paired_end=False, extra_art_args=None):
     platf = getattr(plat, platform)
 
     fastq_files, sam_files = {}, {}
     for mutation_type, data_file in data_files.iteritems():
-        fastq_file, sam_file = art.simulate(data_file, platf, platf.coverage, paired_end, working_dir)
+        fastq_file, sam_file = art.simulate(data_file, platf, platf.coverage, paired_end, working_dir, extra_art_args=extra_art_args)
         if not isinstance(fastq_file, tuple):
             fastq_file = [fastq_file]
         fastq_files[mutation_type], sam_files[mutation_type] = [i for i in fastq_file], sam_file

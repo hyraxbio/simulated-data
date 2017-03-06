@@ -25,7 +25,7 @@ def sequence_length(sequence_file):
     with open(sequence_file, 'r') as handle:
         return len(list(Bio.SeqIO.parse(handle, "fasta"))[0])
 
-def simulate(sequence_file, platform, coverage, paired_end, working_dir):
+def simulate(sequence_file, platform, coverage, paired_end, working_dir, extra_art_args=None):
 
     """ Wrapper for the sequence simulators ART and pbsim.
 
@@ -41,13 +41,20 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
     """
     out_file = os.path.join(working_dir, str(uuid.uuid4()))
 
+    extra_args = {}
+    if extra_art_args is not None:
+        extra_args_separated = extra_art_args.split(',') 
+        pars = extra_args_separated[::2]
+        vals = extra_args_separated[1::2]
+        for par, val in zip(pars, vals):
+            extra_args[par] = val 
+ 
     if platform == plat.illumina:
         # catch for version-specific params which changed in GreatSmokeyMountains
         art_version = get_art_version('art_illumina')
         ms = 'MS'
         if art_version[1] > 3:
             ms = 'MSv3'
-        
         args = [
             'art_illumina', 
             '-sam',
@@ -56,9 +63,10 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
             '-l', str(platform.mean_read_length),
             # we simulate illumina miseq reads 
             '-ss', ms, 
-            '-f', str(coverage), 
-            '-o', out_file
+            '-f', str(coverage),
+            '-o', out_file,
         ]
+
         if paired_end:
             args.extend([
                 '-p',
@@ -103,6 +111,10 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir):
             str(coverage)
         ]
 
+    for par, val in extra_args.iteritems():
+        args.append(par)
+        args.append(val)
+            
     devnull = open(os.devnull, 'w')
     subprocess.check_call(args, stdout=devnull, stderr=devnull)
     devnull.close()
