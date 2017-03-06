@@ -152,6 +152,9 @@ def _simulate_evolution(name, seq, sequence, working_dir, num_taxa):
 
 
 def _simulate_hypermutation(sequences, hypermutation_rate=3):
+    
+    if hypermutation_rate == 0:
+        return sequences, [[]]*len(sequences)
 
     print('\n-------------------------------------------------------')
     print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
@@ -176,6 +179,9 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=12
         list of sequences
 
     """
+    if freq == 0:
+        return sequences, [[]]*len(sequences)
+
     print('\n-------------------------------------------------------')
     print('Making deletions in evolved sequences (probability = {}).'.format(freq))
     print('-------------------------------------------------------\n')
@@ -217,6 +223,9 @@ def _simulate_insertions(sequences, freq=0.2, max_length=100, min_length=15, no_
 
 
     """
+    if freq == 0:
+        return sequences, [[]]*len(sequences)
+
     print('\n---------------------------------------------------------')
     print('Making insertions in evolved sequences (probability = {}).'.format(freq))
     print('---------------------------------------------------------\n')
@@ -250,6 +259,9 @@ def _simulate_frameshifts(sequences, freq=0.3, strip_deletions=True):
         list of sequences
 
     """
+    if freq == 0:
+        return sequences, [[]]*len(sequences)
+
     print('\n-------------------------------------------------------')
     print('Making frameshifts in evolved sequences (probability = {}).'.format(freq))
     print('-------------------------------------------------------\n')
@@ -278,6 +290,9 @@ def _simulate_stop_codons(sequences, freq=0.5):
         list of sequences
 
     """
+    if freq == 0:
+        return sequences, [[]]*len(sequences)
+
     print('\n-------------------------------------------------------')
     print('Making stop codons in evolved sequences (probability = {}).'.format(freq))
     print('-------------------------------------------------------\n')
@@ -322,6 +337,9 @@ def _simulate_inversions(sequences, freq=0.3, max_length=100, min_length=5):
 
 
     """
+    if freq == 0:
+        return sequences, [[]]*len(sequences)
+
     print('\n---------------------------------------------------------')
     print('Making inversions in evolved sequences (probability = {}).'.format(freq))
     print('---------------------------------------------------------\n')
