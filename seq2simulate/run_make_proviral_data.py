@@ -176,9 +176,6 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
         diversity._update_seq_reads_from_strs(sequences_current, sequences_strings)
         data_files[mutation_type] = (_write_to_FASTA(sequences_current, working_dir, '{}_data.fasta'.format(i_mutation)))
         diff_files[mutation_type] = (_write_to_file(seq_diffs, working_dir, '{}_diffs.data'.format(i_mutation)))
-        print('old', [len(s.seq) for s in sequences])
-        print('new', [len(s.seq) for s in sequences_current])
-        print(seq_diffs)
 
     return data_files, diff_files
 
