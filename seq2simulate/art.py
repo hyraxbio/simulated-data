@@ -43,7 +43,7 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir, extra_a
 
     extra_args = {}
     if extra_art_args is not None:
-        extra_args_separated = [str(i) for i in extra_art_args.split(',') ]
+        extra_args_separated = [str(i) for i in extra_art_args.split(',')]
         pars = extra_args_separated[::2]
         vals = extra_args_separated[1::2]
         for par, val in zip(pars, vals):

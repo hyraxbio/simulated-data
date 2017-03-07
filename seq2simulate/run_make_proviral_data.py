@@ -264,6 +264,7 @@ def _decorate_reads(reads, mutation_type, sam_file=None, diff_file=None, paired_
                 sam_line = _parse_sam_line(read_id, sam_file, paired_end=paired_end)
                 seq_diffs = diff_file[sam_line['seq_id']]
                 id_suffixes = [_get_id_suffix(mutation_type, sam_line, seq_diffs)]
+                
     for i in range(len(id_suffixes)):
         if id_suffixes[i] is None:
             id_suffixes[i] = '_{}\n'.format(MUTATIONS['null'])
@@ -341,7 +342,7 @@ def _is_inversion(sam_line, seq_diffs):
     return False
 
 def _covers_index(read_start, read_end, index):
-    return True if read_start <= index < read_end else False
+    return True if read_start <= index <= read_end else False
 
 def sample_fastq(n_reads, fastq1=None, fastq2=None):
 
@@ -405,10 +406,10 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
         elif int(sam_file[read_id][0][FLAG]) == int(sam_file[read_id][1][FLAG]):
             raise ValueError('Both paired-end FASTQ reads are in the same direction.')
         
-        read_start_f = int(sam_file[read_id][0][POS])
-        read_start_r = int(sam_file[read_id][1][POS])
-        read_end_f = read_start_f+len(sam_file[read_id][0][SEQ])-1
-        read_end_r = read_start_r+len(sam_file[read_id][1][SEQ])-1
+        read_start_f = int(sam_file[read_id][0][POS]) - 1 # convert to 0-based
+        read_start_r = int(sam_file[read_id][1][POS]) - 1 # convert to 0-based
+        read_end_f = read_start_f+len(sam_file[read_id][0][SEQ]) - 1
+        read_end_r = read_start_r+len(sam_file[read_id][1][SEQ]) - 1
 
         if read_start_f >= read_end_r:
             raise ValueError('Malformed FASTQ. Paired-end read directions incorrectly specified.')
@@ -419,8 +420,8 @@ def _parse_sam_line(read_id, sam_file, paired_end=False):
                  ] 
     else:
         seq_id = sam_file[read_id][0][RNAME] 
-        read_start = int(sam_file[read_id][0][POS])
-        read_end = read_start+len(sam_file[read_id][0][SEQ])-1
+        read_start = int(sam_file[read_id][0][POS]) - 1 # convert to 0-based
+        read_end = read_start+len(sam_file[read_id][0][SEQ]) - 1
         result = {'seq_id':seq_id, 'read_start': read_start, 'read_end':read_end, 'seq':sam_file[read_id][0][SEQ]}
     return result
      
