@@ -163,8 +163,8 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
                       'longdel': [diversity._simulate_deletions, {'freq': 0, 'no_frameshifts': True}], 
                       'insertion': [diversity._simulate_insertions, {'freq': 0, 'no_frameshifts': True}], 
                       'frameshift': [diversity._simulate_frameshifts, {'freq': 0}],
-                      'stopcodon': [diversity._simulate_stop_codons, {'freq': 1}],
-                      'inversion': [diversity._simulate_inversions, {'freq': 0}],
+                      'stopcodon': [diversity._simulate_stop_codons, {'freq': 0}],
+                      'inversion': [diversity._simulate_inversions, {'freq': 1}],
                      }
 
     for i_mutation, mutation_type in enumerate(mutation_types):

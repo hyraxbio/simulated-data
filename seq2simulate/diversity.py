@@ -209,7 +209,7 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=12
             seq_diffs.append([])
     return sequences, seq_diffs
 
-def _simulate_insertions(sequences, freq=0.2, max_length=100, min_length=15, no_frameshifts=True):
+def _simulate_insertions(sequences, freq=0.2, max_length=200, min_length=30, no_frameshifts=True):
     """
     Args:
         sequences: list of DNA strings
@@ -238,16 +238,39 @@ def _simulate_insertions(sequences, freq=0.2, max_length=100, min_length=15, no_
             max_length = len(seq)//2
         if random.uniform(0, 1) <= freq:
             if no_frameshifts:
-                ins_start = random.randrange(0, (len(seq)-min_length)//3)*3
-                ins_length = random.randint(0, min(max_length, len(seq)-ins_start)//3)*3
+                ins_start = (random.randrange(0, len(seq)-min_length)//3)*3
+                ins_length = (random.randint(0, min(max_length, len(seq)-ins_start))//3)*3
             else:
                 ins_start = random.randrange(0, len(seq)-min_length)
                 ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
-            sequences[i] = seq[0:ins_start] + ''.join([random.choice('ATGC') for insertion in range(ins_length)]) + seq[ins_start:]
-            seq_diffs.append([ins_start, ins_start+ins_length])
+            new_stops_introduced = True
+            while new_stops_introduced:
+                inserted_sequence = ''.join([random.choice('ATGC') for insertion in range(ins_length)])
+                new_sequence = seq[0:ins_start] + inserted_sequence + seq[ins_start:]
+                if _get_n_stop_codons(new_sequence) <= _get_n_stop_codons(seq):
+                    new_stops_introduced = False
+            sequences[i] = new_sequence
+            seq_diffs.append([ins_start, ins_start+ins_length-1, inserted_sequence])
         else:
             seq_diffs.append([])
     return sequences, seq_diffs
+
+
+def _get_n_stop_codons(seq):
+    stop_codons = ['TAG', 'TAA', 'TGA']
+    return len([cdn for cdn in split_seq(seq) if cdn in stop_codons])
+    
+
+def split_seq(seq):
+    """
+    Split a string sequence into a list of codons.
+    """
+    seq_split = []
+    for cdn in range(len(seq)//3):
+        seq_split.append(seq[cdn*3:cdn*3+3])
+    if (len(seq)//3)*3 < len(seq):
+        seq_split.append(seq[cdn*3+3:])
+    return seq_split
 
 def _simulate_frameshifts(sequences, freq=0.3, strip_deletions=True):
     """
@@ -324,13 +347,13 @@ def _closest_match(s1, s2):
 def _sim_score(s1, s2):
     return sum([i==j for i,j in zip(s1, s2)])
 
-def _simulate_inversions(sequences, freq=0.3, max_length=100, min_length=5):
+def _simulate_inversions(sequences, freq=0.3, max_length=200, min_length=15):
     """
     Args:
         sequences: list of DNA strings
-        freq: probability of insertion
-        max_length: of random insertion 
-        min_length: of random insertion
+        freq: probability of inversion
+        max_length: of random inversion 
+        min_length: of random inversion
 
     Returns:
         list of sequences
@@ -347,9 +370,15 @@ def _simulate_inversions(sequences, freq=0.3, max_length=100, min_length=5):
     seq_diffs = []
     for i, seq in enumerate(sequences):
         if random.uniform(0, 1) <= freq:
-            ins_start = random.randrange(0, len(seq)-min_length)
-            ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
-            sequences[i] = seq[0:ins_start] + seq[ins_start:ins_start + ins_length][::-1] + seq[ins_start + ins_length:]
+            new_stops_introduced = True
+            while new_stops_introduced:
+                ins_start = random.randrange(0, len(seq)-min_length)
+                ins_length = random.randint(min_length, min(max_length, len(seq)-ins_start))
+                new_sequence = seq[0:ins_start] + seq[ins_start:ins_start + ins_length][::-1] + seq[ins_start + ins_length:]
+                if _get_n_stop_codons(new_sequence) <= _get_n_stop_codons(seq):
+                    new_stops_introduced = False
+            print('aweh', seq[ins_start:ins_start + ins_length][::-1])
+            sequences[i] = new_sequence
             seq_diffs.append([ins_start, ins_start + ins_length])
         else:
             seq_diffs.append([])
