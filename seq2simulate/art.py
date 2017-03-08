@@ -114,7 +114,7 @@ def simulate(sequence_file, platform, coverage, paired_end, working_dir, extra_a
     for par, val in extra_args.iteritems():
         args.append(par)
         args.append(val)
-            
+
     devnull = open(os.devnull, 'w')
     subprocess.check_call(args, stdout=devnull, stderr=devnull)
     devnull.close()

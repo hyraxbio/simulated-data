@@ -162,9 +162,9 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
     mutation_funcs = {'hypermutation': [diversity._simulate_hypermutation, {'hypermutation_rate': hypermutation_rate}],
                       'longdel': [diversity._simulate_deletions, {'freq': 0, 'no_frameshifts': True}], 
                       'insertion': [diversity._simulate_insertions, {'freq': 0, 'no_frameshifts': True}], 
-                      'frameshift': [diversity._simulate_frameshifts, {'freq': 0}],
+                      'frameshift': [diversity._simulate_frameshifts, {'freq': 1}],
                       'stopcodon': [diversity._simulate_stop_codons, {'freq': 0}],
-                      'inversion': [diversity._simulate_inversions, {'freq': 1}],
+                      'inversion': [diversity._simulate_inversions, {'freq': 0}],
                      }
 
     for i_mutation, mutation_type in enumerate(mutation_types):
@@ -321,8 +321,7 @@ def _is_insertion(sam_line, seq_diffs):
 
 def _is_frameshift(sam_line, seq_diffs):
     if seq_diffs:
-        if _covers_index(sam_line['read_start'], sam_line['read_end'], seq_diffs[0]) \
-            or sam_line['read_start'] >= seq_diffs[0]:
+        if _covers_index(sam_line['read_start'], sam_line['read_end'], seq_diffs[0]):
             return True
     return False
 
