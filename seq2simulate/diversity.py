@@ -163,7 +163,7 @@ def _simulate_hypermutation(sequences, hypermutation_rate=3):
     hyper_evolved_sequences = hypermutate.mutate_sequences(sequences, hypermutation_rates)
     seq_diffs = [get_diffs1(sequences[i], hyper_evolved_sequences[i]) for i in range(len(sequences))]
 
-    return sequences, seq_diffs
+    return hyper_evolved_sequences, seq_diffs
 
 def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=120, min_length=15, no_frameshifts=True):
     """
@@ -377,7 +377,6 @@ def _simulate_inversions(sequences, freq=0.3, max_length=200, min_length=15):
                 new_sequence = seq[0:ins_start] + seq[ins_start:ins_start + ins_length][::-1] + seq[ins_start + ins_length:]
                 if _get_n_stop_codons(new_sequence) <= _get_n_stop_codons(seq):
                     new_stops_introduced = False
-            print('aweh', seq[ins_start:ins_start + ins_length][::-1])
             sequences[i] = new_sequence
             seq_diffs.append([ins_start, ins_start + ins_length])
         else:
