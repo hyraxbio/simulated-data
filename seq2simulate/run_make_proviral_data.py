@@ -164,7 +164,7 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
                       'insertion': [diversity._simulate_insertions, {'freq': 0, 'no_frameshifts': True}], 
                       'frameshift': [diversity._simulate_frameshifts, {'freq': 0}],
                       'stopcodon': [diversity._simulate_stop_codons, {'freq': 0}],
-                      'inversion': [diversity._simulate_inversions, {'freq': 0}],
+                      'inversion': [diversity._simulate_inversions, {'freq': 1}],
                      }
 
     for i_mutation, mutation_type in enumerate(mutation_types):
@@ -332,8 +332,8 @@ def _is_stopcodon(sam_line, seq_diffs):
 
 def _is_inversion(sam_line, seq_diffs):
     if seq_diffs:
-        if seq_diffs[0] <= sam_line['read_start'] and seq_diffs[1] > sam_line['read_start'] \
-            or sam_line['read_start'] <= seq_diffs[0] <= sam_line['read_end']:
+        if _covers_index(seq_diffs[0], seq_diffs[1], sam_line['read_start']) \
+            or _covers_index(sam_line['read_start'], sam_line['read_end'], seq_diffs[0]):
             return True
     return False
 
