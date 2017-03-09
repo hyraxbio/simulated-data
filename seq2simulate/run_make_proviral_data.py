@@ -34,7 +34,14 @@ def get_diffs1(seq0, seq1):
     return [i for i in range(len(seq0)) if seq0[i] != seq1[i]]
 
 
-def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unclean_working=False, hypermutation_rate=3, extra_art_args=None):
+def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unclean_working=False, 
+                 hypermutation_rate=3, 
+                 longdel_freq=1,
+                 insertion_freq=1,
+                 frameshift_freq=1,
+                 stopcodon_freq=1,
+                 inversion_freq=1,
+                 extra_art_args=None):
     """
 
     Perform proviral mutations (including hypermutations, deletions,
@@ -61,7 +68,14 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unc
 
     sequences = [s for s in SeqIO.parse(sequences_path, 'fasta')]
 
-    data_files, diff_files = _make_mutation_data_files(sequences, working_dir, hypermutation_rate=hypermutation_rate)
+    data_files, diff_files = _make_mutation_data_files(sequences, working_dir, 
+                                                       hypermutation_rate=hypermutation_rate,
+                                                       longdel_freq=longdel_freq,
+                                                       insertion_freq=insertion_freq,
+                                                       frameshift_freq=frameshift_freq,
+                                                       stopcodon_freq=stopcodon_freq,
+                                                       inversion_freq=inversion_freq,
+                                                      )
     data_files['null'] = sequences_path
 
     fastq_files, sam_files = _make_art_files(data_files, platform, working_dir, paired_end=paired_end, extra_art_args=extra_art_args)
@@ -142,7 +156,14 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unc
 
     return True
 
-def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
+def _make_mutation_data_files(sequences, working_dir,
+                              hypermutation_rate=3,
+                              longdel_freq=1,
+                              insertion_freq=1,
+                              frameshift_freq=1,
+                              stopcodon_freq=1,
+                              inversion_freq=1,
+                             ):
 
     """
     Performs mutations of various kinds on template sequence(s) and saves both
@@ -160,11 +181,11 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
                        'inversion']
 
     mutation_funcs = {'hypermutation': [diversity._simulate_hypermutation, {'hypermutation_rate': hypermutation_rate}],
-                      'longdel': [diversity._simulate_deletions, {'freq': 0, 'no_frameshifts': True}], 
-                      'insertion': [diversity._simulate_insertions, {'freq': 0, 'no_frameshifts': True}], 
-                      'frameshift': [diversity._simulate_frameshifts, {'freq': 0}],
-                      'stopcodon': [diversity._simulate_stop_codons, {'freq': 0}],
-                      'inversion': [diversity._simulate_inversions, {'freq': 1}],
+                      'longdel': [diversity._simulate_deletions, {'freq': longdel_freq, 'no_frameshifts': True}], 
+                      'insertion': [diversity._simulate_insertions, {'freq': insertion_freq, 'no_frameshifts': True}], 
+                      'frameshift': [diversity._simulate_frameshifts, {'freq': frameshift_freq}],
+                      'stopcodon': [diversity._simulate_stop_codons, {'freq': stopcodon_freq}],
+                      'inversion': [diversity._simulate_inversions, {'freq': inversion_freq}],
                      }
 
     for i_mutation, mutation_type in enumerate(mutation_types):
@@ -172,6 +193,8 @@ def _make_mutation_data_files(sequences, working_dir, hypermutation_rate=3):
         mutation_func, mutation_kwargs = mutation_funcs[mutation_type]
         sequences_strings, sequence_ids = diversity._convert_seqs_to_strs(sequences_current)
         sequences_strings, seq_diffs = mutation_func(sequences_strings, **mutation_kwargs)
+        if any(diff for diff in seq_diffs):
+            print 'diffs:', seq_diffs
         seq_diffs = dict(zip(sequence_ids, seq_diffs))
         diversity._update_seq_reads_from_strs(sequences_current, sequences_strings)
         data_files[mutation_type] = (_write_to_FASTA(sequences_current, working_dir, '{}_data.fasta'.format(i_mutation)))

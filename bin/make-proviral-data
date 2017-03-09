@@ -105,13 +105,61 @@ def get_working_dir():
 )
 
 @click.option(
+    '--longdel-freq',
+    help='Probability of longdel per sequence in longdel dataset.',
+    default=1,
+)
+
+@click.option(
+    '--insertion-freq',
+    help='Probability of insertion per sequence in insertion dataset.',
+    default=1,
+)
+
+@click.option(
+    '--insertion-freq',
+    help='Probability of insertion per sequence in insertion dataset.',
+    default=1,
+)
+
+@click.option(
+    '--longdel-freq',
+    help='Probability of longdel per sequence in longdel dataset.',
+    default=1,
+)
+
+@click.option(
+    '--frameshift-freq',
+    help='Probability of frameshift per sequence in frameshift dataset.',
+    default=1,
+)
+
+@click.option(
+    '--stopcodon-freq',
+    help='Probability of stopcodon per sequence in stop-codon dataset.',
+    default=1,
+)
+
+@click.option(
+    '--inversion-freq',
+    help='Probability of inversion per sequence in inversion dataset.',
+    default=1,
+)
+
+@click.option(
     '--extra-art-args',
     help='comma-separated literal arguments to be passed to ART, e.g. "-k, 5, -l, 100" will be interpreted as "... -k 5 -l 100"',
     default=None,
 )
 
 def run(
-    sequences, out, platform, working_dir, paired_end, unclean_working, hypermutation_rate, extra_art_args,
+    sequences, out, platform, working_dir, paired_end, unclean_working, hypermutation_rate,
+    longdel_freq,
+    insertion_freq,
+    frameshift_freq,
+    stopcodon_freq,
+    inversion_freq,
+    extra_art_args,
 ):
     """
     Perform proviral mutations (including hypermutations, deletions,
@@ -150,7 +198,14 @@ def run(
         if not os.path.isdir(out):
             os.makedirs(out)
 
-    run_make_proviral_data.run_proviral(sequences, working_dir, out, platform, paired_end, unclean_working=unclean_working, hypermutation_rate=hypermutation_rate, extra_art_args=extra_art_args)
+    run_make_proviral_data.run_proviral(sequences, working_dir, out, platform, paired_end, unclean_working=unclean_working, 
+                                        hypermutation_rate=hypermutation_rate, 
+                                        longdel_freq=longdel_freq,
+                                        insertion_freq=insertion_freq,
+                                        frameshift_freq=frameshift_freq,
+                                        stopcodon_freq=stopcodon_freq,
+                                        inversion_freq=inversion_freq,
+                                        extra_art_args=extra_art_args)
 
     return True
 

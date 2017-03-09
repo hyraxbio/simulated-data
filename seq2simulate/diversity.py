@@ -380,7 +380,6 @@ def _simulate_inversions(sequences, freq=0.3, max_length=200, min_length=15):
                     new_stops_introduced = False
             sequences[i] = new_sequence
             seq_diffs.append([ins_start, ins_start + ins_length, inverted_sequence])
-            print(seq_diffs)
         else:
             seq_diffs.append([])
     return sequences, seq_diffs
