@@ -375,6 +375,7 @@ def _simulate_inversions(sequences, freq=0.3, max_length=200, min_length=15):
                 ins_start = random.randrange(0, len(seq)-min_length)
                 ins_length = random.randint(min_length, min(max_length, len(seq)-ins_start))
                 inverted_sequence = seq[ins_start:ins_start + ins_length][::-1]
+                uninverted_seq = seq[ins_start:ins_start + ins_length]
                 new_sequence = seq[0:ins_start] + inverted_sequence + seq[ins_start + ins_length:]
                 if _get_n_stop_codons(new_sequence) <= _get_n_stop_codons(seq):
                     new_stops_introduced = False

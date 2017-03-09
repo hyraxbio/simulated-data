@@ -361,7 +361,7 @@ def _is_inversion(sam_line, seq_diffs):
     return False
 
 def _covers_index(read_start, read_end, index):
-    return True if read_start <= index <= read_end else False
+    return True if read_start <= index < read_end else False
 
 def sample_fastq(n_reads, fastq1=None, fastq2=None):
 
