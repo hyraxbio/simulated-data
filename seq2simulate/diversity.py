@@ -347,7 +347,7 @@ def _closest_match(s1, s2):
 def _sim_score(s1, s2):
     return sum([i==j for i,j in zip(s1, s2)])
 
-def _simulate_inversions(sequences, freq=0.3, max_length=200, min_length=15):
+def _simulate_inversions(sequences, freq=0.3, max_length=300, min_length=40):
     """
     Args:
         sequences: list of DNA strings
