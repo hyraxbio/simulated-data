@@ -157,6 +157,7 @@ def get_working_dir():
     help='Define insertion length.',
     default=None,
 )
+
 def run(
     sequences, out, platform, working_dir, paired_end, unclean_working, hypermutation_rate,
     longdel_freq,
