@@ -41,7 +41,9 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unc
                  frameshift_freq=1,
                  stopcodon_freq=1,
                  inversion_freq=1,
-                 extra_art_args=None):
+                 extra_art_args=None,
+                 insertion_length=None,
+                ):
     """
 
     Perform proviral mutations (including hypermutations, deletions,
@@ -75,6 +77,7 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unc
                                                        frameshift_freq=frameshift_freq,
                                                        stopcodon_freq=stopcodon_freq,
                                                        inversion_freq=inversion_freq,
+                                                       insertion_length=insertion_length,
                                                       )
     data_files['null'] = sequences_path
 
@@ -163,6 +166,7 @@ def _make_mutation_data_files(sequences, working_dir,
                               frameshift_freq=1,
                               stopcodon_freq=1,
                               inversion_freq=1,
+                              insertion_length=None,
                              ):
 
     """
@@ -182,7 +186,7 @@ def _make_mutation_data_files(sequences, working_dir,
 
     mutation_funcs = {'hypermutation': [diversity._simulate_hypermutation, {'hypermutation_rate': hypermutation_rate}],
                       'longdel': [diversity._simulate_deletions, {'freq': longdel_freq, 'no_frameshifts': True}], 
-                      'insertion': [diversity._simulate_insertions, {'freq': insertion_freq, 'no_frameshifts': True}], 
+                      'insertion': [diversity._simulate_insertions, {'freq': insertion_freq, 'no_frameshifts': True, 'insertion_length': insertion_length}], 
                       'frameshift': [diversity._simulate_frameshifts, {'freq': frameshift_freq}],
                       'stopcodon': [diversity._simulate_stop_codons, {'freq': stopcodon_freq}],
                       'inversion': [diversity._simulate_inversions, {'freq': inversion_freq}],

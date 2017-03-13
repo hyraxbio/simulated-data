@@ -209,7 +209,7 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=12
             seq_diffs.append([])
     return sequences, seq_diffs
 
-def _simulate_insertions(sequences, freq=0.2, max_length=200, min_length=30, no_frameshifts=True):
+def _simulate_insertions(sequences, freq=0.2, max_length=200, min_length=30, no_frameshifts=True, insertion_length=None):
     """
     Args:
         sequences: list of DNA strings
@@ -232,23 +232,32 @@ def _simulate_insertions(sequences, freq=0.2, max_length=200, min_length=30, no_
 
     seq_diffs = []
     for i, seq in enumerate(sequences):
-        if min_length > len(seq):
-            min_length = len(seq)//4
-        if max_length > len(seq):
-            max_length = len(seq)//2
         if random.uniform(0, 1) <= freq:
-            if no_frameshifts:
-                ins_start = (random.randrange(0, len(seq)-min_length)//3)*3
-                ins_length = (random.randint(0, min(max_length, len(seq)-ins_start))//3)*3
+            # override length if insertion_length is specified
+            if insertion_length is not None:
+                ins_length = insertion_length
+                ins_start = random.randrange(0, len(seq)-ins_length)
             else:
-                ins_start = random.randrange(0, len(seq)-min_length)
-                ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
+                if min_length > len(seq):
+                    min_length = len(seq)//4
+                if max_length > len(seq):
+                    max_length = len(seq)//2
+                if no_frameshifts:
+                    ins_start = (random.randrange(0, len(seq)-min_length)//3)*3
+                    ins_length = (random.randint(0, min(max_length, len(seq)-ins_start))//3)*3
+                else:
+                    ins_start = random.randrange(0, len(seq)-min_length)
+                    ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
             new_stops_introduced = True
+            n_counter = 0
             while new_stops_introduced:
                 inserted_sequence = ''.join([random.choice('ATGC') for insertion in range(ins_length)])
                 new_sequence = seq[0:ins_start] + inserted_sequence + seq[ins_start:]
                 if _get_n_stop_codons(new_sequence) <= _get_n_stop_codons(seq):
                     new_stops_introduced = False
+                n_counter += 1
+                if n_counter == 100:
+                    raise ValueError('Unable to generate insertion without introducing new stop codons after {} attempts.'.format(n_counter))
             sequences[i] = new_sequence
             seq_diffs.append([ins_start, ins_start+ins_length-1, inserted_sequence])
         else:
