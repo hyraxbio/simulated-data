@@ -217,6 +217,7 @@ def _simulate_insertions(sequences, freq=0.2, max_length=200, min_length=30, no_
         max_length: of random insertion 
         min_length: of random insertion
         no_frameshifts: do not introduce frameshifts
+        insertion_length: a fixed insertion length which overrides max_length and min_length
 
     Returns:
         list of sequences

@@ -169,11 +169,16 @@ def run(
     insertion_length,
 ):
     """
+
     Perform proviral mutations (including hypermutations, deletions,
     insertions, frameshifts, inserting stop-codons, and inversions) on a set of
-    sequences and generate an NGS dataset for viral and proviral sequences, then
-    sample these two FASTQ files to create a new FASTQ file consisting of a
-    fraction of reads produced from each proviral (and viral) dataset.
+    sequences and generate an NGS dataset for the viral sequence and proviral
+    sequences. After this sample these FASTQ files to create a new FASTQ file
+    consisting of a fraction of reads produced from each proviral (and viral)
+    dataset. The proportion of reads for each respective dataset is 1/7th of the
+    final FASTQ file. This proportion is unaffected by mutation frequency
+    parameters in the sense that setting a mutation frequency to 0 will result in a
+    FASTQ file with 2/7 reads coming from a viral source.
 
     Args:
         sequences_path: path to FASTA sequence file
@@ -183,6 +188,13 @@ def run(
         paired_end: produce paired_end data
         unclean_working: do not delete working directory files upon completion
         hypermutation_rate: rate of hypermutation per 100 bp
+        longdel_freq: probability of long deletion in sequences used for long deletion dataset
+        insertion_freq: probability of insertion in sequences used for insertion dataset
+        frameshift_freq: probability of frameshift in sequences used for frameshift dataset
+        stopcodon: probability of stop codon in sequences used for stop codon dataset
+        inversion: probability of inversion in sequences used for inversion dataset
+        extra_art_args: comma-separated literal arguments to be passed to ART, e.g. "-k, 5, -l, 100" will be interpreted as "... -k 5 -l 100"
+        insertion_length: define fixed insertion length 
 
     Returns:
         True 

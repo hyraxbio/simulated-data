@@ -60,6 +60,13 @@ def run_proviral(sequences_path, working_dir, out_dir, platform, paired_end, unc
         paired_end: produce paired_end data
         unclean_working: do not delete working directory files upon completion
         hypermutation_rate: rate of hypermutation per 100 bp
+        longdel_freq: probability of long deletion in sequences used for long deletion dataset
+        insertion_freq: probability of insertion in sequences used for insertion dataset
+        frameshift_freq: probability of frameshift in sequences used for frameshift dataset
+        stopcodon: probability of stop codon in sequences used for stop codon dataset
+        inversion: probability of inversion in sequences used for inversion dataset
+        extra_art_args: comma-separated literal arguments to be passed to ART, e.g. "-k, 5, -l, 100" will be interpreted as "... -k 5 -l 100"
+        insertion_length: define fixed insertion length 
 
     Returns:
         True 
