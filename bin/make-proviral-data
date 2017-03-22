@@ -104,15 +104,81 @@ def get_working_dir():
     default=3,
 )
 
+@click.option(
+    '--longdel-freq',
+    help='Probability of longdel per sequence in longdel dataset.',
+    default=1,
+)
+
+@click.option(
+    '--insertion-freq',
+    help='Probability of insertion per sequence in insertion dataset.',
+    default=1,
+)
+
+@click.option(
+    '--insertion-freq',
+    help='Probability of insertion per sequence in insertion dataset.',
+    default=1,
+)
+
+@click.option(
+    '--longdel-freq',
+    help='Probability of longdel per sequence in longdel dataset.',
+    default=1,
+)
+
+@click.option(
+    '--frameshift-freq',
+    help='Probability of frameshift per sequence in frameshift dataset.',
+    default=1,
+)
+
+@click.option(
+    '--stopcodon-freq',
+    help='Probability of stopcodon per sequence in stop-codon dataset.',
+    default=1,
+)
+
+@click.option(
+    '--inversion-freq',
+    help='Probability of inversion per sequence in inversion dataset.',
+    default=1,
+)
+
+@click.option(
+    '--extra-art-args',
+    help='comma-separated literal arguments to be passed to ART, e.g. "-k, 5, -l, 100" will be interpreted as "... -k 5 -l 100"',
+    default=None,
+)
+
+@click.option(
+    '--insertion-length',
+    help='Define insertion length.',
+    default=None,
+)
+
 def run(
-    sequences, out, platform, working_dir, paired_end, unclean_working, hypermutation_rate
+    sequences, out, platform, working_dir, paired_end, unclean_working, hypermutation_rate,
+    longdel_freq,
+    insertion_freq,
+    frameshift_freq,
+    stopcodon_freq,
+    inversion_freq,
+    extra_art_args,
+    insertion_length,
 ):
     """
+
     Perform proviral mutations (including hypermutations, deletions,
     insertions, frameshifts, inserting stop-codons, and inversions) on a set of
-    sequences and generate an NGS dataset for viral and proviral sequences, then
-    sample these two FASTQ files to create a new FASTQ file consisting of a
-    fraction of reads produced from each proviral (and viral) dataset.
+    sequences and generate an NGS dataset for the viral sequence and proviral
+    sequences. After this sample these FASTQ files to create a new FASTQ file
+    consisting of a fraction of reads produced from each proviral (and viral)
+    dataset. The proportion of reads for each respective dataset is 1/7th of the
+    final FASTQ file. This proportion is unaffected by mutation frequency
+    parameters in the sense that setting a mutation frequency to 0 will result in a
+    FASTQ file with 2/7 reads coming from a viral source.
 
     Args:
         sequences_path: path to FASTA sequence file
@@ -122,6 +188,13 @@ def run(
         paired_end: produce paired_end data
         unclean_working: do not delete working directory files upon completion
         hypermutation_rate: rate of hypermutation per 100 bp
+        longdel_freq: probability of long deletion in sequences used for long deletion dataset
+        insertion_freq: probability of insertion in sequences used for insertion dataset
+        frameshift_freq: probability of frameshift in sequences used for frameshift dataset
+        stopcodon: probability of stop codon in sequences used for stop codon dataset
+        inversion: probability of inversion in sequences used for inversion dataset
+        extra_art_args: comma-separated literal arguments to be passed to ART, e.g. "-k, 5, -l, 100" will be interpreted as "... -k 5 -l 100"
+        insertion_length: define fixed insertion length 
 
     Returns:
         True 
@@ -144,7 +217,18 @@ def run(
         if not os.path.isdir(out):
             os.makedirs(out)
 
-    run_make_proviral_data.run_proviral(sequences, working_dir, out, platform, paired_end, unclean_working=unclean_working, hypermutation_rate=hypermutation_rate)
+    if insertion_length is not None:
+        insertion_length = int(insertion_length)
+ 
+    run_make_proviral_data.run_proviral(sequences, working_dir, out, platform, paired_end, unclean_working=unclean_working, 
+                                        hypermutation_rate=hypermutation_rate, 
+                                        longdel_freq=longdel_freq,
+                                        insertion_freq=insertion_freq,
+                                        frameshift_freq=frameshift_freq,
+                                        stopcodon_freq=stopcodon_freq,
+                                        inversion_freq=inversion_freq,
+                                        extra_art_args=extra_art_args,
+                                        insertion_length=insertion_length)
 
     return True
 

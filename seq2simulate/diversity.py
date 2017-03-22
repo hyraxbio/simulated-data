@@ -152,6 +152,9 @@ def _simulate_evolution(name, seq, sequence, working_dir, num_taxa):
 
 
 def _simulate_hypermutation(sequences, hypermutation_rate=3):
+    
+    if hypermutation_rate == 0:
+        return sequences, [[]]*len(sequences)
 
     print('\n-------------------------------------------------------')
     print('Hypermutating evolved sequences (rate = {} per 100 bp).'.format(hypermutation_rate))
@@ -160,7 +163,7 @@ def _simulate_hypermutation(sequences, hypermutation_rate=3):
     hyper_evolved_sequences = hypermutate.mutate_sequences(sequences, hypermutation_rates)
     seq_diffs = [get_diffs1(sequences[i], hyper_evolved_sequences[i]) for i in range(len(sequences))]
 
-    return sequences, seq_diffs
+    return hyper_evolved_sequences, seq_diffs
 
 def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=120, min_length=15, no_frameshifts=True):
     """
@@ -176,6 +179,9 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=12
         list of sequences
 
     """
+    if freq == 0:
+        return sequences, [[]]*len(sequences)
+
     print('\n-------------------------------------------------------')
     print('Making deletions in evolved sequences (probability = {}).'.format(freq))
     print('-------------------------------------------------------\n')
@@ -203,7 +209,7 @@ def _simulate_deletions(sequences, freq=0.4, strip_deletions=True, max_length=12
             seq_diffs.append([])
     return sequences, seq_diffs
 
-def _simulate_insertions(sequences, freq=0.2, max_length=100, min_length=15, no_frameshifts=True):
+def _simulate_insertions(sequences, freq=0.2, max_length=200, min_length=30, no_frameshifts=True, insertion_length=None):
     """
     Args:
         sequences: list of DNA strings
@@ -211,34 +217,70 @@ def _simulate_insertions(sequences, freq=0.2, max_length=100, min_length=15, no_
         max_length: of random insertion 
         min_length: of random insertion
         no_frameshifts: do not introduce frameshifts
+        insertion_length: a fixed insertion length which overrides max_length and min_length
 
     Returns:
         list of sequences
 
 
     """
+    if freq == 0:
+        return sequences, [[]]*len(sequences)
+
     print('\n---------------------------------------------------------')
     print('Making insertions in evolved sequences (probability = {}).'.format(freq))
     print('---------------------------------------------------------\n')
 
     seq_diffs = []
     for i, seq in enumerate(sequences):
-        if min_length > len(seq):
-            min_length = len(seq)//4
-        if max_length > len(seq):
-            max_length = len(seq)//2
         if random.uniform(0, 1) <= freq:
-            if no_frameshifts:
-                ins_start = random.randrange(0, (len(seq)-min_length)//3)*3
-                ins_length = random.randint(0, min(max_length, len(seq)-ins_start)//3)*3
+            # override length if insertion_length is specified
+            if insertion_length is not None:
+                ins_length = insertion_length
+                ins_start = random.randrange(0, len(seq)-ins_length)
             else:
-                ins_start = random.randrange(0, len(seq)-min_length)
-                ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
-            sequences[i] = seq[0:ins_start] + ''.join([random.choice('ATGC') for insertion in range(ins_length)]) + seq[ins_start:]
-            seq_diffs.append([ins_start, ins_start+ins_length])
+                if min_length > len(seq):
+                    min_length = len(seq)//4
+                if max_length > len(seq):
+                    max_length = len(seq)//2
+                if no_frameshifts:
+                    ins_start = (random.randrange(0, len(seq)-min_length)//3)*3
+                    ins_length = (random.randint(0, min(max_length, len(seq)-ins_start))//3)*3
+                else:
+                    ins_start = random.randrange(0, len(seq)-min_length)
+                    ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
+            new_stops_introduced = True
+            n_counter = 0
+            while new_stops_introduced:
+                inserted_sequence = ''.join([random.choice('ATGC') for insertion in range(ins_length)])
+                new_sequence = seq[0:ins_start] + inserted_sequence + seq[ins_start:]
+                if _get_n_stop_codons(new_sequence) <= _get_n_stop_codons(seq):
+                    new_stops_introduced = False
+                n_counter += 1
+                if n_counter == 100:
+                    raise ValueError('Unable to generate insertion without introducing new stop codons after {} attempts.'.format(n_counter))
+            sequences[i] = new_sequence
+            seq_diffs.append([ins_start, ins_start+ins_length-1, inserted_sequence])
         else:
             seq_diffs.append([])
     return sequences, seq_diffs
+
+
+def _get_n_stop_codons(seq):
+    stop_codons = ['TAG', 'TAA', 'TGA']
+    return len([cdn for cdn in split_seq(seq) if cdn in stop_codons])
+    
+
+def split_seq(seq):
+    """
+    Split a string sequence into a list of codons.
+    """
+    seq_split = []
+    for cdn in range(len(seq)//3):
+        seq_split.append(seq[cdn*3:cdn*3+3])
+    if (len(seq)//3)*3 < len(seq):
+        seq_split.append(seq[cdn*3+3:])
+    return seq_split
 
 def _simulate_frameshifts(sequences, freq=0.3, strip_deletions=True):
     """
@@ -250,6 +292,9 @@ def _simulate_frameshifts(sequences, freq=0.3, strip_deletions=True):
         list of sequences
 
     """
+    if freq == 0:
+        return sequences, [[]]*len(sequences)
+
     print('\n-------------------------------------------------------')
     print('Making frameshifts in evolved sequences (probability = {}).'.format(freq))
     print('-------------------------------------------------------\n')
@@ -278,6 +323,9 @@ def _simulate_stop_codons(sequences, freq=0.5):
         list of sequences
 
     """
+    if freq == 0:
+        return sequences, [[]]*len(sequences)
+
     print('\n-------------------------------------------------------')
     print('Making stop codons in evolved sequences (probability = {}).'.format(freq))
     print('-------------------------------------------------------\n')
@@ -292,11 +340,12 @@ def _simulate_stop_codons(sequences, freq=0.5):
                 codon = seq[ind:ind+3]
                 stop_codon, score = _closest_match(codon, stop_codons)
                 if score == 2:
-                    putative_codons.append([ind, stop_codon]) 
+                    putative_codons.append([ind, stop_codon, codon]) 
             if len(putative_codons) > 0:
                 codon_replacement = random.choice(putative_codons)
+                replacement_index = [ni for ni, nt in enumerate(zip(codon_replacement[1], codon_replacement[2])) if nt[0] != nt[1]][0]
                 sequences[i] = seq[0:codon_replacement[0]] + codon_replacement[1] + seq[codon_replacement[0]+3:]
-                seq_diffs.append([codon_replacement[0]])
+                seq_diffs.append([codon_replacement[0] + replacement_index, codon_replacement[1][replacement_index]])
         else:
             seq_diffs.append([])
     return sequences, seq_diffs
@@ -308,19 +357,22 @@ def _closest_match(s1, s2):
 def _sim_score(s1, s2):
     return sum([i==j for i,j in zip(s1, s2)])
 
-def _simulate_inversions(sequences, freq=0.3, max_length=100, min_length=5):
+def _simulate_inversions(sequences, freq=0.3, max_length=300, min_length=60):
     """
     Args:
         sequences: list of DNA strings
-        freq: probability of insertion
-        max_length: of random insertion 
-        min_length: of random insertion
+        freq: probability of inversion
+        max_length: of random inversion 
+        min_length: of random inversion
 
     Returns:
         list of sequences
 
 
     """
+    if freq == 0:
+        return sequences, [[]]*len(sequences)
+
     print('\n---------------------------------------------------------')
     print('Making inversions in evolved sequences (probability = {}).'.format(freq))
     print('---------------------------------------------------------\n')
@@ -328,10 +380,17 @@ def _simulate_inversions(sequences, freq=0.3, max_length=100, min_length=5):
     seq_diffs = []
     for i, seq in enumerate(sequences):
         if random.uniform(0, 1) <= freq:
-            ins_start = random.randrange(0, len(seq)-min_length)
-            ins_length = random.randint(0, min(max_length, len(seq)-ins_start))
-            sequences[i] = seq[0:ins_start] + seq[ins_start:ins_start + ins_length][::-1] + seq[ins_start + ins_length:]
-            seq_diffs.append([ins_start, ins_start + ins_length])
+            new_stops_introduced = True
+            while new_stops_introduced:
+                ins_start = random.randrange(0, len(seq)-min_length)
+                ins_length = random.randint(min_length, min(max_length, len(seq)-ins_start))
+                inverted_sequence = seq[ins_start:ins_start + ins_length][::-1]
+                uninverted_seq = seq[ins_start:ins_start + ins_length]
+                new_sequence = seq[0:ins_start] + inverted_sequence + seq[ins_start + ins_length:]
+                if _get_n_stop_codons(new_sequence) <= _get_n_stop_codons(seq):
+                    new_stops_introduced = False
+            sequences[i] = new_sequence
+            seq_diffs.append([ins_start, ins_start + ins_length, inverted_sequence])
         else:
             seq_diffs.append([])
     return sequences, seq_diffs
