@@ -11,12 +11,6 @@ from threading import Thread
 
 from seq2simulate import sierra_ws as sierra, hiv_drms
 
-mutation_prefix = "residueSets := [][]string{"
-mutation_suffix = "\n}\n"
-
-call_prefix = "scores := []map[string]int{"
-call_suffix = "\n}\n"
-
 def get_calls(printed_count, row, column, calls):
     try:
         calls[printed_count] = sierra.get_calls_from_drms([row, column])
@@ -34,8 +28,8 @@ calls = [None] * NUM_THREADS
 with open(sys.argv[1], 'w') as mutation_file, \
      open(sys.argv[2], 'w') as call_file:
 
-    mutation_file.write(mutation_prefix)
-    call_file.write(call_prefix)
+    mutation_file.write("")
+    call_file.write("")
     
     printed_count = 0
     for row_count, row in enumerate(hiv_drms.drms):
@@ -66,16 +60,23 @@ with open(sys.argv[1], 'w') as mutation_file, \
                             and (printed_count == NUM_THREADS) \
                             and (t == 0)
                         if not first_line:
-                            mutation_file.write(",\n")
-                            call_file.write(",\n")
+                            mutation_file.write("\n")
+                            call_file.write("\n")
 
-                        mutation_file.write("{\"%s\", \"%s\"}" % (
+                        mutation_file.write("%s,%s" % (
                             row_list[t].locus_str(), 
                             column_list[t].locus_str())
                         )
-                        call_file.write(str(calls[t]).replace("\'", "\""))
-    mutation_file.write(mutation_suffix)
-    call_file.write(call_suffix)
+
+                        callFst = True
+                        for key, value in calls[t].iteritems():
+                          if not callFst:
+                            call_file.write(",")
+
+                          callFst = False
+                          call_file.write(str(key))
+                          call_file.write(":")
+                          call_file.write(str(value))
 
 
             
