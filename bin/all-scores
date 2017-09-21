@@ -19,8 +19,9 @@ call_suffix = "\n}\n"
 
 def get_calls(printed_count, row, column, calls):
     try:
-        calls[printed_count] = sierra.get_calls_from_drms([i, j])
-    except:
+        calls[printed_count] = sierra.get_calls_from_drms([row, column])
+    except Exception as e:
+        print(e)
         calls[printed_count] = None
 
 NUM_THREADS = 50        
