@@ -76,7 +76,7 @@ with open(sys.argv[1], 'w') as mutation_file, \
                           callFst = False
                           call_file.write(str(key))
                           call_file.write(":")
-                          call_file.write(str(value))
+                          call_file.write(str(int(value)))
 
 
             
