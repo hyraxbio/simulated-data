@@ -63,10 +63,10 @@ def simulate(sequence, working_dir, num_taxa=10,
     """
     
 
-    sequences = {
+    sequences = [
         ('susceptible', sequence.susceptible),
         ('resistant', sequence.resistant)
-    }
+    ]
 
     filenames = {}
 
@@ -127,7 +127,7 @@ def _simulate_evolution(name, seq, sequence, working_dir, num_taxa):
             allowed_sequences = [
                 s for s in evolved_sequences \
                     if drms_unchanged(seq.id, drms, 
-                        sierra.get_drms(s, known_drms=hiv_drms))
+                        sierra.get_drms(s, known_drms=hiv_drms.drms))
             ]
         except:
             allowed_sequences = []

@@ -49,7 +49,7 @@ def parse_drms(response, known_drms=[]):
                     mut = drm.Drm(mut_text, mutation_dict[gene_name])
                     # if the mutation scores, or we know it's one
                     # of the drms that scores in combination
-                    if partial_score["score"] != 0 or (mut in known_drms):
+                    if (partial_score["score"] != 0) or (mut in known_drms):
                         if mut not in drms:
                             drms.append(mut)
     return drms                        
@@ -179,3 +179,5 @@ def get_drms(sequence, known_drms=[]):
     if len(response) == 0 or "drugResistance" not in response[0]:
         raise ValueError("Not HIV DNA.")
     return parse_drms(response[0], known_drms=known_drms)
+
+
