@@ -10,7 +10,7 @@ class Sequence:
         self.years_infected = 1
         self.susceptible = susceptible
         self.resistant = resistant
-        self.drms = sierra.get_drms(resistant, known_drms=hiv_drms)
+        self.drms = sierra.get_drms(resistant, known_drms=hiv_drms.drms)
         self.pcr_error = False
         self.human_error = False
         self.env_error = False
