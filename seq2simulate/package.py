@@ -18,6 +18,8 @@ def sequence_files(folder):
     file_list = glob.glob(os.path.join(folder, "*.fastq.gz"))
     for uncompressed in glob.glob(os.path.join(folder, "*.fastq")):
         file_list.append(compress(uncompressed))
+    for bam in glob.glob(os.path.join(folder, "*.bam")):
+        file_list.append(bam)
     return map(os.path.basename, file_list)
 
 
@@ -124,7 +126,7 @@ def illumina_paired(folder):
         f.write(illumina_details_preamble_paired)
         for s in file_list:
             pid = s.replace('.gz', '').replace('.fastq', '')
-            for pair in [('_1', '_2'), ('_R1', '_R2')]:
+            for pair in [('_1', '_2'), ('_R1', '_R2'), ('_R1_001', '_R2_001')]:
                 if pid.endswith(pair[0]):
                     pid = pid.replace(pair[0], '')
                     # only write out the first file of the pair
@@ -160,7 +162,7 @@ def ion(folder):
         f.write(ion_details_preamble)
 
         for s in file_list:
-            pid = s.replace('.gz', '').replace('.fastq', '')
+            pid = s.replace('.gz', '').replace('.fastq', '').replace('bam', '')
             f.write("%s,%s\n" % (pid, pid))
             samples.append(sample_record(pid, [s]))
 
