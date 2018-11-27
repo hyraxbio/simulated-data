@@ -17,7 +17,7 @@ fixed_calls_below_100_prevalence = { drm.Drm('M184V', drm.RT) : {'D4T': [50,'R']
 
 # If we remove everything in RT barring K65, we should get low coverage
 # calls for all NRTIs and NNRTIs unless we see K65R
-low_coverage_drugs = ['ABC', 'DDI', 'FTC', '3TC', 'D4T', 
+low_coverage_drugs = ['ABC', 'DDI', 'FTC', '3TC', 'D4T', 'DOR', 
                       'TDF', 'AZT', 'EFV', 'ETR', 'NVP', 'RPV']
 call_if_resistant = ['TDF', 'DDI', 'D4T']
 
