@@ -38,20 +38,24 @@ def parse_drms(response, known_drms=[]):
         drms: all drms in the response
     """
     drms = []
-    for gene in response["drugResistance"]:
+    for gene in response["alignedGeneSequences"]:
         gene_name = gene["gene"]["name"]
-        for score in gene["drugScores"]:
-            for partial_score in score["partialScores"]:
-                for mutation in partial_score["mutations"]:
-                    mut_text = mutation["text"]
-                    mut_text = mut_text.replace("Insertion", "i")
-                    mut_text = mut_text.replace("Deletion", "d")
-                    mut = drm.Drm(mut_text, mutation_dict[gene_name])
-                    # if the mutation scores, or we know it's one
-                    # of the drms that scores in combination
-                    if (partial_score["score"] != 0) or (mut in known_drms):
-                        if mut not in drms:
-                            drms.append(mut)
+        # grab mutations 
+        for mutation in gene["mutations"]:
+            mutated_to = mutation["AAs"]
+            # handle insertions
+            if len(mutated_to) > 1:
+                mutated_to = "i"
+            if mutated_to == "-":
+                mutated_to = "d"
+            mut_text = mutation["consensus"] \
+                      + str(mutation["position"]) \
+                      + mutated_to
+
+            mut = drm.Drm(mut_text, mutation_dict[gene_name])
+            if mut in known_drms and mut not in drms:
+                drms.append(mut)
+    # print(drms)
     return drms                        
 
 def call_sierra_with_drms(drms):
@@ -159,6 +163,7 @@ def get_calls_from_drms(drms):
          for d in drms
     ]
     response = call_sierra_with_drms(request_drms)
+    
     if len(response) == 0 or "drugResistance" not in response:
         raise ValueError("Not HIV DRMs.")
     
@@ -176,6 +181,8 @@ def get_drms(sequence, known_drms=[]):
         A list of Drm objects
     """
     response = call_sierra_with_sequence(sequence)
+    #json.dump(response, sys.stdout, indent=2)
+
     if len(response) == 0 or "drugResistance" not in response[0]:
         raise ValueError("Not HIV DNA.")
     return parse_drms(response[0], known_drms=known_drms)
