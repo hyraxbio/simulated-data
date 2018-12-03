@@ -27,12 +27,45 @@ def get_version():
     )
     return data['viewer']['currentVersion']['text']
 
-def parse_drms(response, known_drms=[]):
+
+def parse_drms_from_scores(response):
     """
-    Parse a sierra generated json list of mutations.
+    Parse a sierra generated json list of mutations.  
+    Works without a known list of DRMs, but cannot return DRMs
+    that score only in combination.
 
     Args:
         response: the deserialized json response.
+    
+    Returns:
+        drms: all drms in the response
+    """
+    drms = []
+    for gene in response["drugResistance"]:
+        gene_name = gene["gene"]["name"]
+        for score in gene["drugScores"]:
+            for partial_score in score["partialScores"]:
+                for mutation in partial_score["mutations"]:
+                    mut_text = mutation["text"]
+                    mut_text = mut_text.replace("Insertion", "i")
+                    mut_text = mut_text.replace("Deletion", "d")
+                    mut = drm.Drm(mut_text, mutation_dict[gene_name])
+                    # if the mutation scores, or we know it's one
+                    # of the drms that scores in combination
+                    if partial_score["score"] != 0:
+                        if mut not in drms:
+                            drms.append(mut)
+    return drms  
+
+def parse_drms(response, known_drms=[]):
+    """
+    Parse a sierra generated json list of mutations.
+    Filters out only DRMs from a known list of DRMs.
+    Cannot ab initio discover DRMs.
+
+    Args:
+        response: the deserialized json response.
+        known_drms: the list of already-known drms
     
     Returns:
         drms: all drms in the response
@@ -88,7 +121,7 @@ def is_drm(potential_drms):
     if len(response) == 0 or "drugResistance" not in response:
         raise ValueError("Not HIV DRMs.")
 
-    return parse_drms(response)
+    return parse_drms_from_scores(response)
 
 def call_sierra_with_sequence(sequence):
     """
