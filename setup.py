@@ -111,6 +111,8 @@ setup(
         'sierrapy',
         'numpy',
         'scipy',
+        'http',
+        'matplotlib'
     ],
     setup_requires=[
         'appdirs',
@@ -122,6 +124,7 @@ setup(
         'wstools',
         'sierrapy',
         'numpy',
+        'wheel',
     ]
 )
 
