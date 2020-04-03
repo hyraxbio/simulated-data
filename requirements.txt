@@ -18,7 +18,7 @@ ply==3.11
 promise==2.1
 pypandoc==1.4
 pysam==0.15.0
-requests==2.19.1
+requests==2.20.0
 Rx==1.6.1
 scipy==1.1.0
 sierrapy==0.2.1
