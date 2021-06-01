@@ -26,6 +26,6 @@ six==1.11.0
 SOAPpy==0.12.22
 tqdm==4.24.0
 typing==3.6.4
-urllib3==1.23
+urllib3==1.26.5
 voluptuous==0.11.3
 wstools==0.4.8
